@@ -273,10 +273,13 @@ const handleUDF = async (funcLogger, app) => {
       }),
       text: _.map(allOrders, v =>
         v.side === 'BUY'
-          ? `Bought @ ${v.price} on ${moment(v.time)}`
-          : `Sold @${v.price} on ${moment(v.time)}`
+          ? `Bought @ ${v.price} on ${moment(v.time).tz('Europe/Madrid')}`
+          : `Sold @${v.price} on ${moment(v.time).tz('Europe/Madrid')}`
       ),
-      price: _.map(allOrders, 'price')
+      price: _.map(allOrders, 'price'),
+      label: _.map(allOrders, (v) => { return (v.side === 'BUY') ? 'B':'S'}),
+      labelFontColor: _.map(allOrders, () => { return 'white'}),
+      minSize: _.map(allOrders, () => { return 14}),
     };
 
     // const activeGridOrders = await mongo.findAll(

@@ -55,193 +55,212 @@
                     'linetoolgannsquare.showLabels': true,
                 }
             });
+            var marksEnabled = true;
+
+            //Toggle contrl to show/hide marks
+            widget.headerReady().then(function() {
+                var button = widget.createButton();
+                button.setAttribute('title', 'Toggle marks');
+                button.addEventListener('click', function() {
+                    if (marksEnabled) {
+                        tvWidget.activeChart().clearMarks()
+                        marksEnabled = false
+                    } else {
+                        tvWidget.activeChart().refreshMarks()
+                        marksEnabled = true
+                    }
+                });
+                button.textContent = 'Marks';
+            });
 
             tvWidget.onChartReady(function () {
 
-                fetch('http://localhost:8080/grids?symbol=' + symbol)
-                    .then((response) => {
-                        return response.json();
-                    })
-                    .then((grids) => {
-
-                        grids.forEach((grid) => {
-
-                            this.activeChart().createShape( //Sell
-                                {
-                                    time: grid.to / 1000,
-                                    price: grid.triggerPrice[0]
-                                },
-                                {
-                                    shape: "icon",
-                                    lock: true,
-                                    disableSelection: true,
-                                    disableSave: true,
-                                    disableUndo: true,
-                                    text: grid.triggerPercentage[0],
-                                    overrides: {}
-                                },
-                            );
-
-                            this.activeChart().createShape( //Buy
-                                {
-                                    time: grid.from / 1000,
-                                    price: grid.sellPrice[0]
-                                },
-                                {
-                                    shape: "arrow_up",
-                                    lock: true,
-                                    disableSelection: true,
-                                    disableSave: true,
-                                    disableUndo: true,
-                                    text: grid.triggerPercentage[0],
-                                    overrides: {
-                                    }
-                                },
-                            );
-
-                            for (let idx = 0; idx < grid.buyGrids; idx++) {
-                                console.log(grid.triggerPercentage[0])
-
-                                if (grid.limitPrice[idx] == 5)
-
-                                    //Limit price
-                                    this.activeChart().createMultipointShape(
-                                        [
-                                            {
-                                                time: grid.from / 1000,
-                                                price: grid.limitPrice[idx]
-                                            },
-                                            {
-                                                time: grid.to / 1000,
-                                                price: grid.limitPrice[idx]
-                                            }
-                                        ],
-                                        {
-                                            shape: "trend_line",
-                                            lock: true,
-                                            disableSelection: true,
-                                            disableSave: true,
-                                            disableUndo: true,
-                                            text: grid.triggerPercentage[idx],
-                                            overrides: {
-                                                linewidth: idx + 1,
-                                                linecolor: 'orange',
-                                            }
-                                        },
-                                    );
-
-                                // //triggerprice
-                                // this.activeChart().createMultipointShape(
-                                //     [
-                                //         {
-                                //             time: grid.from / 1000,
-                                //             price: grid.triggerPrice[idx]
-                                //         },
-                                //         {
-                                //             time: grid.to / 1000,
-                                //             price: grid.triggerPrice[idx]
-                                //         }
-                                //     ],
-                                //     {
-                                //         shape: "trend_line",
-                                //         lock: true,
-                                //         disableSelection: true,
-                                //         disableSave: true,
-                                //         disableUndo: true,
-                                //         text: grid.triggerPercentage[idx],
-                                //         overrides: {
-                                //             linewidth: idx + 1,
-                                //             linecolor: 'red',
-                                //         }
-                                //     },
-                                // );
-                                //
-                                // //triggerprice as a box
-                                // if (idx < grids.length -1 )
-                                //     this.activeChart().createMultipointShape(
-                                //     [
-                                //         {
-                                //             time: grid.from / 1000,
-                                //             price: grid.triggerPrice[idx]
-                                //         },
-                                //         {
-                                //             time: grid.to / 1000,
-                                //             price: grid.triggerPrice[idx+1]
-                                //         }
-                                //     ],
-                                //     {
-                                //         shape: "rectangle",
-                                //         lock: true,
-                                //         disableSelection: true,
-                                //         disableSave: true,
-                                //         disableUndo: true,
-                                //         text: grid.triggerPercentage[idx],
-                                //         overrides: {
-                                //             linewidth: idx + 1,
-                                //             linecolor: 'red',
-                                //         }
-                                //     },
-                                // );
-                                //
-                                // //sell
-                                // this.activeChart().createMultipointShape(
-                                //     [
-                                //         {
-                                //             time: grid.from / 1000,
-                                //             price: grid.sellPrice
-                                //         },
-                                //         {
-                                //             time: grid.to / 1000,
-                                //             price: grid.sellPrice
-                                //         }
-                                //     ],
-                                //     {
-                                //         shape: "trend_line",
-                                //         lock: true,
-                                //         disableSelection: true,
-                                //         disableSave: true,
-                                //         disableUndo: true,
-                                //         text: "sell",
-                                //         overrides: {
-                                //             linewidth: idx + 1,
-                                //             linecolor: 'green',
-                                //         }
-                                //     },
-                                // );
-                            }
-                        })
-
-                    })
-
-
-                //TODO create grid on user click a buy mark
-                // this.activeChart().createOrderLine()
-                // 		.setPrice(1)
-                // 		.setText("dd")
-                // 		.setQuantity(null);
-                this.activeChart().createExecutionShape()
-                    .setText("@1,320.75 Limit Buy 1")
-                    .setTooltip("@1,320.75 Limit Buy 1")
-                    .setTextColor("rgba(0,255,0,0.5)")
-                    .setArrowColor("#0F0")
-                    .setDirection("buy")
-                    .setTime(this.activeChart().getVisibleRange().to)
-                    .setPrice(1600);
-
-                const from = Date.now() / 1000 - 2 * 24 * 3600; // 500 days ago
-                const to = Date.now() / 1000 + 2 * 24 * 3600;
-                this.activeChart().createMultipointShape(
-                    [{time: from, price: 1500}, {time: to, price: 1500}],
-                    {
-                        shape: "trend_line",
-                        lock: true,
-                        disableSelection: true,
-                        disableSave: true,
-                        disableUndo: true,
-                        text: "text",
-                    }
-                );
-
+                //Add markToggle shape
+                //this.activeChart().createShape()
+                // fetch('http://localhost:8080/grids?symbol=' + symbol)
+                //     .then((response) => {
+                //         return response.json();
+                //     })
+                //     .then((grids) => {
+                //
+                //         grids.forEach((grid) => {
+                //
+                //             this.activeChart().createShape( //Sell
+                //                 {
+                //                     time: grid.to / 1000,
+                //                     price: grid.triggerPrice[0]
+                //                 },
+                //                 {
+                //                     shape: "icon",
+                //                     lock: true,
+                //                     disableSelection: true,
+                //                     disableSave: true,
+                //                     disableUndo: true,
+                //                     text: grid.triggerPercentage[0],
+                //                     overrides: {}
+                //                 },
+                //             );
+                //
+                //             this.activeChart().createShape( //Buy
+                //                 {
+                //                     time: grid.from / 1000,
+                //                     price: grid.sellPrice[0]
+                //                 },
+                //                 {
+                //                     shape: "arrow_up",
+                //                     lock: true,
+                //                     disableSelection: true,
+                //                     disableSave: true,
+                //                     disableUndo: true,
+                //                     text: grid.triggerPercentage[0],
+                //                     overrides: {
+                //                     }
+                //                 },
+                //             );
+                //
+                //             for (let idx = 0; idx < grid.buyGrids; idx++) {
+                //                 console.log(grid.triggerPercentage[0])
+                //
+                //                 if (grid.limitPrice[idx] == 5)
+                //
+                //                     //Limit price
+                //                     this.activeChart().createMultipointShape(
+                //                         [
+                //                             {
+                //                                 time: grid.from / 1000,
+                //                                 price: grid.limitPrice[idx]
+                //                             },
+                //                             {
+                //                                 time: grid.to / 1000,
+                //                                 price: grid.limitPrice[idx]
+                //                             }
+                //                         ],
+                //                         {
+                //                             shape: "trend_line",
+                //                             lock: true,
+                //                             disableSelection: true,
+                //                             disableSave: true,
+                //                             disableUndo: true,
+                //                             text: grid.triggerPercentage[idx],
+                //                             overrides: {
+                //                                 linewidth: idx + 1,
+                //                                 linecolor: 'orange',
+                //                             }
+                //                         },
+                //                     );
+                //
+                //                 // //triggerprice
+                //                 // this.activeChart().createMultipointShape(
+                //                 //     [
+                //                 //         {
+                //                 //             time: grid.from / 1000,
+                //                 //             price: grid.triggerPrice[idx]
+                //                 //         },
+                //                 //         {
+                //                 //             time: grid.to / 1000,
+                //                 //             price: grid.triggerPrice[idx]
+                //                 //         }
+                //                 //     ],
+                //                 //     {
+                //                 //         shape: "trend_line",
+                //                 //         lock: true,
+                //                 //         disableSelection: true,
+                //                 //         disableSave: true,
+                //                 //         disableUndo: true,
+                //                 //         text: grid.triggerPercentage[idx],
+                //                 //         overrides: {
+                //                 //             linewidth: idx + 1,
+                //                 //             linecolor: 'red',
+                //                 //         }
+                //                 //     },
+                //                 // );
+                //                 //
+                //                 // //triggerprice as a box
+                //                 // if (idx < grids.length -1 )
+                //                 //     this.activeChart().createMultipointShape(
+                //                 //     [
+                //                 //         {
+                //                 //             time: grid.from / 1000,
+                //                 //             price: grid.triggerPrice[idx]
+                //                 //         },
+                //                 //         {
+                //                 //             time: grid.to / 1000,
+                //                 //             price: grid.triggerPrice[idx+1]
+                //                 //         }
+                //                 //     ],
+                //                 //     {
+                //                 //         shape: "rectangle",
+                //                 //         lock: true,
+                //                 //         disableSelection: true,
+                //                 //         disableSave: true,
+                //                 //         disableUndo: true,
+                //                 //         text: grid.triggerPercentage[idx],
+                //                 //         overrides: {
+                //                 //             linewidth: idx + 1,
+                //                 //             linecolor: 'red',
+                //                 //         }
+                //                 //     },
+                //                 // );
+                //                 //
+                //                 // //sell
+                //                 // this.activeChart().createMultipointShape(
+                //                 //     [
+                //                 //         {
+                //                 //             time: grid.from / 1000,
+                //                 //             price: grid.sellPrice
+                //                 //         },
+                //                 //         {
+                //                 //             time: grid.to / 1000,
+                //                 //             price: grid.sellPrice
+                //                 //         }
+                //                 //     ],
+                //                 //     {
+                //                 //         shape: "trend_line",
+                //                 //         lock: true,
+                //                 //         disableSelection: true,
+                //                 //         disableSave: true,
+                //                 //         disableUndo: true,
+                //                 //         text: "sell",
+                //                 //         overrides: {
+                //                 //             linewidth: idx + 1,
+                //                 //             linecolor: 'green',
+                //                 //         }
+                //                 //     },
+                //                 // );
+                //             }
+                //         })
+                //
+                //     })
+                //
+                //
+                // //TODO create grid on user click a buy mark
+                // // this.activeChart().createOrderLine()
+                // // 		.setPrice(1)
+                // // 		.setText("dd")
+                // // 		.setQuantity(null);
+                // this.activeChart().createExecutionShape()
+                //     .setText("@1,320.75 Limit Buy 1")
+                //     .setTooltip("@1,320.75 Limit Buy 1")
+                //     .setTextColor("rgba(0,255,0,0.5)")
+                //     .setArrowColor("#0F0")
+                //     .setDirection("buy")
+                //     .setTime(this.activeChart().getVisibleRange().to)
+                //     .setPrice(1600);
+                //
+                // const from = Date.now() / 1000 - 2 * 24 * 3600; // 500 days ago
+                // const to = Date.now() / 1000 + 2 * 24 * 3600;
+                // this.activeChart().createMultipointShape(
+                //     [{time: from, price: 1500}, {time: to, price: 1500}],
+                //     {
+                //         shape: "trend_line",
+                //         lock: true,
+                //         disableSelection: true,
+                //         disableSave: true,
+                //         disableUndo: true,
+                //         text: "text",
+                //     }
+                // );
+                //
 
             })
         };

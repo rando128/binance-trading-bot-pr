@@ -316,7 +316,6 @@ const handleUDF = async (funcLogger, app) => {
     const { symbol } = req.query;
     // TODO ADD FROM / TO
 
-
     const allTradeGrids = await mongo.findAll(
       logger,
       'trailing-trade-grid-trade-archive',

@@ -123,7 +123,7 @@ const handleUDF = async (funcLogger, app) => {
       supported_resolutions: supportedResolutions,
       supports_search: true,
       supports_group_request: false,
-      supports_marks: true,
+      supports_marks: false,
       supports_timescale_marks: false,
       supports_time: true
     })
@@ -143,7 +143,8 @@ const handleUDF = async (funcLogger, app) => {
 
     const interval = RESOLUTIONS_INTERVALS_MAP[req.query.resolution];
     if (!interval) {
-      throw new Error(`Invalid resolution ${req.query.resolution}`);
+      return res.send({ s: 'no_data' });
+      //throw new Error(`Invalid resolution ${req.query.resolution}`);
     }
 
     const candles = await binance.client.candles({
@@ -263,21 +264,23 @@ const handleUDF = async (funcLogger, app) => {
     allOrders = databaseSellOrders.concat(
       databaseBuyOrders.concat(databaseStopLossOrders)
     );
+    logger.warn(allOrders)
     allOrders = {
       id: _.map(allOrders, 'id'),
-      time: _.map(allOrders, v => v.time / 1000),
+      time: _.map(allOrders, v => Math.floor(v.time / 1000)),
       color: _.map(allOrders, v => {
-        if (v.side === 'BUY') return 'red';
-        if (v.sell === 'GTC') return 'orange';
+        if (v.side == 'BUY') return 'red';
+        if (v.sell == 'GTC') return 'orange';
         return 'green';
       }),
-      text: _.map(allOrders, v =>
-        v.side === 'BUY'
-          ? `Bought @ ${v.price} on ${moment(v.time).tz('Europe/Madrid')}`
-          : `Sold @${v.price} on ${moment(v.time).tz('Europe/Madrid')}`
+      text: _.map(allOrders, v => {
+          if (v.side === 'BUY') return `@${v.price}`;
+          if (v.sell == 'GTC') return `@${v.price}`;
+          return `@${v.price}`
+        }
       ),
       price: _.map(allOrders, 'price'),
-      label: _.map(allOrders, (v) => { return (v.side === 'BUY') ? 'B':'S'}),
+      label: _.map(allOrders, (v) => { return (v.side === 'BUY') ? 'B': 'S'}),
       labelFontColor: _.map(allOrders, () => { return 'white'}),
       minSize: _.map(allOrders, () => { return 14}),
     };
@@ -326,9 +329,10 @@ const handleUDF = async (funcLogger, app) => {
         symbol
       }
     );
-    // res.send(allTradeGrids)
+    //res.send(allTradeGrids)
 
     const grids = allTradeGrids.map(g => {
+      console.log(g)
       const from = g.buy[0].executedOrder.transactTime;
       const to = g.sellGridTradeExecuted
         ? g.sell[0].executedOrder.transactTime

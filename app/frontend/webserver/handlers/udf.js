@@ -123,7 +123,7 @@ const handleUDF = async (funcLogger, app) => {
       supported_resolutions: supportedResolutions,
       supports_search: true,
       supports_group_request: false,
-      supports_marks: false,
+      supports_marks: true,
       supports_timescale_marks: false,
       supports_time: true
     })
@@ -132,7 +132,7 @@ const handleUDF = async (funcLogger, app) => {
   // UDF history
   app.get('/history', async (req, res) => {
     const { symbol } = req.query;
-    const from = req.query.from * 1000;
+    const countback = req.query.countback;
     const to = req.query.to * 1000;
 
     const isInSymbols = _.find(symbols, { symbol }) || null;
@@ -143,20 +143,19 @@ const handleUDF = async (funcLogger, app) => {
 
     const interval = RESOLUTIONS_INTERVALS_MAP[req.query.resolution];
     if (!interval) {
-      return res.send({ s: 'no_data' });
+      return res.send({ s: 'no_data', m: 'invalid resolution' });
       //throw new Error(`Invalid resolution ${req.query.resolution}`);
     }
 
     const candles = await binance.client.candles({
       symbol,
       interval,
-      startTime: from,
       endTime: to,
-      limit: 500
+      limit: countback
     });
 
     if (candles.length === 0) {
-      return res.send({ s: 'no_data' });
+      return res.send({ s: 'no_data', m: 'no candles' });
     }
     return res.send({
       s: 'ok',

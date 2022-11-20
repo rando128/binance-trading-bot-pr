@@ -32,7 +32,7 @@
                 debug: true, // uncomment this line to see Library errors and warnings in the console
                 fullscreen: true,
                 symbol: symbol,
-                interval: '360',
+                //interval: '360',
                 //timeframe: {from: 1666001200, to: 1667131200},
                 container: "tv_chart_container",
 
@@ -92,7 +92,11 @@
                 button.textContent = 'Marks';
             });
 
-            // tvWidget.onChartReady(function () {
+            tvWidget.onChartReady(function () {
+                tvWidget.subscribe('time_interval', (event) => {
+                    tvWidget
+                })
+            })
             //
             //
             //     //console.log(this.activeChart().getVisiblePriceRange());

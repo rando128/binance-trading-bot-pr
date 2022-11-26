@@ -3,100 +3,157 @@
 <head>
 
     <title>TradingView Charting</title>
-
-    <!-- Fix for iOS Safari zooming bug -->
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
-
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
     <script type="text/javascript" src="charting_library/charting_library.standalone.js"></script>
     <script type="text/javascript" src="datafeeds/udf/dist/bundle.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script type="text/javascript">
 
         function getParameterByName(name) {
             name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
             var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-                results = regex.exec(location.search);
+              results = regex.exec(location.search);
             return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
         }
 
         function initOnReady() {
             var datafeedUrl = "";//"https://demo-feed-data.tradingview.com";
-            var symbol = getParameterByName('symbol');
+            var symbol = getParameterByName("symbol");
 
-            var customDataUrl = getParameterByName('dataUrl');
+            var customDataUrl = getParameterByName("dataUrl");
             if (customDataUrl !== "") {
-                datafeedUrl = customDataUrl.startsWith('https://') ? customDataUrl : `https://${customDataUrl}`;
+                datafeedUrl = customDataUrl.startsWith("https://") ? customDataUrl : `https://${customDataUrl}`;
             }
 
             var widget = window.tvWidget = new TradingView.widget({
                 debug: true, // uncomment this line to see Library errors and warnings in the console
                 fullscreen: true,
                 symbol: symbol,
-                //interval: '360',
+                //interval: '60',
                 //timeframe: {from: 1666001200, to: 1667131200},
                 container: "tv_chart_container",
 
                 //	BEWARE: no trailing slash is expected in feed URL
                 datafeed: new Datafeeds.UDFCompatibleDatafeed(datafeedUrl),
                 library_path: "charting_library/",
-                locale: getParameterByName('lang') || "en",
-
-                disabled_features: ["use_localstorage_for_settings"],
+                locale: getParameterByName("lang") || "en",
+                timezone: "exchange",
+                disabled_features: ["left_toolbar", "header_symbol_search", "header_settings", "header_compare", "header_screenshot", "header_undo_redo"],
                 // enabled_features: ["study_templates"],
                 // charts_storage_url: 'https://saveload.tradingview.com',
                 // charts_storage_api_version: "1.1",
                 // client_id: 'tradingview.com',
-                user_id: 'public_user_id',
-                theme: getParameterByName('theme'),
+                user_id: "public_user_id",
+                theme: getParameterByName("theme"),
 
                 //default bar style
-                overrides: {
-                    'mainSeriesProperties.style': 8,
-                    'linetoolgannsquare.showLabels': true,
-                }
+                // overrides: {
+                //     "mainSeriesProperties.style": 8,
+                // }
             });
             var marksEnabled = true;
 
-            function create_marker(chart, time, price, type, color, text, margin) {
-                chart.createShape({
-                    time: time,
-                    channel: (type === 'B') ? 'low' : 'high',
-                    //price: (type === 'B') ? price * 0.9 : price * 1.1
-                }, {
-                    shape: (type === 'B') ? 'arrow_up' : 'arrow_down',
-                    //icon: (type === 'B') ? '0xf176' : '0xf175',
-                    text: text,
-                    lock: true,
-                    disableSelection: false,
-                    disableSave: true,
-                    disableUndo: true,
-                    overrides: {
-                        size: 22,
-                        color: (type === 'B') ? 'red' :  color,
-                    }
-                })
-            }
             //Toggle control to show/hide marks
             widget.headerReady().then(function() {
                 var button = widget.createButton();
-                button.setAttribute('title', 'Toggle marks');
-                button.addEventListener('click', function() {
+                button.setAttribute("title", "Toggle marks");
+                button.addEventListener("click", function() {
                     if (marksEnabled) {
-                        tvWidget.activeChart().clearMarks()
-                        marksEnabled = false
+                        tvWidget.activeChart().clearMarks();
+                        marksEnabled = false;
                     } else {
-                        tvWidget.activeChart().refreshMarks()
-                        marksEnabled = true
+                        tvWidget.activeChart().refreshMarks();
+                        marksEnabled = true;
                     }
                 });
-                button.textContent = 'Marks';
+                button.textContent = "Marks";
             });
 
-            tvWidget.onChartReady(function () {
-                tvWidget.subscribe('time_interval', (event) => {
-                    tvWidget
-                })
-            })
+            tvWidget.onChartReady(function() {
+
+                fetch("http://localhost:8080/grid_trades?symbol=" + symbol)
+                  .then((response) => {
+                      return response.json();
+                  })
+                  .then((grids) => {
+                      const totalGrids = grids.length;
+                      grids.forEach((grid, idx, grids) => {
+
+                          //Trade marks
+                          const color = (grid.side == 'BUY') ? "rgba(14, 203, 129)" : ((grid.stopLoss) ? "rgba(255, 165, 0)" : "rgba(246, 70, 93)");
+                          const tooltip = (grid.side == 'BUY') ?
+                            `Buy ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}` : (grid.stopLoss) ? `Stoploss ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}` :
+                              `Sell ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}`
+                          this.activeChart().createExecutionShape()
+                            .setTooltip( tooltip)
+                            .setDirection((grid.side === 'BUY') ? "buy" : "sell")
+                            .setArrowColor(color)
+                            .setTime(grid.from)
+                            .setPrice(grid.price);
+
+                          //Grids
+                          if (grid.side === 'BUY')
+                              this.activeChart().createMultipointShape(
+                                [
+                                    {
+                                        time: grid.from,
+                                        price: grid.lastBuyPrice
+                                    },
+                                    {
+                                        time: (grid.to) ? grid.to : (Date.now() / 1000),
+                                        price: grid.lastBuyPrice
+                                    }
+                                ],
+                                {
+                                    shape: "long_position",
+                                    lock: true,
+                                    disableSelection: true,
+                                    disableSave: true,
+                                    disableUndo: true,
+                                    zOrder: "top",
+                                    overrides: {
+                                        profitBackground: "rgba(14, 203, 129, 0.075)",
+                                        stopBackground: "rgba(246, 70, 93, 0.05)",
+                                        stopLevel: grid.price * grid.scale * 0.035, //TODO pass buy % grid
+                                        profitLevel: grid.price * grid.scale * 0.015,//grid.lastBuyPrice * 13.015 //TODO pass sell percentage
+                                        risk: 1,
+                                    }
+                                });
+
+                          //current lastBuyPrice
+                          if (idx == (totalGrids - 1))
+                              this.activeChart().createMultipointShape(
+                                [
+                                    {
+                                        time: grid.from,
+                                        price: grid.lastBuyPrice
+                                    },
+                                    {
+                                        time: Date.now(),
+                                        price: grid.lastBuyPrice
+                                    }
+                                ],
+                                {
+                                    shape: "trend_line",
+                                    lock: true,
+                                    disableSelection: true,
+                                    disableSave: true,
+                                    disableUndo: true,
+                                    zOrder: "top",
+                                    overrides: {
+                                        linecolor: "gray",
+                                        extendRight: true,
+                                        linestyle: 1
+                                    }
+                                });
+                      });
+                  });
+
+            });
+
+
+            //
             //
             //
             //     //console.log(this.activeChart().getVisiblePriceRange());
@@ -305,7 +362,7 @@
             // })
         };
 
-        window.addEventListener('DOMContentLoaded', initOnReady, false);
+        window.addEventListener("DOMContentLoaded", initOnReady, false);
     </script>
 
 </head>

@@ -46,6 +46,24 @@ const RESOLUTIONS_INTERVALS_MAP = {
   '1M': '1M'
 };
 
+const RESOLUTIONS_SECONDS_MAP = {
+  1: 60,
+  3: 180,
+  5: 300,
+  15: 900,
+  30: 1800,
+  60: 3600,
+  120: 7200,
+  240: 14400,
+  360: 21600,
+  480: 28800,
+  720: 43200,
+  '1D': 86400,
+  '3D': 259200,
+  '1W': 604800,
+  '1M': 2592000
+};
+
 function priceScale(symbol) {
   let scale = 1;
   symbol.filters.forEach(filter => {
@@ -75,7 +93,7 @@ const handleUDF = async (funcLogger, app) => {
       type: 'crypto',
       currency_code: symbol.quoteAsset,
       session: '24x7',
-      timezone: 'UTC',
+      timezone: 'Europe/Madrid',
       minmovement: 1,
       minmov: 1,
       minmovement2: 0,
@@ -123,7 +141,7 @@ const handleUDF = async (funcLogger, app) => {
       supported_resolutions: supportedResolutions,
       supports_search: true,
       supports_group_request: false,
-      supports_marks: true,
+      supports_marks: false,
       supports_timescale_marks: false,
       supports_time: true
     })
@@ -132,7 +150,7 @@ const handleUDF = async (funcLogger, app) => {
   // UDF history
   app.get('/history', async (req, res) => {
     const { symbol } = req.query;
-    const countback = req.query.countback;
+    const { countback } = req.query;
     const to = req.query.to * 1000;
 
     const isInSymbols = _.find(symbols, { symbol }) || null;
@@ -263,19 +281,21 @@ const handleUDF = async (funcLogger, app) => {
     allOrders = databaseSellOrders.concat(
       databaseBuyOrders.concat(databaseStopLossOrders)
     );
-    logger.warn(allOrders)
+
+    //TV bug: marks are offset one tick to the left - https://github.com/tradingview/charting_library/issues/410
+    const interval = RESOLUTIONS_SECONDS_MAP[req.query.resolution];
     allOrders = {
       id: _.map(allOrders, 'id'),
-      time: _.map(allOrders, v => Math.floor(v.time / 1000)),
+      time: _.map(allOrders, v => v.time / 1000 - interval),
       color: _.map(allOrders, v => {
         if (v.side == 'BUY') return 'red';
         if (v.sell == 'GTC') return 'orange';
         return 'green';
       }),
       text: _.map(allOrders, v => {
-          if (v.side === 'BUY') return `@${v.price}`;
-          if (v.sell == 'GTC') return `@${v.price}`;
-          return `@${v.price}`
+          if (v.side === 'BUY') return `@${v.price} ${moment(v.time).tz('Europe/Madrid')}`;
+          if (v.sell == 'GTC') return `@${v.price} ${moment(v.time).tz('Europe/Madrid')}`;
+          return `@${v.price} ${moment(v.time).tz('Europe/Madrid')}`
         }
       ),
       price: _.map(allOrders, 'price'),
@@ -317,149 +337,284 @@ const handleUDF = async (funcLogger, app) => {
   });
 
   // Grids endpoints
-  app.get('/grids', async (req, res) => {
+  app.get('/grid_trades', async (req, res) => {
     const { symbol } = req.query;
     // TODO ADD FROM / TO
 
-    const allTradeGrids = await mongo.findAll(
+    let allOrders;
+    const databaseBuyOrders = await mongo.aggregate(
       logger,
       'trailing-trade-grid-trade-archive',
-      {
-        symbol
-      }
+      [
+        {
+          $unwind: '$buy'
+        },
+        {
+          $match: {
+            $and: [{ symbol }, { 'buy.executed': true }]
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            id: '$buy.executedOrder.orderId',
+            time: '$buy.executedOrder.transactTime',
+            side: '$buy.executedOrder.side',
+            price: '$buy.executedOrder.price',
+            qty: '$buy.executedOrder.executedQty',
+            amount: '$buy.executedOrder.cummulativeQuoteQty',
+          }
+        }
+      ]
     );
-    //res.send(allTradeGrids)
+    const databaseSellOrders = await mongo.aggregate(
+      logger,
+      'trailing-trade-grid-trade-archive',
+      [
+        {
+          $unwind: '$sell'
+        },
+        {
+          $match: {
+            $and: [{ symbol }, { 'sell.executed': true }]
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            id: '$sell.executedOrder.orderId',
+            time: '$sell.executedOrder.transactTime',
+            side: '$sell.executedOrder.side',
+            price: '$sell.executedOrder.price',
+            qty: '$sell.executedOrder.executedQty',
+          }
+        }
+      ]
+    );
 
-    const grids = allTradeGrids.map(g => {
-      console.log(g)
-      const from = g.buy[0].executedOrder.transactTime;
-      const to = g.sellGridTradeExecuted
-        ? g.sell[0].executedOrder.transactTime
-        : g.stopLoss.transactTime;
+    const databaseStopLossOrders = await mongo.aggregate(
+      logger,
+      'trailing-trade-grid-trade-archive',
+      [
+        {
+          $unwind: '$stopLoss'
+        },
+        {
+          $match: {
+            $and: [{ symbol }]
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            id: '$stopLoss.orderId',
+            time: '$stopLoss.transactTime',
+            side: '$stopLoss.side',
+            price: '$stopLoss.fills.price',
+            sell: '$stopLoss.timeInForce',
+            qty: '$stopLoss.executedQty',
+          }
+        }
+      ]
+    );
 
-      const price1 = parseFloat(g.buy[0].executedOrder.price);
-      const limitPrice1 =
-        (parseFloat(g.buy[0].limitPercentage) *
-          parseFloat(g.buy[0].executedOrder.stopPrice)) /
-        parseFloat(g.buy[0].stopPercentage);
-      const triggerPrice1 = parseFloat(g.buy[0].executedOrder.stopPrice); // can't access original trigger point
-      const triggerPercentage1 = parseFloat(g.buy[0].triggerPercentage);
-      const limitPercentage1 = parseFloat(g.buy[0].limitPercentage);
+    const databaseActiveGridOrders = await mongo.aggregate(
+      logger,
+      'trailing-trade-grid-trade',
+      [
+        {
+          $unwind: '$buy'
+        },
+        {
+          $match: {
+            $and: [{ 'buy.executedOrder.symbol': symbol }, { 'buy.executed': true }]
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            time: '$buy.executedOrder.transactTime',
+            qty: '$buy.executedOrder.executedQty',
+            amount: '$buy.executedOrder.cummulativeQuoteQty',
+            price: '$buy.executedOrder.price',
+            side: '$buy.executedOrder.side',
+          }
+        },
+      ]
+    );
 
-      let sellPrice = price1 * parseFloat(g.sell[0].triggerPercentage);
-      let lastPrice = price1;
-      const lastQty = parseFloat(g.buy[0].executedOrder.executedQty);
-      const lastQuote = parseFloat(g.buy[0].executedOrder.cummulativeQuoteQty);
+    allOrders = databaseSellOrders.concat(
+      databaseBuyOrders.concat(databaseStopLossOrders.concat(databaseActiveGridOrders))
+    );
 
-      const hasGrid2 = g.buy.length >= 2;
-      const isGrid2Executed = hasGrid2 ? g.buy[1].executed === true : false;
-      const price2 =
-        hasGrid2 && isGrid2Executed
-          ? parseFloat(g.buy[1].executedOrder.price)
-          : null;
-      const limitPercentage2 = hasGrid2
-        ? parseFloat(g.buy[1].limitPercentage)
-        : null;
-      const limitPrice2 =
-        hasGrid2 && isGrid2Executed
-          ? (parseFloat(g.buy[1].limitPercentage) *
-              parseFloat(g.buy[1].executedOrder.stopPrice)) /
-            parseFloat(g.buy[1].stopPercentage)
-          : null;
-      const triggerPrice2 = hasGrid2
-        ? lastPrice * parseFloat(g.buy[1].triggerPercentage)
-        : null;
-      const triggerPercentage2 = hasGrid2
-        ? parseFloat(g.buy[1].triggerPercentage)
-        : null;
-      sellPrice = triggerPrice2
-        ? price2 * parseFloat(g.sell[0].triggerPercentage)
-        : sellPrice;
+    allOrders.sort( (a,b) => {
+      return a.time - b.time
+    })
 
-      lastPrice = (() => {
-        if (hasGrid2 && isGrid2Executed)
-          return (
-            (lastQuote +
-              parseFloat(g.buy[1].executedOrder.cummulativeQuoteQty)) /
-            (lastQty + parseFloat(g.buy[1].executedOrder.executedQty))
-          );
-        if (hasGrid2) return lastPrice * g.buy[1].triggerPercentage;
-        return null;
-      })();
-      // lastQty =
-      //   hasGrid2 && isGrid2Executed
-      //     ? parseFloat(g.buy[1].executedOrder.executedQty)
-      //     : lastQty;
-      // lastQuote =
-      //   hasGrid2 && isGrid2Executed
-      //     ? parseFloat(g.buy[1].executedOrder.cummulativeQuoteQty)
-      //     : lastQuote;
+    //get symbol scale - TV uses ticks for long-position band
+    const exchangeSymbol = symbols.filter( s => s.symbol === symbol)[0]
 
-      const hasGrid3 = g.buy.length >= 3;
-      const isGrid3Executed = hasGrid3 ? g.buy[2].executed === true : false;
-      const price3 =
-        hasGrid3 && isGrid3Executed
-          ? parseFloat(g.buy[2].executedOrder.price)
-          : null;
-      const limitPercentage3 = hasGrid3
-        ? parseFloat(g.buy[2].limitPercentage)
-        : null;
-      const limitPrice3 =
-        hasGrid3 && isGrid3Executed
-          ? (parseFloat(g.buy[2].limitPercentage) *
-              parseFloat(g.buy[2].executedOrder.stopPrice)) /
-            parseFloat(g.buy[2].stopPercentage)
-          : null;
-      const triggerPrice3 = hasGrid3
-        ? lastPrice * parseFloat(g.buy[2].triggerPercentage)
-        : null;
-      const triggerPercentage3 = hasGrid3
-        ? parseFloat(g.buy[2].triggerPercentage)
-        : null;
-      sellPrice = triggerPrice3
-        ? price3 * parseFloat(g.sell[0].triggerPercentage)
-        : sellPrice;
-      // lastPrice =
-      //   hasGrid3 & isGrid3Executed
-      //     ? (lastQuote +
-      //         parseFloat(g.buy[2].executedOrder.cummulativeQuoteQty)) /
-      //       (lastQty + parseFloat(g.buy[2].executedOrder.executedQty))
-      //     : hasGrid3
-      //     ? lastPrice * g.buy[2].triggerPercentage
-      //     : null;
-      // lastQty =
-      //   hasGrid3 & isGrid3Executed
-      //     ? parseFloat(g.buy[2].executedOrder.executedQty)
-      //     : lastQty;
-      // lastQuote =
-      //   hasGrid3 & isGrid3Executed
-      //     ? parseFloat(g.buy[2].executedOrder.cummulativeQuoteQty)
-      //     : lastQuote;
+    let currentBuyIdx = 0
 
-      return {
-        from,
-        to,
+    allOrders.map( (order, i, orders) => {
+      if (order.side === 'BUY') {
+        const qty = orders.slice(currentBuyIdx, i + 1).reduce((acc, o) => acc + parseFloat(o.qty), 0);
+        const amount = orders.slice(currentBuyIdx, i + 1).reduce((acc, o) => acc + parseFloat(o.amount), 0);
+        order.lastBuyPrice = amount / qty;
+        order.stopLoss = (order.sell == 'GTC');
+      } else {
+        currentBuyIdx = i + 1;
+      }
 
-        buyGrids: g.buy.length,
-        sellPrice,
-        triggerPrice: [triggerPrice1, triggerPrice2, triggerPrice3].filter(
-          e => e
-        ),
-        triggerPercentage: [
-          triggerPercentage1,
-          triggerPercentage2,
-          triggerPercentage3
-        ].filter(e => e),
-        limitPrice: [limitPrice1, limitPrice2, limitPrice3].filter(e => e),
-        limitPercentage: [
-          limitPercentage1,
-          limitPercentage2,
-          limitPercentage3
-        ].filter(e => e)
-      };
+      order.price = parseFloat(order.price);
+      order.from = order.time / 1000;
+      order.to = (i == orders.length - 1) ? null : orders[i+1].time / 1000;
+      order.scale = exchangeSymbol.pricescale;
+      return order;
+    })
+
+    allOrders.forEach(function(order) {
+      delete order.id;
+      //delete order.amount;
+      delete order.time;
     });
 
-    res.send(grids);
+    // logger.warn(
+    //     {databaseOpenOrders},
+    //     `Retrieved ${symbol} active trades`
+    // );
+    res.send(allOrders)
+
+    // const grids = allTradeGrids.map(g => {
+    //   console.log(g)
+    //   const from = g.buy[0].executedOrder.transactTime;
+    //   const to = g.sellGridTradeExecuted
+    //     ? g.sell[0].executedOrder.transactTime
+    //     : g.stopLoss.transactTime;
+    //
+    //   const price1 = parseFloat(g.buy[0].executedOrder.price);
+    //   const limitPrice1 =
+    //     (parseFloat(g.buy[0].limitPercentage) *
+    //       parseFloat(g.buy[0].executedOrder.stopPrice)) /
+    //     parseFloat(g.buy[0].stopPercentage);
+    //   const triggerPrice1 = parseFloat(g.buy[0].executedOrder.stopPrice); // can't access original trigger point
+    //   const triggerPercentage1 = parseFloat(g.buy[0].triggerPercentage);
+    //   const limitPercentage1 = parseFloat(g.buy[0].limitPercentage);
+    //
+    //   let sellPrice = price1 * parseFloat(g.sell[0].triggerPercentage);
+    //   let lastPrice = price1;
+    //   const lastQty = parseFloat(g.buy[0].executedOrder.executedQty);
+    //   const lastQuote = parseFloat(g.buy[0].executedOrder.cummulativeQuoteQty);
+    //
+    //   const hasGrid2 = g.buy.length >= 2;
+    //   const isGrid2Executed = hasGrid2 ? g.buy[1].executed === true : false;
+    //   const price2 =
+    //     hasGrid2 && isGrid2Executed
+    //       ? parseFloat(g.buy[1].executedOrder.price)
+    //       : null;
+    //   const limitPercentage2 = hasGrid2
+    //     ? parseFloat(g.buy[1].limitPercentage)
+    //     : null;
+    //   const limitPrice2 =
+    //     hasGrid2 && isGrid2Executed
+    //       ? (parseFloat(g.buy[1].limitPercentage) *
+    //           parseFloat(g.buy[1].executedOrder.stopPrice)) /
+    //         parseFloat(g.buy[1].stopPercentage)
+    //       : null;
+    //   const triggerPrice2 = hasGrid2
+    //     ? lastPrice * parseFloat(g.buy[1].triggerPercentage)
+    //     : null;
+    //   const triggerPercentage2 = hasGrid2
+    //     ? parseFloat(g.buy[1].triggerPercentage)
+    //     : null;
+    //   sellPrice = triggerPrice2
+    //     ? price2 * parseFloat(g.sell[0].triggerPercentage)
+    //     : sellPrice;
+    //
+    //   lastPrice = (() => {
+    //     if (hasGrid2 && isGrid2Executed)
+    //       return (
+    //         (lastQuote +
+    //           parseFloat(g.buy[1].executedOrder.cummulativeQuoteQty)) /
+    //         (lastQty + parseFloat(g.buy[1].executedOrder.executedQty))
+    //       );
+    //     if (hasGrid2) return lastPrice * g.buy[1].triggerPercentage;
+    //     return null;
+    //   })();
+    //   // lastQty =
+    //   //   hasGrid2 && isGrid2Executed
+    //   //     ? parseFloat(g.buy[1].executedOrder.executedQty)
+    //   //     : lastQty;
+    //   // lastQuote =
+    //   //   hasGrid2 && isGrid2Executed
+    //   //     ? parseFloat(g.buy[1].executedOrder.cummulativeQuoteQty)
+    //   //     : lastQuote;
+    //
+    //   const hasGrid3 = g.buy.length >= 3;
+    //   const isGrid3Executed = hasGrid3 ? g.buy[2].executed === true : false;
+    //   const price3 =
+    //     hasGrid3 && isGrid3Executed
+    //       ? parseFloat(g.buy[2].executedOrder.price)
+    //       : null;
+    //   const limitPercentage3 = hasGrid3
+    //     ? parseFloat(g.buy[2].limitPercentage)
+    //     : null;
+    //   const limitPrice3 =
+    //     hasGrid3 && isGrid3Executed
+    //       ? (parseFloat(g.buy[2].limitPercentage) *
+    //           parseFloat(g.buy[2].executedOrder.stopPrice)) /
+    //         parseFloat(g.buy[2].stopPercentage)
+    //       : null;
+    //   const triggerPrice3 = hasGrid3
+    //     ? lastPrice * parseFloat(g.buy[2].triggerPercentage)
+    //     : null;
+    //   const triggerPercentage3 = hasGrid3
+    //     ? parseFloat(g.buy[2].triggerPercentage)
+    //     : null;
+    //   sellPrice = triggerPrice3
+    //     ? price3 * parseFloat(g.sell[0].triggerPercentage)
+    //     : sellPrice;
+    //   // lastPrice =
+    //   //   hasGrid3 & isGrid3Executed
+    //   //     ? (lastQuote +
+    //   //         parseFloat(g.buy[2].executedOrder.cummulativeQuoteQty)) /
+    //   //       (lastQty + parseFloat(g.buy[2].executedOrder.executedQty))
+    //   //     : hasGrid3
+    //   //     ? lastPrice * g.buy[2].triggerPercentage
+    //   //     : null;
+    //   // lastQty =
+    //   //   hasGrid3 & isGrid3Executed
+    //   //     ? parseFloat(g.buy[2].executedOrder.executedQty)
+    //   //     : lastQty;
+    //   // lastQuote =
+    //   //   hasGrid3 & isGrid3Executed
+    //   //     ? parseFloat(g.buy[2].executedOrder.cummulativeQuoteQty)
+    //   //     : lastQuote;
+    //
+    //   return {
+    //     from,
+    //     to,
+    //
+    //     buyGrids: g.buy.length,
+    //     sellPrice,
+    //     triggerPrice: [triggerPrice1, triggerPrice2, triggerPrice3].filter(
+    //       e => e
+    //     ),
+    //     triggerPercentage: [
+    //       triggerPercentage1,
+    //       triggerPercentage2,
+    //       triggerPercentage3
+    //     ].filter(e => e),
+    //     limitPrice: [limitPrice1, limitPrice2, limitPrice3].filter(e => e),
+    //     limitPercentage: [
+    //       limitPercentage1,
+    //       limitPercentage2,
+    //       limitPercentage3
+    //     ].filter(e => e)
+    //   };
+    // });
+    //
+    // res.send(grids);
   });
 };
 

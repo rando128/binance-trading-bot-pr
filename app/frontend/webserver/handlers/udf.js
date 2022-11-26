@@ -339,7 +339,14 @@ const handleUDF = async (funcLogger, app) => {
   // Grids endpoints
   app.get('/grid_trades', async (req, res) => {
     const { symbol } = req.query;
-    // TODO ADD FROM / TO
+
+    // console.log(await mongo.aggregate(
+    //   logger,
+    //   'trailing-trade-grid-trade',[
+    //     {
+    //       $unwind: '$sell'
+    //     }
+    // ]))
 
     let allOrders;
     const databaseBuyOrders = await mongo.aggregate(
@@ -367,6 +374,7 @@ const handleUDF = async (funcLogger, app) => {
         }
       ]
     );
+
     const databaseSellOrders = await mongo.aggregate(
       logger,
       'trailing-trade-grid-trade-archive',
@@ -387,6 +395,7 @@ const handleUDF = async (funcLogger, app) => {
             side: '$sell.executedOrder.side',
             price: '$sell.executedOrder.price',
             qty: '$sell.executedOrder.executedQty',
+            sellTrigger: '$sell.triggerPercentage',
           }
         }
       ]
@@ -451,15 +460,38 @@ const handleUDF = async (funcLogger, app) => {
       return a.time - b.time
     })
 
+    //get active grid trigger sell percentage
+    const activeGridOrder = await mongo.aggregate(
+      logger,
+      'trailing-trade-grid-trade',
+      [
+        {
+          $unwind: '$sell'
+        },
+        {
+          $match: {
+            $and: [{ key: symbol }]
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            triggerPercentage: '$sell.triggerPercentage',
+          }
+        },
+      ]
+    );
+    const activeTriggerPercentage = activeGridOrder[0].triggerPercentage
+
     //get symbol scale - TV uses ticks for long-position band
     const exchangeSymbol = symbols.filter( s => s.symbol === symbol)[0]
-
     let currentBuyIdx = 0
 
     allOrders.map( (order, i, orders) => {
       if (order.side === 'BUY') {
         const qty = orders.slice(currentBuyIdx, i + 1).reduce((acc, o) => acc + parseFloat(o.qty), 0);
         const amount = orders.slice(currentBuyIdx, i + 1).reduce((acc, o) => acc + parseFloat(o.amount), 0);
+        order.sellTrigger = (i < orders.length - 1 ) ? orders.slice(currentBuyIdx).filter( o => o.side == "SELL")[0]['sellTrigger'] : activeTriggerPercentage;
         order.lastBuyPrice = amount / qty;
         order.stopLoss = (order.sell == 'GTC');
       } else {

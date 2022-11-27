@@ -18,7 +18,7 @@
     }
 
     function drawShapes(chart, symbol) {
-      fetch("http://localhost:8080/grid_trades?symbol=" + symbol)
+      fetch("/grid_trades?symbol=" + symbol)
         .then((response) => {
           return response.json();
         })
@@ -41,7 +41,6 @@
               .setTime(grid.from)
               .setPrice(grid.price);
 
-            console.log(grid);
             //Grids
             if (grid.side === "BUY")
               chart.createMultipointShape(

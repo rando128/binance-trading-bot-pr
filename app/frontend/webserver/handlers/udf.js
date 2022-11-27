@@ -355,8 +355,8 @@ const handleUDF = async (funcLogger, app) => {
             { //fully executed grids
               $and: [
                 { 'symbol': symbol },
-                { 'buyGridTradeExecuted': false },
-                { 'sellGridTradeExecuted': false },
+                { 'buyGridTradeExecuted': true },
+                { 'sellGridTradeExecuted': true },
               ]
             },
             { //grids exited via stoploss - TODO: handle manually exited traded

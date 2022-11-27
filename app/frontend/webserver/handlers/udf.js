@@ -4,9 +4,14 @@ const { binance, mongo } = require('../../../helpers');
 const {
   getCachedExchangeInfo
 } = require('../../../cronjob/trailingTradeHelper/common');
-// const {
-//   getClosedTrades
-// } = require('../../../cronjob/trailingTradeIndicator/steps');
+
+const {
+  getSymbolConfiguration,
+} = require('../../../cronjob/trailingTradeHelper/configuration');
+
+const {
+  getClosedTrades
+} = require('../../../cronjob/trailingTradeIndicator/steps');
 
 const supportedResolutions = [
   '1',
@@ -340,182 +345,164 @@ const handleUDF = async (funcLogger, app) => {
   app.get('/grid_trades', async (req, res) => {
     const { symbol } = req.query;
 
-    // console.log(await mongo.aggregate(
-    //   logger,
-    //   'trailing-trade-grid-trade',[
-    //     {
-    //       $unwind: '$sell'
-    //     }
-    // ]))
+    const symbolConfiguration = await getSymbolConfiguration(logger, symbol);
 
-    let allOrders;
-    const databaseBuyOrders = await mongo.aggregate(
+    const archivedGrids = await mongo.findAll(
       logger,
       'trailing-trade-grid-trade-archive',
-      [
-        {
-          $unwind: '$buy'
-        },
-        {
-          $match: {
-            $and: [{ symbol }, { 'buy.executed': true }]
-          }
-        },
-        {
-          $project: {
-            _id: 0,
-            id: '$buy.executedOrder.orderId',
-            time: '$buy.executedOrder.transactTime',
-            side: '$buy.executedOrder.side',
-            price: '$buy.executedOrder.price',
-            qty: '$buy.executedOrder.executedQty',
-            amount: '$buy.executedOrder.cummulativeQuoteQty',
-          }
-        }
-      ]
+      {
+          $or: [
+            { //fully executed grids
+              $and: [
+                { 'symbol': symbol },
+                { 'buyGridTradeExecuted': false },
+                { 'sellGridTradeExecuted': false },
+              ]
+            },
+            { //grids exited via stoploss - TODO: handle manually exited traded
+            $and: [
+              { 'symbol': symbol },
+              { 'buyGridTradeExecuted': true },
+              { 'sellGridTradeExecuted': false },
+              { 'stopLoss.orderId': { $exists: true } }
+            ]
+            }
+          ]
+      },
     );
 
-    const databaseSellOrders = await mongo.aggregate(
-      logger,
-      'trailing-trade-grid-trade-archive',
-      [
-        {
-          $unwind: '$sell'
-        },
-        {
-          $match: {
-            $and: [{ symbol }, { 'sell.executed': true }]
-          }
-        },
-        {
-          $project: {
-            _id: 0,
-            id: '$sell.executedOrder.orderId',
-            time: '$sell.executedOrder.transactTime',
-            side: '$sell.executedOrder.side',
-            price: '$sell.executedOrder.price',
-            qty: '$sell.executedOrder.executedQty',
-            sellTrigger: '$sell.triggerPercentage',
-          }
-        }
-      ]
-    );
-
-    const databaseStopLossOrders = await mongo.aggregate(
-      logger,
-      'trailing-trade-grid-trade-archive',
-      [
-        {
-          $unwind: '$stopLoss'
-        },
-        {
-          $match: {
-            $and: [{ symbol }]
-          }
-        },
-        {
-          $project: {
-            _id: 0,
-            id: '$stopLoss.orderId',
-            time: '$stopLoss.transactTime',
-            side: '$stopLoss.side',
-            price: '$stopLoss.fills.price',
-            sell: '$stopLoss.timeInForce',
-            qty: '$stopLoss.executedQty',
-          }
-        }
-      ]
-    );
-
-    const databaseActiveGridOrders = await mongo.aggregate(
+    const activeGrid = await mongo.findAll(
       logger,
       'trailing-trade-grid-trade',
-      [
-        {
-          $unwind: '$buy'
-        },
-        {
-          $match: {
-            $and: [{ 'buy.executedOrder.symbol': symbol }, { 'buy.executed': true }]
-          }
-        },
-        {
-          $project: {
-            _id: 0,
-            time: '$buy.executedOrder.transactTime',
-            qty: '$buy.executedOrder.executedQty',
-            amount: '$buy.executedOrder.cummulativeQuoteQty',
-            price: '$buy.executedOrder.price',
-            side: '$buy.executedOrder.side',
-          }
-        },
-      ]
+      {
+          'key': symbol
+      },
     );
 
-    allOrders = databaseSellOrders.concat(
-      databaseBuyOrders.concat(databaseStopLossOrders.concat(databaseActiveGridOrders))
-    );
+    const allGrids = archivedGrids.concat(activeGrid);
 
-    allOrders.sort( (a,b) => {
-      return a.time - b.time
-    })
+    // allOrders.sort( (a,b) => {
+    //   return a.time - b.time
+    // })
 
-    //get active grid trigger sell percentage
-    const activeGridOrder = await mongo.aggregate(
-      logger,
-      'trailing-trade-grid-trade',
-      [
-        {
-          $unwind: '$sell'
-        },
-        {
-          $match: {
-            $and: [{ key: symbol }]
+    /*
+    trade:
+      side: buy, sell,
+      isStopLoss
+      price
+      time
+      scale
+      lastBuyPrice (amount / qty )
+      buy-> sellTriggerpercentage + nextBuyTriggerPercentage
+     */
+
+    const exchangeSymbol = symbols.filter(s => s.symbol === symbol)[0];
+    const scale = exchangeSymbol.pricescale;
+
+    console.log(`scale ${symbol}: ${scale}`)
+
+    //res.send(allGrids)
+
+    let allTrades = []
+    allGrids.forEach( (grid, idx, grids) => {
+
+      let qty = 0;
+      let amount = 0;
+
+      //go over each buy element
+      grid.buy.forEach( (buy, b, buys) => {
+
+        //TODO Add break-even level
+        //sell or stoploss element if any
+        let sell;
+        if (grid.sell[0].executed)
+          sell = grid.sell[0].executedOrder;
+        else if (grid.stopLossQuoteQty)
+          sell = grid.stopLoss;
+        if (sell)
+          allTrades.push({
+            time: sell.transactTime / 1000,
+            side: 'SELL',
+            price: (grid.stopLossQuoteQty) ? parseFloat(sell.fills[0].price) : parseFloat(sell.price),
+            qty: sell.executedQty,
+            stopLoss: (grid.stopLossQuoteQty) ? true : false,
+            scale: scale,
+          })
+
+        if (buy.executed) {
+
+            qty += parseFloat(buy.executedOrder.executedQty);
+            amount += parseFloat(buy.executedOrder.cummulativeQuoteQty);
+
+            let sellTrigger = grid.sell[0].triggerPercentage;
+            let buyTrigger = (b < (buys.length - 1)) ?  buys[b + 1].triggerPercentage  : 0;
+
+            if (sell === undefined) { //take live configuration for active grids
+              buyTrigger = (b < (symbolConfiguration.buy.gridTrade.length - 1)) ? symbolConfiguration.buy.gridTrade[b+1].triggerPercentage : 0;
+              sellTrigger = symbolConfiguration.sell.gridTrade[0].triggerPercentage;
+            }
+
+            allTrades.push({
+              time: buy.executedOrder.transactTime / 1000,
+              side: 'BUY',
+              price: parseFloat(buy.executedOrder.price),
+              qty: parseFloat(buy.executedOrder.executedQty),
+              sellTrigger: sellTrigger * scale,
+              buyTrigger: buyTrigger * scale,
+              lastBuyPrice: amount / qty,
+              scale: scale,
+            })
           }
-        },
-        {
-          $project: {
-            _id: 0,
-            triggerPercentage: '$sell.triggerPercentage',
-          }
-        },
-      ]
-    );
-    const activeTriggerPercentage = activeGridOrder[0].triggerPercentage
+      })
 
-    //get symbol scale - TV uses ticks for long-position band
-    const exchangeSymbol = symbols.filter( s => s.symbol === symbol)[0]
-    let currentBuyIdx = 0
-
-    allOrders.map( (order, i, orders) => {
-      if (order.side === 'BUY') {
-        const qty = orders.slice(currentBuyIdx, i + 1).reduce((acc, o) => acc + parseFloat(o.qty), 0);
-        const amount = orders.slice(currentBuyIdx, i + 1).reduce((acc, o) => acc + parseFloat(o.amount), 0);
-        order.sellTrigger = (i < orders.length - 1 ) ? orders.slice(currentBuyIdx).filter( o => o.side == "SELL")[0]['sellTrigger'] : activeTriggerPercentage;
-        order.lastBuyPrice = amount / qty;
-        order.stopLoss = (order.sell == 'GTC');
-      } else {
-        currentBuyIdx = i + 1;
-      }
-
-      order.price = parseFloat(order.price);
-      order.from = order.time / 1000;
-      order.to = (i == orders.length - 1) ? null : orders[i+1].time / 1000;
-      order.scale = exchangeSymbol.pricescale;
-      return order;
-    })
-
-    allOrders.forEach(function(order) {
-      delete order.id;
-      //delete order.amount;
-      delete order.time;
     });
+
+    allTrades.sort( (a,b) => { return a.time - b.time })
+
+    allTrades.map( (order, i, orders) => {
+      order.from = order.time
+      order.to = (i == orders.length - 1) ? null : orders[i + 1].time
+    })
+
+    res.send(allTrades)
+
+
+    // const activeTriggerPercentage = activeGridOrder[0].triggerPercentage
+    //
+    // //get symbol scale - TV uses ticks for long-position band
+    // const exchangeSymbol = symbols.filter( s => s.symbol === symbol)[0]
+    // let currentBuyIdx = 0
+    //
+    // allOrders.map( (order, i, orders) => {
+    //   if (order.side === 'BUY') {
+    //     const qty = orders.slice(currentBuyIdx, i + 1).reduce((acc, o) => acc + parseFloat(o.qty), 0);
+    //     const amount = orders.slice(currentBuyIdx, i + 1).reduce((acc, o) => acc + parseFloat(o.amount), 0);
+    //     order.lastBuyPrice = amount / qty;
+    //     order.stopLoss = (order.sell == 'GTC');
+    //     //order.sellTrigger = (i < orders.length - 1) ? orders.slice(currentBuyIdx).filter(o => o.side == "SELL")[0]['sellTrigger'] : activeTriggerPercentage;
+    //     //order.buyTrigger = order.buyTrigger;
+    //   } else {
+    //     currentBuyIdx = i + 1;
+    //   }
+    //
+    //   order.price = parseFloat(order.price);
+    //   order.from = order.time / 1000;
+    //   order.to = (i == orders.length - 1) ? null : orders[i+1].time / 1000;
+    //   order.scale = exchangeSymbol.pricescale;
+    //   return order;
+    // })
+    //
+    // allOrders.forEach(function(order) {
+    //   delete order.id;
+    //   //delete order.amount;
+    //   delete order.time;
+    // });
 
     // logger.warn(
     //     {databaseOpenOrders},
     //     `Retrieved ${symbol} active trades`
     // );
-    res.send(allOrders)
+    //res.send(allOrders)
 
     // const grids = allTradeGrids.map(g => {
     //   console.log(g)

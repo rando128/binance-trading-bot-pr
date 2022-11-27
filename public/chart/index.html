@@ -2,172 +2,201 @@
 <html>
 <head>
 
-    <title>TradingView Charting</title>
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
-    <script type="text/javascript" src="charting_library/charting_library.standalone.js"></script>
-    <script type="text/javascript" src="datafeeds/udf/dist/bundle.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-    <script type="text/javascript">
+  <title>TradingView Charting</title>
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+  <script type="text/javascript" src="charting_library/charting_library.standalone.js"></script>
+  <script type="text/javascript" src="datafeeds/udf/dist/bundle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+  <script type="text/javascript">
 
-        function getParameterByName(name) {
-            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-              results = regex.exec(location.search);
-            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-        }
+    function getParameterByName(name) {
+      name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+      var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+      return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
 
-        function drawShapes(chart,symbol) {
-            fetch("http://localhost:8080/grid_trades?symbol=" + symbol)
-              .then((response) => {
-                  return response.json();
-              })
-              .then((grids) => {
-                  const totalGrids = grids.length;
-                  grids.forEach((grid, idx, grids) => {
+    function drawShapes(chart, symbol) {
+      fetch("http://localhost:8080/grid_trades?symbol=" + symbol)
+        .then((response) => {
+          return response.json();
+        })
+        .then((grids) => {
+          const totalGrids = grids.length;
+          grids.forEach((grid, idx, grids) => {
 
-                      //Trade marks
-                      const color = (grid.side == 'BUY') ? "rgba(14, 203, 129)" : ((grid.stopLoss) ? "rgba(255, 165, 0)" : "rgba(246, 70, 93)");
-                      const tooltip = (grid.side == 'BUY') ?
-                        `Buy ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}` : (grid.stopLoss) ? `Stoploss ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}` :
-                          `Sell ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}`
-                      chart.createExecutionShape()
-                        .setTooltip(tooltip)
-                        .setDirection((grid.side === 'BUY') ? "buy" : "sell")
-                        .setArrowColor(color)
-                        .setTime(grid.from)
-                        .setPrice(grid.price);
+            //Trade marks
+            const color = (grid.side == "BUY") ? "rgba(14, 203, 129)" : ((grid.stopLoss) ? "rgba(255, 165, 0)" : "rgba(246, 70, 93)");
+            const buyTrigger = (grid.buyTrigger) ? 100 * (1 - grid.buyTrigger / grid.scale) : 0;
+            const sellTrigger = (grid.sellTrigger / grid.scale - 1) * 100;
+            const tooltip = (grid.side == "BUY") ?
+              `Buy ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}\nSellTrigger: ${sellTrigger.toFixed(2)}%\nBuyTrigger: ${ buyTrigger.toFixed(2)}%` :
+              (grid.stopLoss) ? `Stoploss ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}` :
+                `Sell ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}`;
+            chart.createExecutionShape()
+              .setTooltip(tooltip)
+              .setDirection((grid.side === "BUY") ? "buy" : "sell")
+              .setArrowColor(color)
+              .setTime(grid.from)
+              .setPrice(grid.price);
 
-                      console.log(grid)
-                      //Grids
-                      if (grid.side === 'BUY')
-                          chart.createMultipointShape(
-                            [
-                                {
-                                    time: grid.from,
-                                    price: grid.lastBuyPrice
-                                },
-                                {
-                                    time: (grid.to) ? grid.to : (Date.now() / 1000),
-                                    price: grid.lastBuyPrice
-                                }
-                            ],
-                            {
-                                shape: "long_position",
-                                lock: true,
-                                disableSelection: true,
-                                disableSave: true,
-                                disableUndo: true,
-                                zOrder: "top",
-                                overrides: {
-                                    profitBackground: "rgba(14, 203, 129, 0.075)",
-                                    stopBackground: "rgba(246, 70, 93, 0.05)",
-                                    stopLevel: grid.price * grid.scale * 0.05, //TODO pass buy % grid
-                                    profitLevel: grid.price * grid.scale * grid.sellTrigger / 100,
-                                    risk: 1,
-                                }
-                            });
+            console.log(grid);
+            //Grids
+            if (grid.side === "BUY")
+              chart.createMultipointShape(
+                [
+                  {
+                    time: grid.from,
+                    price: grid.lastBuyPrice
+                  },
+                  {
+                    time: (grid.to) ? grid.to : (Date.now() / 1000),
+                    price: grid.lastBuyPrice
+                  }
+                ],
+                {
+                  shape: "long_position",
+                  lock: true,
+                  disableSelection: true,
+                  disableSave: true,
+                  disableUndo: true,
+                  zOrder: "top",
+                  overrides: {
+                    profitBackground: "rgba(14, 203, 129, 0.075)",
+                    stopBackground: "rgba(246, 70, 93, 0.075)",
+                    stopLevel: (grid.buyTrigger) ? grid.lastBuyPrice * (grid.scale - grid.buyTrigger) : 0,
+                    profitLevel: grid.lastBuyPrice * (grid.sellTrigger - grid.scale),
+                    risk: 1
+                  }
+                });
 
-                      //current lastBuyPrice
-                      if (idx == (totalGrids - 1))
-                          chart.createMultipointShape(
-                            [
-                                {
-                                    time: grid.from,
-                                    price: grid.lastBuyPrice
-                                },
-                                {
-                                    time: Date.now(),
-                                    price: grid.lastBuyPrice
-                                }
-                            ],
-                            {
-                                shape: "trend_line",
-                                lock: true,
-                                disableSelection: true,
-                                disableSave: true,
-                                disableUndo: true,
-                                zOrder: "top",
-                                overrides: {
-                                    linecolor: "gray",
-                                    extendRight: true,
-                                    linestyle: 1
-                                }
-                            });
-                  });
-              });
-        }
-
-        function initOnReady() {
-            var datafeedUrl = "";//"https://demo-feed-data.tradingview.com";
-            var symbol = getParameterByName("symbol");
-            //var interval  = getParameterByName("interval") || '360';
-
-            var customDataUrl = getParameterByName("dataUrl");
-            if (customDataUrl !== "") {
-                datafeedUrl = customDataUrl.startsWith("https://") ? customDataUrl : `https://${customDataUrl}`;
+            //current lastBuyPrice
+            if (idx == (totalGrids - 1) & (grid.side == 'BUY')) {
+              chart.createMultipointShape(
+                [
+                  {
+                    time: grid.from,
+                    price: grid.lastBuyPrice
+                  },
+                  {
+                    time: Date.now(),
+                    price: grid.lastBuyPrice
+                  }
+                ],
+                {
+                  shape: "trend_line",
+                  lock: true,
+                  disableSelection: true,
+                  disableSave: true,
+                  disableUndo: true,
+                  zOrder: "top",
+                  overrides: {
+                    linecolor: "gray",
+                    extendRight: true,
+                    linestyle: 1
+                  }
+                });
+              //next sell trigger
+              chart.createMultipointShape(
+                [
+                  {
+                    time: grid.from,
+                    price: grid.lastBuyPrice * grid.sellTrigger
+                  },
+                  {
+                    time: Date.now(),
+                    price: grid.lastBuyPrice * grid.sellTrigger
+                  }
+                ],
+                {
+                  shape: "trend_line",
+                  lock: true,
+                  disableSelection: true,
+                  disableSave: true,
+                  disableUndo: true,
+                  zOrder: "top",
+                  overrides: {
+                    linecolor: "gray",
+                    extendRight: true,
+                    linestyle: 1
+                  }
+                });
             }
+          });
+        });
+    }
 
-            var widget = window.tvWidget = new TradingView.widget({
-                debug: true, // uncomment this line to see Library errors and warnings in the console
-                fullscreen: true,
-                symbol: symbol,
-                //interval: interval,
-                //timeframe: {from: 1666001200, to: 1667131200},
-                container: "tv_chart_container",
+    function initOnReady() {
+      var datafeedUrl = "";//"https://demo-feed-data.tradingview.com";
+      var symbol = getParameterByName("symbol");
+      //var interval  = getParameterByName("interval") || '360';
 
-                //	BEWARE: no trailing slash is expected in feed URL
-                datafeed: new Datafeeds.UDFCompatibleDatafeed(datafeedUrl),
-                library_path: "charting_library/",
-                locale: getParameterByName("lang") || "en",
-                timezone: "exchange",
-                disabled_features: ["left_toolbar", "header_symbol_search", "header_settings", "header_compare", "header_screenshot", "header_undo_redo"],
-                // enabled_features: ["study_templates"],
-                // charts_storage_url: 'https://saveload.tradingview.com',
-                // charts_storage_api_version: "1.1",
-                // client_id: 'tradingview.com',
-                user_id: "public_user_id",
-                theme: getParameterByName("theme"),
+      var customDataUrl = getParameterByName("dataUrl");
+      if (customDataUrl !== "") {
+        datafeedUrl = customDataUrl.startsWith("https://") ? customDataUrl : `https://${customDataUrl}`;
+      }
 
-                //default bar style
-                // overrides: {
-                //     "mainSeriesProperties.style": 8,
-                // }
-            });
-            var marksEnabled = true;
+      var widget = window.tvWidget = new TradingView.widget({
+        debug: true, // uncomment this line to see Library errors and warnings in the console
+        fullscreen: true,
+        symbol: symbol,
+        //interval: interval,
+        //timeframe: {from: 1666001200, to: 1667131200},
+        container: "tv_chart_container",
 
-            // //Toggle control to show/hide marks
-            // widget.headerReady().then(function() {
-            //     var button = widget.createButton();
-            //     button.setAttribute("title", "Toggle marks");
-            //     button.addEventListener("click", function() {
-            //         if (marksEnabled) {
-            //             tvWidget.activeChart().getAllShapes().forEach((
-            //               { name, id }) => tvWidget.activeChart().removeEntity(id));
-            //             marksEnabled = false;
-            //         } else {
-            //             drawShapes(tvWidget.activeChart(), symbol);
-            //             marksEnabled = true;
-            //         }
-            //     });
-            //     button.textContent = "Marks";
-            // });
+        //	BEWARE: no trailing slash is expected in feed URL
+        datafeed: new Datafeeds.UDFCompatibleDatafeed(datafeedUrl),
+        library_path: "charting_library/",
+        locale: getParameterByName("lang") || "en",
+        timezone: "exchange",
+        disabled_features: ["left_toolbar", "header_symbol_search", "header_settings", "header_compare", "header_screenshot", "header_undo_redo"],
+        // enabled_features: ["study_templates"],
+        // charts_storage_url: 'https://saveload.tradingview.com',
+        // charts_storage_api_version: "1.1",
+        // client_id: 'tradingview.com',
+        user_id: "public_user_id",
+        theme: getParameterByName("theme")
 
-            tvWidget.onChartReady(function() {
-                drawShapes(this.activeChart(), symbol);
+        //default bar style
+        // overrides: {
+        //     "mainSeriesProperties.style": 8,
+        // }
+      });
+      var marksEnabled = true;
 
-                // this.activeChart().onIntervalChanged().subscribe(
-                //   null, (interval, timeframeObj) => {
-                //       console.log(interval)
-                //       window.location = `/chart/?symbol=${symbol}&interval=${interval}`
-                //   });
+      // //Toggle control to show/hide marks
+      // widget.headerReady().then(function() {
+      //     var button = widget.createButton();
+      //     button.setAttribute("title", "Toggle marks");
+      //     button.addEventListener("click", function() {
+      //         if (marksEnabled) {
+      //             tvWidget.activeChart().getAllShapes().forEach((
+      //               { name, id }) => tvWidget.activeChart().removeEntity(id));
+      //             marksEnabled = false;
+      //         } else {
+      //             drawShapes(tvWidget.activeChart(), symbol);
+      //             marksEnabled = true;
+      //         }
+      //     });
+      //     button.textContent = "Marks";
+      // });
 
-            });
+      tvWidget.onChartReady(function() {
+        drawShapes(this.activeChart(), symbol);
 
-        };
+        // this.activeChart().onIntervalChanged().subscribe(
+        //   null, (interval, timeframeObj) => {
+        //       console.log(interval)
+        //       window.location = `/chart/?symbol=${symbol}&interval=${interval}`
+        //   });
 
-        window.addEventListener("DOMContentLoaded", initOnReady, false);
-    </script>
+      });
+
+    };
+
+    window.addEventListener("DOMContentLoaded", initOnReady, false);
+  </script>
 
 </head>
 

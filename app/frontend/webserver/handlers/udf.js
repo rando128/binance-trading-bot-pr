@@ -408,25 +408,25 @@ const handleUDF = async (funcLogger, app) => {
       let qty = 0;
       let amount = 0;
 
+      //TODO Add break-even level
+      //sell or stoploss element if any
+      let sell;
+      if (grid.sell[0].executed)
+        sell = grid.sell[0].executedOrder;
+      else if (grid.stopLossQuoteQty)
+        sell = grid.stopLoss;
+      if (sell)
+        allTrades.push({
+          time: sell.transactTime / 1000,
+          side: 'SELL',
+          price: (grid.stopLossQuoteQty) ? parseFloat(sell.fills[0].price) : parseFloat(sell.price),
+          qty: sell.executedQty,
+          stopLoss: (grid.stopLossQuoteQty) ? true : false,
+          scale: scale,
+        })
+
       //go over each buy element
       grid.buy.forEach( (buy, b, buys) => {
-
-        //TODO Add break-even level
-        //sell or stoploss element if any
-        let sell;
-        if (grid.sell[0].executed)
-          sell = grid.sell[0].executedOrder;
-        else if (grid.stopLossQuoteQty)
-          sell = grid.stopLoss;
-        if (sell)
-          allTrades.push({
-            time: sell.transactTime / 1000,
-            side: 'SELL',
-            price: (grid.stopLossQuoteQty) ? parseFloat(sell.fills[0].price) : parseFloat(sell.price),
-            qty: sell.executedQty,
-            stopLoss: (grid.stopLossQuoteQty) ? true : false,
-            scale: scale,
-          })
 
         if (buy.executed) {
 

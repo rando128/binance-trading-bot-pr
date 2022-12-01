@@ -408,7 +408,6 @@ const handleUDF = async (funcLogger, app) => {
       let qty = 0;
       let amount = 0;
 
-      //TODO Add break-even level
       //sell or stoploss element if any
       let sell;
       if (grid.sell[0].executed)
@@ -449,6 +448,7 @@ const handleUDF = async (funcLogger, app) => {
               sellTrigger: sellTrigger * scale,
               buyTrigger: buyTrigger * scale,
               lastBuyPrice: amount / qty,
+              totalQty: qty,
               scale: scale,
             })
           }

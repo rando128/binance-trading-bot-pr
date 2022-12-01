@@ -10,6 +10,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
   <script type="text/javascript">
 
+    var trades = [];
+
     function getParameterByName(name) {
       name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
       var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
@@ -18,12 +20,13 @@
     }
 
     function drawShapes(chart, symbol) {
-      fetch("/grid_trades?symbol=" + symbol)
+      fetch("/grid_trades?symbol=" + symbol + "&timestamp=" + Date.now())
         .then((response) => {
           return response.json();
         })
         .then((grids) => {
           const totalGrids = grids.length;
+
           grids.forEach((grid, idx, grids) => {
 
             //Trade marks
@@ -31,15 +34,17 @@
             const buyTrigger = (grid.buyTrigger) ? 100 * (1 - grid.buyTrigger / grid.scale) : 0;
             const sellTrigger = (grid.sellTrigger / grid.scale - 1) * 100;
             const tooltip = (grid.side == "BUY") ?
-              `Buy ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}\nSellTrigger: ${sellTrigger.toFixed(2)}%\nBuyTrigger: ${ buyTrigger.toFixed(2)}%` :
+              `Buy ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}\nSellTrigger: ${sellTrigger.toFixed(2)}%\nBuyTrigger: ${buyTrigger.toFixed(2)}%` :
               (grid.stopLoss) ? `Stoploss ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}` :
                 `Sell ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}`;
-            chart.createExecutionShape()
-              .setTooltip(tooltip)
-              .setDirection((grid.side === "BUY") ? "buy" : "sell")
-              .setArrowColor(color)
-              .setTime(grid.from)
-              .setPrice(grid.price);
+            trades.push(
+              tvWidget.activeChart().createExecutionShape()
+                .setTooltip(tooltip)
+                .setDirection((grid.side === "BUY") ? "buy" : "sell")
+                .setArrowColor(color)
+                .setTime(grid.from)
+                .setPrice(grid.price))
+
 
             //Grids
             if (grid.side === "BUY")
@@ -123,7 +128,16 @@
                 });
             }
           });
+
+          return true;
         });
+    }
+
+    function redrawShapes(chart, symbol) {
+      tvWidget.activeChart().getAllShapes().forEach(({ name, id }) => tvWidget.activeChart().removeEntity(id));
+      trades.forEach(t => t.remove())
+      trades = []
+      drawShapes(tvWidget.activeChart(), symbol);
     }
 
     function initOnReady() {
@@ -141,7 +155,6 @@
         fullscreen: true,
         symbol: symbol,
         //interval: interval,
-        //timeframe: {from: 1666001200, to: 1667131200},
         container: "tv_chart_container",
 
         //	BEWARE: no trailing slash is expected in feed URL
@@ -182,19 +195,26 @@
       // });
 
       tvWidget.onChartReady(function() {
+        this.activeChart().setChartType(8);//Heikin-ashi
         drawShapes(this.activeChart(), symbol);
 
-        // this.activeChart().onIntervalChanged().subscribe(
-        //   null, (interval, timeframeObj) => {
-        //       console.log(interval)
-        //       window.location = `/chart/?symbol=${symbol}&interval=${interval}`
-        //   });
+        this.activeChart().onIntervalChanged().subscribe(
+          null, (interval, timeframeObj) => {
+            console.log("---------onIntervalChanged------")
+
+            setTimeout(function() {
+              redrawShapes(tvWidget.activeChart(),symbol);
+              console.log("---------redrawShapes------")
+            }, 2000)
+
+          });
 
       });
 
     };
 
     window.addEventListener("DOMContentLoaded", initOnReady, false);
+    //TODO window resize
   </script>
 
 </head>

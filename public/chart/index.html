@@ -10,7 +10,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
   <script type="text/javascript">
 
-    var trades = [];
+    let trades = [];
+    let currentSellTrigger = 0;
+    let exitLine = null;
 
     function getParameterByName(name) {
       name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
@@ -19,7 +21,7 @@
       return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     }
 
-    function drawShapes(chart, symbol) {
+    function drawShapes(symbol) {
       fetch("/grid_trades?symbol=" + symbol + "&timestamp=" + Date.now())
         .then((response) => {
           return response.json();
@@ -37,6 +39,7 @@
               `Buy ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}\nSellTrigger: ${sellTrigger.toFixed(2)}%\nBuyTrigger: ${buyTrigger.toFixed(2)}%` :
               (grid.stopLoss) ? `Stoploss ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}` :
                 `Sell ${grid.qty} @${grid.price}\n${moment(grid.from * 1000)}`;
+
             trades.push(
               tvWidget.activeChart().createExecutionShape()
                 .setTooltip(tooltip)
@@ -48,7 +51,7 @@
 
             //Grids
             if (grid.side === "BUY")
-              chart.createMultipointShape(
+              tvWidget.activeChart().createMultipointShape(
                 [
                   {
                     time: grid.from,
@@ -77,7 +80,8 @@
 
             //current lastBuyPrice
             if (idx == (totalGrids - 1) & (grid.side == 'BUY')) {
-              chart.createMultipointShape(
+              currentSellTrigger = sellTrigger;
+              tvWidget.activeChart().createMultipointShape(
                 [
                   {
                     time: grid.from,
@@ -86,31 +90,6 @@
                   {
                     time: Date.now(),
                     price: grid.lastBuyPrice
-                  }
-                ],
-                {
-                  shape: "trend_line",
-                  lock: true,
-                  disableSelection: true,
-                  disableSave: true,
-                  disableUndo: true,
-                  zOrder: "top",
-                  overrides: {
-                    linecolor: "gray",
-                    extendRight: true,
-                    linestyle: 1
-                  }
-                });
-              //next sell trigger
-              chart.createMultipointShape(
-                [
-                  {
-                    time: grid.from,
-                    price: grid.lastBuyPrice * grid.sellTrigger
-                  },
-                  {
-                    time: Date.now(),
-                    price: grid.lastBuyPrice * grid.sellTrigger
                   }
                 ],
                 {
@@ -133,11 +112,50 @@
         });
     }
 
-    function redrawShapes(chart, symbol) {
+    function clearShapes() {
+      //clear grids
       tvWidget.activeChart().getAllShapes().forEach(({ name, id }) => tvWidget.activeChart().removeEntity(id));
+
+      //clear trade events
       trades.forEach(t => t.remove())
       trades = []
-      drawShapes(tvWidget.activeChart(), symbol);
+    }
+
+    function redrawShapes(symbol) {
+      clearShapes()
+      drawShapes(symbol);
+    }
+
+    function reDrawExitLine(price) {
+      //next sell trigger
+      if (exitLine)
+        tvWidget.activeChart().removeEntity(exitLine)
+
+      console.log(price * (100 + currentSellTrigger) / 100)
+
+      exitLine = tvWidget.activeChart().createShape(
+        {
+            price: price * ( 100 + currentSellTrigger) / 100,
+            time: Date.now()
+        },
+        {
+          shape: "horizontal_line",
+          lock: true,
+          disableSelection: true,
+          disableSave: true,
+          disableUndo: true,
+          zOrder: "top",
+          text: `${currentSellTrigger.toFixed(2)}%`,
+          overrides: {
+            linecolor: "blue",
+            linewidth: 1,
+            linestyle: 1,
+            showLabel: true,
+            horzLabelsAlign: 'right',
+            fontsize: 10,
+            textcolor: 'gray',
+          }
+        })
     }
 
     function initOnReady() {
@@ -168,12 +186,11 @@
         // charts_storage_api_version: "1.1",
         // client_id: 'tradingview.com',
         user_id: "public_user_id",
-        theme: getParameterByName("theme")
-
+        theme: getParameterByName("theme"),
         //default bar style
-        // overrides: {
-        //     "mainSeriesProperties.style": 8,
-        // }
+        overrides: {
+            "mainSeriesProperties.style": 8,
+        }
       });
       var marksEnabled = true;
 
@@ -195,19 +212,18 @@
       // });
 
       tvWidget.onChartReady(function() {
-        this.activeChart().setChartType(8);//Heikin-ashi
-        drawShapes(this.activeChart(), symbol);
+        drawShapes(symbol);
 
         this.activeChart().onIntervalChanged().subscribe(
           null, (interval, timeframeObj) => {
-            console.log("---------onIntervalChanged------")
-
             setTimeout(function() {
-              redrawShapes(tvWidget.activeChart(),symbol);
-              console.log("---------redrawShapes------")
+              redrawShapes(symbol);
             }, 2000)
-
           });
+
+        tvWidget.subscribe('onTick', (e) => {
+          reDrawExitLine(e.close)
+        })
 
       });
 

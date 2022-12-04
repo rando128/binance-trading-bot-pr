@@ -28,6 +28,8 @@
         })
         .then((grids) => {
           const totalGrids = grids.length;
+          let lastBuyTrigger = -1;
+          let lastSellTrigger = -1;
 
           grids.forEach((grid, idx, grids) => {
 
@@ -50,7 +52,7 @@
 
 
             //Grids
-            if (grid.side === "BUY")
+            if (grid.side === "BUY") {
               tvWidget.activeChart().createMultipointShape(
                 [
                   {
@@ -78,8 +80,55 @@
                   }
                 });
 
+              //Add sell/buy % only if different
+              if (sellTrigger !== lastSellTrigger || idx % 5 == 0) {
+                tvWidget.activeChart().createShape(
+                  {
+                    time: (grid.to) ? grid.to : (Date.now() / 1000),
+                    price: grid.lastBuyPrice * grid.sellTrigger / grid.scale
+                  },
+                  {
+                    shape: "text",
+                    lock: true,
+                    disableSelection: true,
+                    disableSave: true,
+                    disableUndo: true,
+                    zOrder: "top",
+                    text: `${sellTrigger.toFixed(2)}%`,
+                    overrides: {
+                      fontsize: 6,
+                      color: "rgba(14, 203, 129, 0.85)",
+                    }
+                  });
+
+                lastSellTrigger = sellTrigger;
+              }
+
+              if (buyTrigger !== lastBuyTrigger || idx % 5 == 0) {
+                tvWidget.activeChart().createShape(
+                  {
+                    time: grid.from,
+                    price: grid.lastBuyPrice * grid.buyTrigger / grid.scale
+                  },
+                  {
+                    shape: "text",
+                    lock: true,
+                    disableSelection: true,
+                    disableSave: true,
+                    disableUndo: true,
+                    zOrder: "top",
+                    text: `${buyTrigger.toFixed(2)}%`,
+                    overrides: {
+                      fontsize: 6,
+                      color: "rgba(246, 70, 93, 0.85)",
+                    }
+                  });
+                lastBuyTrigger = buyTrigger;
+              }
+            }
+
             //current lastBuyPrice
-            if (idx == (totalGrids - 1) & (grid.side == 'BUY')) {
+            if (idx == (totalGrids - 1) && (grid.side == 'BUY')) {
               currentSellTrigger = sellTrigger;
               tvWidget.activeChart().createMultipointShape(
                 [
@@ -131,11 +180,12 @@
       if (exitLine)
         tvWidget.activeChart().removeEntity(exitLine)
 
-      console.log(price * (100 + currentSellTrigger) / 100)
+      let trigger = currentSellTrigger || 1.5;
+      //console.log(price * (100 + currentSellTrigger) / 100)
 
       exitLine = tvWidget.activeChart().createShape(
         {
-            price: price * ( 100 + currentSellTrigger) / 100,
+            price: price * ( 100 + trigger) / 100,
             time: Date.now()
         },
         {
@@ -145,7 +195,7 @@
           disableSave: true,
           disableUndo: true,
           zOrder: "top",
-          text: `${currentSellTrigger.toFixed(2)}%`,
+          text: `${trigger.toFixed(2)}%`,
           overrides: {
             linecolor: "blue",
             linewidth: 1,
@@ -224,6 +274,12 @@
         tvWidget.subscribe('onTick', (e) => {
           reDrawExitLine(e.close)
         })
+
+        tvWidget.subscribe('reset_scales', (e) => {
+          redrawShapes(symbol)
+        })
+
+
 
       });
 

@@ -5,8 +5,8 @@ services:
     container_name: binance-bot
     build:
       context: ./
-      target: dev-stage
-      # target: production-stage
+      # target: dev-stage
+      target: production-stage
     networks:
       - internal
     volumes:

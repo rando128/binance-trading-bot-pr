@@ -366,9 +366,10 @@ class CoinWrapperBuySignal extends React.Component {
 
       const nextGridAmount = nextGridQty * currentPrice;
 
-      const executedBuyGrids = gridTrade.filter(trade => trade.executed).length;
+      const firstNonExecutedTradeIndex = gridTrade.findIndex(
+        trade => trade.executed === false);
 
-      const hasManualTrade = currentGridTradeIndex !== executedBuyGrids;
+      const hasManualTrade = firstNonExecutedTradeIndex < currentGridTradeIndex;
 
       const isSingleSellGrid = symbolConfiguration.sell.currentGridTradeIndex >=0 & sellGridTrade.length == 1;
 

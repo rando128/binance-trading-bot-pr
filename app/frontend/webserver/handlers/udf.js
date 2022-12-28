@@ -434,8 +434,7 @@ const handleUDF = async (funcLogger, app) => {
 
             let sellTrigger = grid.sell[0].triggerPercentage;
             let buyTrigger = (b < (buys.length - 1)) ?  buys[b + 1].triggerPercentage  : 0;
-
-            if (sell === undefined) { //take live configuration for active grids
+            if (sell === undefined && symbolConfiguration.buy !== undefined) { //take live configuration for active grids
               buyTrigger = (b < (symbolConfiguration.buy.gridTrade.length - 1)) ? symbolConfiguration.buy.gridTrade[b+1].triggerPercentage : 0;
               sellTrigger = symbolConfiguration.sell.gridTrade[0].triggerPercentage;
             }

@@ -2,11 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.0.96] - 2022-12-28
+
+- Enhanced the suggested break-even amount a grid calculator by [@rando128](https://github.com/rando128) - [#555](https://github.com/chrisleekr/binance-trading-bot/pull/555), [#557](https://github.com/chrisleekr/binance-trading-bot/pull/557)
+- Fixed API error page priority by [@habibalkhabbaz](https://github.com/habibalkhabbaz) - [#556](https://github.com/chrisleekr/binance-trading-bot/pull/556)
+
+Thanks[@rando128](https://github.com/rando128) and [@habibalkhabbaz](https://github.com/habibalkhabbaz) for your great contributions. 💯 :heart:
+## [0.0.95] - 2022-12-19
+
+- Added API error message when using the wrong API key/secret - [#544](https://github.com/chrisleekr/binance-trading-bot/pull/544)
+- Automatic login when password is autofilled by the browser by [@rando128](https://github.com/rando128) - [#550](https://github.com/chrisleekr/binance-trading-bot/pull/550)
+- Fixed the queue concurrency issue - [#551](https://github.com/chrisleekr/binance-trading-bot/pull/551)
+- Added the feature to hide temporary disabled trading coins from dashboard by [@rando128](https://github.com/rando128) - [#552](https://github.com/chrisleekr/binance-trading-bot/pull/552)
+- Enhanced the suggested break-even amount with a grid calculator by [@rando128](https://github.com/rando128) - [#554](https://github.com/chrisleekr/binance-trading-bot/pull/554)
+
+Thanks [@rando128](https://github.com/rando128) for your great contributions. 💯 :heart:
+
+## [0.0.94] - 2022-11-24
 
 - Added advanced chart link to Tradingview section by [@rando128](https://github.com/rando128) - [#525](https://github.com/chrisleekr/binance-trading-bot/pull/525)
 - Fixed Frontend pagination by [@habibalkhabbaz](https://github.com/habibalkhabbaz) - [#526](https://github.com/chrisleekr/binance-trading-bot/pull/526)
 - Added buy/sell order details in the grid trade sections by [@rando128](https://github.com/rando128) - [#527](https://github.com/chrisleekr/binance-trading-bot/pull/527)
+- Added to show suggested break-even amount by [@rando128](https://github.com/rando128) - [#540](https://github.com/chrisleekr/binance-trading-bot/pull/540)
 
 Thanks [@habibalkhabbaz](https://github.com/habibalkhabbaz) and [@rando128](https://github.com/rando128) for your great contributions. 💯 :heart:
 

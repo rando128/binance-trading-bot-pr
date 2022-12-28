@@ -33,3 +33,6 @@ log
 /public/dist/*
 !/public/dist/.gitkeep
 
+result.csv
+.~lock.result.csv#
+package-lock.json

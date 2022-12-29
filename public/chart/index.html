@@ -291,7 +291,7 @@
                   this._context = context;
                   this._input = inputCallback;
                   this._context.select_sym(1);
-                  const v = (PineJS.Std.high(this._context) - PineJS.Std.low(this._context) ) / PineJS.Std.low(this._context);
+                  const v = 100 * (PineJS.Std.high(this._context) - PineJS.Std.low(this._context) ) / PineJS.Std.low(this._context);
                   return [v];
                 }
         }
@@ -343,6 +343,10 @@
         setTimeout(function () {
           tvWidget.activeChart().getPanes()[1].setHeight(10)
         }, 1);
+
+        tvWidget.activeChart().onSymbolChanged().subscribe(null, () =>
+          redrawShapes(symbol)
+        );
 
       });
 

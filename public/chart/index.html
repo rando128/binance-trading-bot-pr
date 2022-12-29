@@ -13,6 +13,7 @@
     let trades = [];
     let currentSellTrigger = 0;
     let exitLine = null;
+    var symbol = getParameterByName("symbol");
 
     function getParameterByName(name) {
       name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
@@ -21,7 +22,7 @@
       return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     }
 
-    function drawShapes(symbol) {
+    function drawShapes() {
       fetch("/grid_trades?symbol=" + symbol + "&timestamp=" + Date.now())
         .then((response) => {
           return response.json();
@@ -170,9 +171,9 @@
       trades = []
     }
 
-    function redrawShapes(symbol) {
+    function redrawShapes() {
       clearShapes()
-      drawShapes(symbol);
+      drawShapes();
     }
 
     function reDrawExitLine(price) {
@@ -181,7 +182,6 @@
         tvWidget.activeChart().removeEntity(exitLine)
 
       let trigger = currentSellTrigger || 1.5;
-      //console.log(price * (100 + currentSellTrigger) / 100)
 
       exitLine = tvWidget.activeChart().createShape(
         {
@@ -210,7 +210,6 @@
 
     function initOnReady() {
       var datafeedUrl = "";//"https://demo-feed-data.tradingview.com";
-      var symbol = getParameterByName("symbol");
       //var interval  = getParameterByName("interval") || '360';
 
       var customDataUrl = getParameterByName("dataUrl");
@@ -316,18 +315,17 @@
                 drawShapes()
                 marksEnabled = true;
                 button.textContent = "Marks ON";
-
               }
           });
       });
 
       tvWidget.onChartReady(function() {
-        drawShapes(symbol);
+        drawShapes();
 
         tvWidget.activeChart().onIntervalChanged().subscribe(
           null, (interval, timeframeObj) => {
             setTimeout(function() {
-              redrawShapes(symbol);
+              redrawShapes();
             }, 2000)
           });
 
@@ -336,7 +334,7 @@
         })
 
         tvWidget.subscribe('reset_scales', (e) => {
-          redrawShapes(symbol)
+          redrawShapes()
         })
 
         tvWidget.activeChart().createStudy('volatility', false, false)
@@ -344,8 +342,11 @@
           tvWidget.activeChart().getPanes()[1].setHeight(10)
         }, 1);
 
-        tvWidget.activeChart().onSymbolChanged().subscribe(null, (symbol) => {
-          redrawShapes(symbol.symbol)
+        tvWidget.activeChart().onSymbolChanged().subscribe(null, (data) => {
+          symbol = data.symbol
+          setTimeout(function() {
+            redrawShapes();
+          }, 2000)
           }
         );
 

@@ -344,8 +344,9 @@
           tvWidget.activeChart().getPanes()[1].setHeight(10)
         }, 1);
 
-        tvWidget.activeChart().onSymbolChanged().subscribe(null, () =>
-          redrawShapes(symbol)
+        tvWidget.activeChart().onSymbolChanged().subscribe(null, (symbol) => {
+          redrawShapes(symbol.symbol)
+          }
         );
 
       });

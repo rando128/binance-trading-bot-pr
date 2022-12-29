@@ -3,10 +3,10 @@
 <head>
 
   <title>TradingView Charting</title>
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
-  <script type="text/javascript" src="charting_library/charting_library.standalone.js"></script>
-  <script type="text/javascript" src="datafeeds/udf/dist/bundle.js"></script>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+        name="viewport">
+  <script src="charting_library/charting_library.standalone.js" type="text/javascript"></script>
+  <script src="datafeeds/udf/dist/bundle.js" type="text/javascript"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
   <script type="text/javascript">
 
@@ -230,7 +230,7 @@
         library_path: "charting_library/",
         locale: getParameterByName("lang") || "en",
         timezone: "exchange",
-        disabled_features: ["create_volume_indicator_by_default", "left_toolbar", "header_symbol_search", "header_settings", "header_compare", "header_screenshot", "header_undo_redo"],
+        disabled_features: ["create_volume_indicator_by_default", "left_toolbar", "header_settings", "header_compare", "header_screenshot", "header_undo_redo"], //"header_symbol_search"
         // enabled_features: ["study_templates"],
         // charts_storage_url: 'https://saveload.tradingview.com',
         // charts_storage_api_version: "1.1",
@@ -304,19 +304,21 @@
 
       //Toggle control to show/hide marks
       widget.headerReady().then(function() {
-          var button = widget.createButton();
-          button.setAttribute("title", "Toggle marks");
-          button.addEventListener("click", function() {
+        var button = widget.createButton();
+        button.setAttribute("title", "Toggle marks");
+        button.textContent = "Marks ON";
+        button.addEventListener("click", function() {
               if (marksEnabled) {
                 clearShapes()
                 marksEnabled = false;
+                button.textContent = "Marks OFF";
               } else {
-                console.log('draw')
                 drawShapes()
                 marksEnabled = true;
+                button.textContent = "Marks ON";
+
               }
           });
-          button.textContent = "Marks";
       });
 
       tvWidget.onChartReady(function() {

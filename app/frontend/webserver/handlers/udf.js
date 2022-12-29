@@ -152,6 +152,37 @@ const handleUDF = async (funcLogger, app) => {
     })
   );
 
+  // UDF search - respond with the list of monitored coins
+  app.get('/search', async (req, res) => {
+
+    const trailingTradeCacheQuery = [
+      {
+        $match: {}
+      },
+      {
+        $project: {
+          _id: 0,
+          symbol: '$symbol',
+          full_name: '$symbol',
+          description: '$sell.currentProfitPercentage',
+          exchange: {
+            $literal: 'binance'
+          },
+          type: {
+            $literal: 'crypto'
+          },
+          sortField: '$symbol'
+        }
+      }
+    ]
+    const monitoredCoins = await mongo.aggregate(
+      logger,
+      'trailing-trade-cache',
+      trailingTradeCacheQuery
+    );
+    return res.send(monitoredCoins);
+  });
+
   // UDF history
   app.get('/history', async (req, res) => {
     const { symbol } = req.query;

@@ -344,6 +344,11 @@
 
         tvWidget.activeChart().onSymbolChanged().subscribe(null, (data) => {
           symbol = data.symbol
+
+          const url = new URL(window.location);
+          url.searchParams.set('symbol', symbol);
+          window.history.pushState({symbol}, symbol, url);
+
           setTimeout(function() {
             redrawShapes();
           }, 2000)

@@ -1,9 +1,6 @@
 /* eslint-disable no-await-in-loop */
-const moment = require('moment');
-
 const {
   cancelOrder,
-  saveOverrideAction,
   isExceedingMaxOpenTrades,
   refreshOpenOrdersAndAccountInfo,
   getAccountInfoFromAPI
@@ -22,19 +19,10 @@ const execute = async (logger, rawData) => {
   const {
     symbol,
     action,
-    isLocked,
     openOrders,
-    buy: { limitPrice: buyLimitPrice },
-    sell: { limitPrice: sellLimitPrice }
+    buy: { limitPrice: buyLimitPrice, currentPrice: buyCurrentPrice },
+    sell: { limitPrice: sellLimitPrice, currentPrice: sellCurrentPrice }
   } = data;
-
-  if (isLocked) {
-    logger.info(
-      { isLocked },
-      'Symbol is locked, do not process handle-open-orders'
-    );
-    return data;
-  }
 
   if (action !== 'not-determined') {
     logger.info(
@@ -55,7 +43,6 @@ const execute = async (logger, rawData) => {
     if (order.side.toLowerCase() === 'buy') {
       if (await isExceedingMaxOpenTrades(logger, data)) {
         // Cancel the initial buy order if max. open trades exceeded
-        data.action = 'buy-order-cancelled';
         logger.info(
           { data, saveLog: true },
           `The current number of open trades has reached the maximum number of open trades. ` +
@@ -81,14 +68,30 @@ const execute = async (logger, rawData) => {
         } else {
           data.buy.openOrders = [];
 
+          // Set action as buy order cancelled
+          data.action = 'buy-order-cancelled';
+
           data.accountInfo = await getAccountInfoFromAPI(logger);
         }
-      } else if (parseFloat(order.stopPrice) >= buyLimitPrice) {
-        // Is the stop price is higher than current limit price?
-        logger.info(
-          { stopPrice: order.stopPrice, buyLimitPrice, saveLog: true },
-          'Stop price is higher than buy limit price, cancel current buy order'
-        );
+      } else if (
+        parseFloat(order.stopPrice) > buyLimitPrice ||
+        buyCurrentPrice > parseFloat(order.price)
+      ) {
+        if (parseFloat(order.stopPrice) > buyLimitPrice) {
+          // Is the buy order stop price higher than current buy limit price?
+          logger.info(
+            { stopPrice: order.stopPrice, buyLimitPrice, saveLog: true },
+            'Buy order stop price is higher than current buy limit price, cancel current buy order'
+          );
+        }
+
+        if (buyCurrentPrice > parseFloat(order.price)) {
+          // Is the current price higher than buy order price?
+          logger.info(
+            { stopPrice: order.stopPrice, buyLimitPrice, saveLog: true },
+            'Current price is higher than buy order price, cancel current buy order'
+          );
+        }
 
         // Cancel current order
         const cancelResult = await cancelOrder(logger, symbol, order);
@@ -107,25 +110,12 @@ const execute = async (logger, rawData) => {
           data.buy.openOrders = buyOpenOrders;
 
           data.action = 'buy-order-checking';
-
-          await saveOverrideAction(
-            logger,
-            symbol,
-            {
-              action: 'buy',
-              actionAt: moment().toISOString(),
-              triggeredBy: 'buy-cancelled',
-              notify: false,
-              checkTradingView: true
-            },
-            `The bot will place a buy order in the next tick because could not retrieve the cancelled order result.`
-          );
         } else {
           // Reset buy open orders
           data.buy.openOrders = [];
 
-          // Set action as buy
-          data.action = 'buy';
+          // Set action as buy order cancelled
+          data.action = 'buy-order-cancelled';
 
           data.accountInfo = await getAccountInfoFromAPI(logger);
         }
@@ -140,12 +130,25 @@ const execute = async (logger, rawData) => {
     }
 
     if (order.side.toLowerCase() === 'sell') {
-      // Is the stop price is less than current limit price?
-      if (parseFloat(order.stopPrice) <= sellLimitPrice) {
-        logger.info(
-          { stopPrice: order.stopPrice, sellLimitPrice, saveLog: true },
-          'Stop price is less than sell limit price, cancel current sell order'
-        );
+      if (
+        parseFloat(order.stopPrice) < sellLimitPrice ||
+        sellCurrentPrice < parseFloat(order.price)
+      ) {
+        if (parseFloat(order.stopPrice) < sellLimitPrice) {
+          // Is the sell order stop price lower than current sell limit price?
+          logger.info(
+            { stopPrice: order.stopPrice, sellLimitPrice, saveLog: true },
+            'Sell order stop price is less than current sell limit price, cancel current sell order'
+          );
+        }
+
+        if (sellCurrentPrice < parseFloat(order.price)) {
+          // Is the current price less than sell order price?
+          logger.info(
+            { stopPrice: order.stopPrice, sellLimitPrice, saveLog: true },
+            'Current price is less than sell order price, cancel current sell order'
+          );
+        }
 
         // Cancel current order
         const cancelResult = await cancelOrder(logger, symbol, order);

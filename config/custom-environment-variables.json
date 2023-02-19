@@ -266,6 +266,19 @@
             "__description": "Set a boolean to use TradingView recommendation to trigger the buy. If the buy trigger price is reached, the bot will check TradingView recommendation and if it is not `Buy`, then the bot will not place a buy order.",
             "__format": "boolean"
           }
+        },
+        "automaticBuyAmount": {
+          "enabled": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_AUTOMATIC_BUY_AMOUNT_ENABLED",
+            "__description": "Set a boolean for determining the buy amount that will maximize the chance to break-even given the grid sell trigger objective.",
+            "__format": "boolean"
+          },
+          "drainWallet": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_AUTOMATIC_BUY_DRAIN_WALLET_ENABLED",
+            "__description": "Set a boolean to purchase more than the buy grid maximum amount.",
+            "__format": "boolean"
+          }
+
         }
       },
       "sell": {

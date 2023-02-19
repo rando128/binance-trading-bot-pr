@@ -662,7 +662,7 @@ class SettingIcon extends React.Component {
                                                     If enabled, the bot will buy
                                                     if the last 2 Heikin-Ashi
                                                     candles are bullish. This
-                                                    increases the chance to
+                                                    increases the chance to buy
                                                     right after a trend
                                                     reversal. It uses the
                                                     interval defined in the{' '}

@@ -57,7 +57,8 @@ class CoinWrapperTradingView extends React.Component {
                 }
               }
             }
-          }
+          },
+          candles: { interval },
         },
         sell: { heikinAshiRestriction: sellHeikinAshiRestriction },
         tradingView,
@@ -414,7 +415,7 @@ class CoinWrapperTradingView extends React.Component {
           <div className='coin-info-column coin-info-column-price'>
             {sellHeikinAshiRestriction !== null ? (
               <span className='coin-info-label fs-8'>
-                Heikin Ashi trend{' '}
+                Heikin Ashi trend{' '}({interval}){' '}
                 <i
                   className={`fas fa-sm mb-1 ${
                     sellHeikinAshiRestriction

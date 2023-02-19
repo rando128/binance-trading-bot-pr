@@ -366,6 +366,53 @@ const shouldForceSellByTradingViewRecommendation = (logger, data) => {
 };
 
 /**
+ * Check whether heikin-ashi signal prevents buy trade (except the first one)
+ *
+ * @param {*} logger
+ * @param {*} data
+ * @returns
+ */
+const isHeikinAshiRestrictingBuy = (logger, data) => {
+  const {
+    symbolConfiguration: {
+      buy: {
+        heikinAshiRestriction: { enabled: heikinAshiRestrictionEnabled },
+        currentGridTradeIndex
+      }
+    },
+    buy: { heikinAshiRestriction }
+  } = data;
+
+  if (heikinAshiRestrictionEnabled && currentGridTradeIndex >= 1) {
+    return heikinAshiRestriction;
+  }
+  return false;
+};
+
+/**
+ * Check whether heikin-ashi signal prevents sell trade
+ *
+ * @param {*} logger
+ * @param {*} data
+ * @returns
+ */
+const isHeikinAshiRestrictingSell = (logger, data) => {
+  const {
+    symbolConfiguration: {
+      sell: {
+        heikinAshiRestriction: { enabled: heikinAshiRestrictionEnabled }
+      }
+    },
+    sell: { heikinAshiRestriction }
+  } = data;
+
+  if (heikinAshiRestrictionEnabled) {
+    return heikinAshiRestriction;
+  }
+  return false;
+};
+
+/**
  * Set sell action and message
  *
  * @param {*} logger
@@ -443,6 +490,7 @@ const execute = async (logger, rawData) => {
   //    and current price is less or equal than lowest price
   //    and current balance has not enough value to sell,
   //    and current price is lower than the restriction price
+  //    and heikin-ashi signal is bullish
   //  then buy.
   if (canBuy(data)) {
     if (
@@ -452,7 +500,7 @@ const execute = async (logger, rawData) => {
         logger,
         data,
         'buy-order-wait',
-        `There is a last gird trade buy order. Wait.`
+        `There is a last gird trade buy order. Wait before buying.`
       );
     }
 
@@ -514,6 +562,15 @@ const execute = async (logger, rawData) => {
       );
     }
 
+    if (await isHeikinAshiRestrictingBuy(logger, data)) {
+      return setBuyActionAndMessage(
+        logger,
+        data,
+        'wait',
+        `The Heikin-Ashi signal is still bearish. Wait before selling.`
+      );
+    }
+
     return setBuyActionAndMessage(
       logger,
       data,
@@ -525,6 +582,7 @@ const execute = async (logger, rawData) => {
   // Check sell signal - if
   //  last buy price has a value
   //  and total balance is enough to sell
+  //  and heikin-ashi signal is bullish
   if (canSell(data)) {
     if (
       _.isEmpty(await getGridTradeLastOrder(logger, symbol, 'sell')) === false
@@ -575,6 +633,16 @@ const execute = async (logger, rawData) => {
           'The current price is reached the sell trigger price. ' +
             `However, the action is temporarily disabled by ${checkDisable.disabledBy}. ` +
             `Resume sell process after ${checkDisable.ttl}s.`
+        );
+      }
+
+      // If we have a bull run, wait.
+      if (await isHeikinAshiRestrictingSell(logger, data)) {
+        return setSellActionAndMessage(
+          logger,
+          data,
+          'wait',
+          `The Heikin-Ashi signal is still bullish. Wait.`
         );
       }
 

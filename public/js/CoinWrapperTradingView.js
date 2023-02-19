@@ -59,6 +59,7 @@ class CoinWrapperTradingView extends React.Component {
             }
           }
         },
+        sell: { heikinAshiRestriction: sellHeikinAshiRestriction },
         tradingView,
         overrideData
       }
@@ -311,24 +312,22 @@ class CoinWrapperTradingView extends React.Component {
     return (
       <div className='coin-info-sub-wrapper'>
         <div className='coin-info-column coin-info-column-title'>
-          <div className='coin-info-label'>
-            Tradingview
-          </div>
+          <div className='coin-info-label'>Tradingview</div>
           <div className='coin-info-value'>
-            Open: <a
+            Open:{' '}
+            <a
               href={
                 'https://www.tradingview.com/symbols/' + symbol + '/technicals/'
               }
               rel='noopener noreferrer'
               target='_blank'>
-            Technical analysis
-          </a> &nbsp; | &nbsp;
+              Technical analysis
+            </a>{' '}
+            &nbsp; | &nbsp;
             <a
-                href={
-                  'https://www.tradingview.com/chart/?symbol=' + symbol
-                }
-                rel='noopener noreferrer'
-                target='_blank'>
+              href={'https://www.tradingview.com/chart/?symbol=' + symbol}
+              rel='noopener noreferrer'
+              target='_blank'>
               Chart
             </a>
           </div>
@@ -413,6 +412,19 @@ class CoinWrapperTradingView extends React.Component {
             </div>
           </div>
           <div className='coin-info-column coin-info-column-price'>
+            {sellHeikinAshiRestriction !== null ? (
+              <span className='coin-info-label fs-8'>
+                Heikin Ashi trend{' '}
+                <i
+                  className={`fas fa-sm mb-1 ${
+                    sellHeikinAshiRestriction
+                      ? 'fa-arrow-up text-success'
+                      : 'fa-arrow-down text-danger'
+                  }`}></i>
+              </span>
+            ) : (
+              ''
+            )}
             <span
               className='coin-info-value font-italic fs-9'
               title={tradingView.result.time}>

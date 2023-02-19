@@ -190,6 +190,39 @@ const execute = async (logger, rawData) => {
     ...latestIndicators
   };
 
+  // Compute Heikin-Ashi indicator with last 2 candles and determine if uptrend
+  let heikinAshiUpTrend = null;
+  if (candles.length >= 3) {
+    const currentHeikinAshiCandle = {
+      open: (candles[1].open + candles[1].close) / 2,
+      close:
+        (candles[0].open +
+          candles[0].close +
+          candles[0].high +
+          candles[0].low) /
+        4,
+      high: candles[0].high,
+      low: candles[0].low
+    };
+    const currentHeikinAshiUpTrend =
+      currentHeikinAshiCandle.close - currentHeikinAshiCandle.open > 0;
+
+    const previousHeikinAshiCandle = {
+      open: (candles[2].open + candles[2].close) / 2,
+      close:
+        (candles[1].open +
+          candles[1].close +
+          candles[1].high +
+          candles[1].low) /
+        4,
+      high: candles[1].high,
+      low: candles[1].low
+    };
+    const previousHeikinAshiUpTrend =
+      previousHeikinAshiCandle.close - previousHeikinAshiCandle.open > 0;
+    heikinAshiUpTrend = currentHeikinAshiUpTrend && previousHeikinAshiUpTrend;
+  }
+
   // Get current price
   const currentPrice = parseFloat(cachedLatestCandle.close);
 
@@ -369,6 +402,8 @@ const execute = async (logger, rawData) => {
     lowestPrice,
     athPrice,
     athRestrictionPrice: buyATHRestrictionPrice,
+    heikinAshiRestriction:
+      heikinAshiUpTrend !== null ? heikinAshiUpTrend === false : null,
     triggerPrice: buyTriggerPrice,
     difference: buyDifference,
     nextBestBuyAmount,
@@ -389,6 +424,8 @@ const execute = async (logger, rawData) => {
     currentProfitPercentage: sellCurrentProfitPercentage,
     conservativeModeApplicable: sellConservativeModeApplicable,
     triggerPercentage,
+    heikinAshiRestriction:
+      heikinAshiUpTrend !== null ? heikinAshiUpTrend === true : null,
     openOrders: newOpenOrders?.filter(o => o.side.toLowerCase() === 'sell'),
     processMessage: _.get(data, 'sell.processMessage', ''),
     updatedAt: moment().utc().toDate()

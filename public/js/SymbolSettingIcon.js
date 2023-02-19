@@ -415,11 +415,58 @@ class SymbolSettingIcon extends React.Component {
                               variant='link'
                               eventKey='0'
                               className='p-0 fs-7 text-uppercase'>
-                              Buy Restriction with ATH (All Time High)
+                              Buy Restrictions
                             </Accordion.Toggle>
                           </Card.Header>
                           <Accordion.Collapse eventKey='0'>
                             <Card.Body className='px-2 py-1'>
+                              <div className='row'>
+                                <div className='col-12'>
+                                  <Form.Group
+                                    controlId='field-buy-heikinashi-restriction-enabled'
+                                    className='mb-2'>
+                                    <Form.Check size='sm'>
+                                      <Form.Check.Input
+                                        type='checkbox'
+                                        data-state-key='buy.heikinAshiRestriction.enabled'
+                                        checked={
+                                          symbolConfiguration.buy
+                                            .heikinAshiRestriction.enabled
+                                        }
+                                        onChange={this.handleInputChange}
+                                      />
+                                      <Form.Check.Label>
+                                        Heikin-Ashi Buy Restriction Enabled -
+                                        applies only to grids with at least one
+                                        executed buy trade{' '}
+                                        <OverlayTrigger
+                                          trigger='click'
+                                          key='buy-heikinashi-restriction-enabled-overlay'
+                                          placement='bottom'
+                                          overlay={
+                                            <Popover id='buy-heikinashi-restriction-enabled-overlay-right'>
+                                              <Popover.Content>
+                                                If enabled, the bot will buy if
+                                                the last 2 Heikin-Ashi candles
+                                                are bullish. This increases the
+                                                chance to buy right after a
+                                                trend reversal. It uses the
+                                                interval defined in the{' '}
+                                                <i>candle settings</i>.
+                                              </Popover.Content>
+                                            </Popover>
+                                          }>
+                                          <Button
+                                            variant='link'
+                                            className='p-0 m-0 ml-1 text-info'>
+                                            <i className='fas fa-question-circle fa-sm'></i>
+                                          </Button>
+                                        </OverlayTrigger>
+                                      </Form.Check.Label>
+                                    </Form.Check>
+                                  </Form.Group>
+                                </div>
+                              </div>
                               <div className='row'>
                                 <div className='col-12'>
                                   <Form.Group
@@ -1194,11 +1241,59 @@ class SymbolSettingIcon extends React.Component {
                                   variant='link'
                                   eventKey='0'
                                   className='p-0 fs-7 text-uppercase'>
-                                  Conservative mode
+                                  Sell restrictions
                                 </Accordion.Toggle>
                               </Card.Header>
                               <Accordion.Collapse eventKey='0'>
                                 <Card.Body className='px-2 py-1'>
+                                  <div className='row'>
+                                    <div className='col-12'>
+                                      <Form.Group
+                                        controlId='field-sell-heikinashi-restriction-enabled'
+                                        className='mb-2'>
+                                        <Form.Check size='sm'>
+                                          <Form.Check.Input
+                                            type='checkbox'
+                                            data-state-key='sell.heikinAshiRestriction.enabled'
+                                            checked={
+                                              symbolConfiguration.sell
+                                                .heikinAshiRestriction.enabled
+                                            }
+                                            onChange={this.handleInputChange}
+                                          />
+                                          <Form.Check.Label>
+                                            Heikin-Ashi Sell Restriction Enabled{' '}
+                                            <OverlayTrigger
+                                              trigger='click'
+                                              key='sell-heikinashi-restriction-enabled-overlay'
+                                              placement='bottom'
+                                              overlay={
+                                                <Popover id='sell-heikinashi-restriction-enabled-overlay-right'>
+                                                  <Popover.Content>
+                                                    If enabled, the bot will not
+                                                    sell if the last 2
+                                                    Heikin-Ashi candles are
+                                                    bullish. This increases the
+                                                    chance to ride a bull run.
+                                                    It uses the interval defined
+                                                    in the{' '}
+                                                    <i>candle settings</i>. It
+                                                    doesn't apply to stop-loss
+                                                    sells.
+                                                  </Popover.Content>
+                                                </Popover>
+                                              }>
+                                              <Button
+                                                variant='link'
+                                                className='p-0 m-0 ml-1 text-info'>
+                                                <i className='fas fa-question-circle fa-sm'></i>
+                                              </Button>
+                                            </OverlayTrigger>
+                                          </Form.Check.Label>
+                                        </Form.Check>
+                                      </Form.Group>
+                                    </div>
+                                  </div>
                                   <div className='row'>
                                     <div className='col-12'>
                                       <Form.Group

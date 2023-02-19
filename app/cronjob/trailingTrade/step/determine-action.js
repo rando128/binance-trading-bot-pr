@@ -378,12 +378,23 @@ const isHeikinAshiRestrictingBuy = (logger, data) => {
       buy: {
         heikinAshiRestriction: { enabled: heikinAshiRestrictionEnabled },
         currentGridTradeIndex
-      }
+      },
+      candles: { interval: humanizedInterval }
     },
-    buy: { heikinAshiRestriction }
+    buy: { heikinAshiRestriction, updatedAt }
   } = data;
 
-  if (heikinAshiRestrictionEnabled && currentGridTradeIndex >= 1) {
+  const interval = humanizedInterval.match(/\d/)[0];
+  const unit = humanizedInterval.match(/\D/)[0];
+  const isSignalFresh =
+    moment().utc().diff(moment(updatedAt), unit, true) <= interval;
+
+  if (
+    heikinAshiRestrictionEnabled &&
+    currentGridTradeIndex >= 1 &&
+    heikinAshiRestriction !== null &&
+    isSignalFresh
+  ) {
     return heikinAshiRestriction;
   }
   return false;
@@ -401,12 +412,22 @@ const isHeikinAshiRestrictingSell = (logger, data) => {
     symbolConfiguration: {
       sell: {
         heikinAshiRestriction: { enabled: heikinAshiRestrictionEnabled }
-      }
+      },
+      candles: { interval: humanizedInterval }
     },
-    sell: { heikinAshiRestriction }
+    sell: { heikinAshiRestriction, updatedAt }
   } = data;
 
-  if (heikinAshiRestrictionEnabled) {
+  const interval = humanizedInterval.match(/\d/)[0];
+  const unit = humanizedInterval.match(/\D/)[0];
+  const isSignalFresh =
+    moment().utc().diff(moment(updatedAt), unit, true) <= interval;
+
+  if (
+    heikinAshiRestrictionEnabled &&
+    heikinAshiRestriction !== null &&
+    isSignalFresh
+  ) {
     return heikinAshiRestriction;
   }
   return false;
@@ -567,7 +588,7 @@ const execute = async (logger, rawData) => {
         logger,
         data,
         'wait',
-        `The Heikin-Ashi signal is still bearish. Wait before selling.`
+        `The Heikin-Ashi signal is still bearish. Wait before buying.`
       );
     }
 
@@ -642,7 +663,7 @@ const execute = async (logger, rawData) => {
           logger,
           data,
           'wait',
-          `The Heikin-Ashi signal is still bullish. Wait.`
+          `The Heikin-Ashi signal is still bullish. Wait before selling.`
         );
       }
 

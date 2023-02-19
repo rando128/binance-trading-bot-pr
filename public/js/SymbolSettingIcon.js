@@ -333,7 +333,103 @@ class SymbolSettingIcon extends React.Component {
                             </Form.Check>
                           </Form.Group>
                         </div>
-
+                        <div className='col-12'>
+                          <Form.Group
+                            controlId='field-automatic-buy-amount'
+                            className='mb-2'>
+                            <Form.Check size='sm'>
+                              <Form.Check.Input
+                                type='checkbox'
+                                data-state-key='buy.automaticBuyAmount.enabled'
+                                checked={
+                                  symbolConfiguration.buy.automaticBuyAmount
+                                    .enabled
+                                }
+                                onChange={this.handleInputChange}
+                              />
+                              <Form.Check.Label>
+                                Allow automatic breakeven calculation of
+                                purchase amounts - applies only to second grid
+                                trade and onwards
+                                <OverlayTrigger
+                                  trigger='click'
+                                  key='buy-automaticBuyAmount-enabled-overlay'
+                                  placement='bottom'
+                                  overlay={
+                                    <Popover id='buy-automaticBuyAmount-enabled-overlay-right'>
+                                      <Popover.Content>
+                                        As the bot is designed to execute buy
+                                        orders at the lowest possible price, it
+                                        can be hard to predict the optimum
+                                        purchase amount. When a new buy grid is
+                                        triggered, this feature allows the bot
+                                        to calculate the optimum buy quantity to
+                                        achieve breakeven. It respects the grid
+                                        min and max purchase unless specified
+                                        otherwise. Coupled with the sell
+                                        conservative mode, it increases your
+                                        chances to exit positively even in case
+                                        of bear conditions.
+                                      </Popover.Content>
+                                    </Popover>
+                                  }>
+                                  <Button
+                                    variant='link'
+                                    className='p-0 m-0 ml-1 text-info'>
+                                    <i className='fas fa-question-circle fa-sm'></i>
+                                  </Button>
+                                </OverlayTrigger>
+                              </Form.Check.Label>
+                            </Form.Check>
+                          </Form.Group>
+                        </div>
+                        <div className='col-12'>
+                          <Form.Group
+                            controlId='field-automatic-buy-amount-drainWallet'
+                            className='mb-2 ml-4'>
+                            <Form.Check size='sm'>
+                              <Form.Check.Input
+                                type='checkbox'
+                                data-state-key='buy.automaticBuyAmount.drainWallet'
+                                checked={
+                                  symbolConfiguration.buy.automaticBuyAmount
+                                    .drainWallet
+                                }
+                                disabled={
+                                  !symbolConfiguration.buy.automaticBuyAmount
+                                    .enabled
+                                }
+                                onChange={this.handleInputChange}
+                              />
+                              <Form.Check.Label>
+                                Automatic breakeven amount can be more that the
+                                grid max purchase amount
+                                <OverlayTrigger
+                                  trigger='click'
+                                  key='buy-automaticBuyAmount-drainWallet-overlay'
+                                  placement='bottom'
+                                  overlay={
+                                    <Popover id='buy-automaticBuyAmount-drainWallet-overlay-right'>
+                                      <Popover.Content>
+                                        When enabled, if the automatic breakeven
+                                        amount is higher than your defined grid
+                                        max amount, the bot will buy the
+                                        breakeven amount. It can strongly drain
+                                        your wallet. Use the grid calculator to
+                                        anticipate your wallet depth.
+                                      </Popover.Content>
+                                    </Popover>
+                                  }>
+                                  <Button
+                                    variant='link'
+                                    className='p-0 m-0 ml-1 text-info'>
+                                    <i className='fas fa-question-circle fa-sm'></i>
+                                  </Button>
+                                </OverlayTrigger>
+                              </Form.Check.Label>
+                            </Form.Check>
+                          </Form.Group>
+                        </div>
                         <div className='col-12'>
                           <SymbolSettingIconGridBuy
                             gridTrade={symbolConfiguration.buy.gridTrade}

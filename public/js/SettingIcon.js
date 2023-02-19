@@ -546,7 +546,7 @@ class SettingIcon extends React.Component {
                                 onChange={this.handleInputChange}
                               />
                               <Form.Check.Label>
-                                Automatic breakeven amount can be more that the
+                                Automatic breakeven amount can be more than the
                                 grid max purchase amount
                                 <OverlayTrigger
                                   trigger='click'

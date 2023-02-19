@@ -266,7 +266,7 @@ const execute = async (logger, rawData) => {
 
   logger.info({ freeBalance }, 'Free balance');
 
-  if (automaticBuyAmountEnabled) {
+  if (automaticBuyAmountEnabled && nextBestBuyAmount) {
     logger.info(
       { nextBestBuyAmount, saveLog: true },
       'Next grid best buy amount '
@@ -287,9 +287,7 @@ const execute = async (logger, rawData) => {
       { freeBalance, saveLog: true },
       'Free balance after break-even adjust'
     );
-  }
-
-  if (freeBalance > maxPurchaseAmount && !automaticBuyAmountEnabled) {
+  } else if (freeBalance > maxPurchaseAmount) {
     freeBalance = maxPurchaseAmount;
     logger.info({ freeBalance }, 'Free balance after adjust');
   }

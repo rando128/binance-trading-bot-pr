@@ -2,12 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Fixed sorting symbols open trades first by [@uhliksk](https://github.com/uhliksk) - [#564](https://github.com/chrisleekr/binance-trading-bot/pull/564)
+- Fixed the issue that cannot export huge logs - [#561](https://github.com/chrisleekr/binance-trading-bot/pull/561), [#567](https://github.com/chrisleekr/binance-trading-bot/pull/567)
+- Fixed the balance calculation to include dust balances by [@uhliksk](https://github.com/uhliksk) - [#571](https://github.com/chrisleekr/binance-trading-bot/pull/571)
+- Fixed the open orders to be cancelled when the current price is higher/lower than the order price by [@uhliksk](https://github.com/uhliksk) - [#569](https://github.com/chrisleekr/binance-trading-bot/pull/569)
+- Improved queue processing by replacing Bull queue to customised queue system by [@uhliksk](https://github.com/uhliksk) - [#562](https://github.com/chrisleekr/binance-trading-bot/pull/562), [#581](https://github.com/chrisleekr/binance-trading-bot/pull/581), [#588](https://github.com/chrisleekr/binance-trading-bot/pull/588)
+- Added conservative sell strategy, which can reduce the sell trigger price as the grid gets deeper by [@rando128](https://github.com/rando128) - [#585](https://github.com/chrisleekr/binance-trading-bot/pull/585)
+- Fixed the stop-loss to be a higher priority than the new buy order by [@uhliksk](https://github.com/uhliksk) - [#589](https://github.com/chrisleekr/binance-trading-bot/pull/589)
+- Improved search and filtering UX by [@rando128](https://github.com/rando128) - [#591](https://github.com/chrisleekr/binance-trading-bot/pull/591)
+- Enhanced the break-even calculator by [@rando128](https://github.com/rando128) - [#597](https://github.com/chrisleekr/binance-trading-bot/pull/597)
+
+Thanks [@uhliksk](https://github.com/uhliksk) and [@rando128](https://github.com/rando128) for your great contributions. 💯 :heart:
+
 ## [0.0.96] - 2022-12-28
 
 - Enhanced the suggested break-even amount a grid calculator by [@rando128](https://github.com/rando128) - [#555](https://github.com/chrisleekr/binance-trading-bot/pull/555), [#557](https://github.com/chrisleekr/binance-trading-bot/pull/557)
 - Fixed API error page priority by [@habibalkhabbaz](https://github.com/habibalkhabbaz) - [#556](https://github.com/chrisleekr/binance-trading-bot/pull/556)
 
-Thanks[@rando128](https://github.com/rando128) and [@habibalkhabbaz](https://github.com/habibalkhabbaz) for your great contributions. 💯 :heart:
+Thanks [@rando128](https://github.com/rando128) and [@habibalkhabbaz](https://github.com/habibalkhabbaz) for your great contributions. 💯 :heart:
+
 ## [0.0.95] - 2022-12-19
 
 - Added API error message when using the wrong API key/secret - [#544](https://github.com/chrisleekr/binance-trading-bot/pull/544)

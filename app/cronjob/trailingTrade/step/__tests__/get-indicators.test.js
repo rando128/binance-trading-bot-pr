@@ -116,9 +116,27 @@ describe('get-indicators.js', () => {
             buy: {
               currentGridTradeIndex: 0,
               currentGridTrade: {
-                triggerPercentage: 1.01,
-                limitPercentage: 1.021
+                triggerPercentage: 1,
+                limitPercentage: 1.036
               },
+              gridTrade: [
+                {
+                  triggerPercentage: 1,
+                  stopPercentage: 1.035,
+                  limitPercentage: 1.036,
+                  minPurchaseAmount: 11,
+                  maxPurchaseAmount: 11,
+                  executed: false
+                },
+                {
+                  triggerPercentage: 0.9,
+                  stopPercentage: 1.045,
+                  limitPercentage: 1.046,
+                  minPurchaseAmount: 15,
+                  maxPurchaseAmount: 22,
+                  executed: false
+                }
+              ],
               athRestriction: {
                 enabled: true,
                 restrictionPercentage: 0.9,
@@ -129,10 +147,18 @@ describe('get-indicators.js', () => {
               }
             },
             sell: {
+              currentSellGridTradeIndex: 0,
               currentGridTrade: {
                 triggerPercentage: 1.06,
                 limitPercentage: 0.979
               },
+              gridTrade: [
+                {
+                  triggerPercentage: 1.06,
+                  limitPercentage: 0.979,
+                  executed: false
+                }
+              ],
               stopLoss: { maxLossPercentage: 0.8 },
               conservativeMode: {
                 enabled: false,
@@ -162,9 +188,27 @@ describe('get-indicators.js', () => {
             buy: {
               currentGridTradeIndex: 0,
               currentGridTrade: {
-                triggerPercentage: 1.01,
-                limitPercentage: 1.021
+                triggerPercentage: 1,
+                limitPercentage: 1.036
               },
+              gridTrade: [
+                {
+                  triggerPercentage: 1,
+                  stopPercentage: 1.035,
+                  limitPercentage: 1.036,
+                  minPurchaseAmount: 11,
+                  maxPurchaseAmount: 11,
+                  executed: false
+                },
+                {
+                  triggerPercentage: 0.9,
+                  stopPercentage: 1.045,
+                  limitPercentage: 1.046,
+                  minPurchaseAmount: 15,
+                  maxPurchaseAmount: 22,
+                  executed: false
+                }
+              ],
               athRestriction: {
                 enabled: true,
                 restrictionPercentage: 0.9,
@@ -175,10 +219,18 @@ describe('get-indicators.js', () => {
               }
             },
             sell: {
+              currentSellGridTradeIndex: 0,
               currentGridTrade: {
                 triggerPercentage: 1.06,
                 limitPercentage: 0.979
               },
+              gridTrade: [
+                {
+                  triggerPercentage: 1.06,
+                  limitPercentage: 0.979,
+                  executed: false
+                }
+              ],
               stopLoss: {
                 maxLossPercentage: 0.8
               },
@@ -205,13 +257,14 @@ describe('get-indicators.js', () => {
           },
           buy: {
             currentPrice: 15555.09,
-            limitPrice: 15881.746889999999,
+            limitPrice: 16115.073240000002,
             highestPrice: 10000,
             lowestPrice: 8893.03,
             athPrice: 9000,
             athRestrictionPrice: 8100,
-            triggerPrice: 8981.9603,
-            difference: 73.18146017634923,
+            triggerPrice: 8893.03,
+            difference: 74.91327477811274,
+            nextBestBuyAmount: null,
             openOrders: [],
             processMessage: '',
             updatedAt: expect.any(Object)
@@ -350,6 +403,23 @@ describe('get-indicators.js', () => {
                 triggerPercentage: 1.01,
                 limitPercentage: 1.021
               },
+              gridTrade: [
+                {
+                  triggerPercentage: 1.01,
+                  limitPercentage: 1.021,
+                  minPurchaseAmount: 11,
+                  maxPurchaseAmount: 11,
+                  executed: false
+                },
+                {
+                  triggerPercentage: 0.9,
+                  stopPercentage: 1.045,
+                  limitPercentage: 1.046,
+                  minPurchaseAmount: 15,
+                  maxPurchaseAmount: 22,
+                  executed: false
+                }
+              ],
               athRestriction: {
                 enabled: false,
                 restrictionPercentage: 0.9,
@@ -360,10 +430,18 @@ describe('get-indicators.js', () => {
               }
             },
             sell: {
+              currentSellGridTradeIndex: 0,
               currentGridTrade: {
                 triggerPercentage: 1.06,
                 limitPercentage: 0.979
               },
+              gridTrade: [
+                {
+                  triggerPercentage: 1.06,
+                  limitPercentage: 0.979,
+                  executed: false
+                }
+              ],
               stopLoss: { maxLossPercentage: 0.8 },
               conservativeMode: {
                 enabled: false,
@@ -396,6 +474,23 @@ describe('get-indicators.js', () => {
                 triggerPercentage: 1.01,
                 limitPercentage: 1.021
               },
+              gridTrade: [
+                {
+                  triggerPercentage: 1.01,
+                  limitPercentage: 1.021,
+                  minPurchaseAmount: 11,
+                  maxPurchaseAmount: 11,
+                  executed: false
+                },
+                {
+                  triggerPercentage: 0.9,
+                  stopPercentage: 1.045,
+                  limitPercentage: 1.046,
+                  minPurchaseAmount: 15,
+                  maxPurchaseAmount: 22,
+                  executed: false
+                }
+              ],
               athRestriction: {
                 enabled: false,
                 restrictionPercentage: 0.9,
@@ -406,10 +501,18 @@ describe('get-indicators.js', () => {
               }
             },
             sell: {
+              currentSellGridTradeIndex: 0,
               currentGridTrade: {
                 triggerPercentage: 1.06,
                 limitPercentage: 0.979
               },
+              gridTrade: [
+                {
+                  triggerPercentage: 1.06,
+                  limitPercentage: 0.979,
+                  executed: false
+                }
+              ],
               stopLoss: {
                 maxLossPercentage: 0.8
               },
@@ -442,6 +545,7 @@ describe('get-indicators.js', () => {
             athPrice: null,
             athRestrictionPrice: null,
             triggerPrice: 8981.9603,
+            nextBestBuyAmount: null,
             difference: 73.18146017634923,
             openOrders: [],
             processMessage: '',
@@ -582,6 +686,7 @@ describe('get-indicators.js', () => {
               buy: {
                 currentGridTradeIndex: -1,
                 currentGridTrade: null,
+                gridTrade: [],
                 athRestriction: {
                   enabled: true,
                   restrictionPercentage: 0.9,
@@ -592,7 +697,9 @@ describe('get-indicators.js', () => {
                 }
               },
               sell: {
+                currentSellGridTradeIndex: null,
                 currentGridTrade: null,
+                gridTrade: [],
                 stopLoss: { maxLossPercentage: 0.8 },
                 conservativeMode: {
                   enabled: false,
@@ -625,6 +732,7 @@ describe('get-indicators.js', () => {
               buy: {
                 currentGridTradeIndex: -1,
                 currentGridTrade: null,
+                gridTrade: [],
                 athRestriction: {
                   enabled: true,
                   restrictionPercentage: 0.9,
@@ -636,6 +744,8 @@ describe('get-indicators.js', () => {
               },
               sell: {
                 currentGridTrade: null,
+                currentSellGridTradeIndex: null,
+                gridTrade: [],
                 stopLoss: {
                   maxLossPercentage: 0.8
                 },
@@ -665,6 +775,7 @@ describe('get-indicators.js', () => {
               limitPrice: null,
               highestPrice: 10000,
               lowestPrice: 8893.03,
+              nextBestBuyAmount: null,
               athPrice: 9000,
               athRestrictionPrice: 8100,
               triggerPrice: null,
@@ -726,6 +837,23 @@ describe('get-indicators.js', () => {
                   triggerPercentage: 1.01,
                   limitPercentage: 1.021
                 },
+                gridTrade: [
+                  {
+                    triggerPercentage: 1.01,
+                    limitPercentage: 1.021,
+                    minPurchaseAmount: 11,
+                    maxPurchaseAmount: 11,
+                    executed: false
+                  },
+                  {
+                    triggerPercentage: 0.9,
+                    stopPercentage: 1.045,
+                    limitPercentage: 1.046,
+                    minPurchaseAmount: 15,
+                    maxPurchaseAmount: 22,
+                    executed: false
+                  }
+                ],
                 athRestriction: {
                   enabled: true,
                   restrictionPercentage: 0.9,
@@ -736,10 +864,18 @@ describe('get-indicators.js', () => {
                 }
               },
               sell: {
+                currentSellGridTradeIndex: 0,
                 currentGridTrade: {
                   triggerPercentage: 1.06,
                   limitPercentage: 0.979
                 },
+                gridTrade: [
+                  {
+                    triggerPercentage: 1.06,
+                    limitPercentage: 0.979,
+                    executed: false
+                  }
+                ],
                 stopLoss: { maxLossPercentage: 0.8 },
                 conservativeMode: {
                   enabled: false,
@@ -775,6 +911,23 @@ describe('get-indicators.js', () => {
                   triggerPercentage: 1.01,
                   limitPercentage: 1.021
                 },
+                gridTrade: [
+                  {
+                    triggerPercentage: 1.01,
+                    limitPercentage: 1.021,
+                    minPurchaseAmount: 11,
+                    maxPurchaseAmount: 11,
+                    executed: false
+                  },
+                  {
+                    triggerPercentage: 0.9,
+                    stopPercentage: 1.045,
+                    limitPercentage: 1.046,
+                    minPurchaseAmount: 15,
+                    maxPurchaseAmount: 22,
+                    executed: false
+                  }
+                ],
                 athRestriction: {
                   enabled: true,
                   restrictionPercentage: 0.9,
@@ -785,10 +938,18 @@ describe('get-indicators.js', () => {
                 }
               },
               sell: {
+                currentSellGridTradeIndex: 0,
                 currentGridTrade: {
                   triggerPercentage: 1.06,
                   limitPercentage: 0.979
                 },
+                gridTrade: [
+                  {
+                    triggerPercentage: 1.06,
+                    limitPercentage: 0.979,
+                    executed: false
+                  }
+                ],
                 stopLoss: {
                   maxLossPercentage: 0.8
                 },
@@ -818,6 +979,7 @@ describe('get-indicators.js', () => {
               limitPrice: 15881.746889999999,
               highestPrice: 10000,
               lowestPrice: 8893.03,
+              nextBestBuyAmount: null,
               athPrice: 9000,
               athRestrictionPrice: 8100,
               triggerPrice: 8981.9603,
@@ -879,6 +1041,24 @@ describe('get-indicators.js', () => {
                   triggerPercentage: 1.01,
                   limitPercentage: 1.021
                 },
+                gridTrade: [
+                  {
+                    triggerPercentage: 1.01,
+                    stopPercentage: 1.035,
+                    limitPercentage: 1.021,
+                    minPurchaseAmount: 11,
+                    maxPurchaseAmount: 11,
+                    executed: true
+                  },
+                  {
+                    triggerPercentage: 0.9,
+                    stopPercentage: 1.045,
+                    limitPercentage: 1.046,
+                    minPurchaseAmount: 15,
+                    maxPurchaseAmount: 22,
+                    executed: false
+                  }
+                ],
                 athRestriction: {
                   enabled: true,
                   restrictionPercentage: 0.9,
@@ -889,10 +1069,18 @@ describe('get-indicators.js', () => {
                 }
               },
               sell: {
+                currentSellGridTradeIndex: 0,
                 currentGridTrade: {
                   triggerPercentage: 1.06,
                   limitPercentage: 0.979
                 },
+                gridTrade: [
+                  {
+                    triggerPercentage: 1.06,
+                    limitPercentage: 0.979,
+                    executed: false
+                  }
+                ],
                 stopLoss: { maxLossPercentage: 0.8 },
                 conservativeMode: {
                   enabled: false,
@@ -928,6 +1116,24 @@ describe('get-indicators.js', () => {
                   triggerPercentage: 1.01,
                   limitPercentage: 1.021
                 },
+                gridTrade: [
+                  {
+                    triggerPercentage: 1.01,
+                    stopPercentage: 1.035,
+                    limitPercentage: 1.021,
+                    minPurchaseAmount: 11,
+                    maxPurchaseAmount: 11,
+                    executed: true
+                  },
+                  {
+                    triggerPercentage: 0.9,
+                    stopPercentage: 1.045,
+                    limitPercentage: 1.046,
+                    minPurchaseAmount: 15,
+                    maxPurchaseAmount: 22,
+                    executed: false
+                  }
+                ],
                 athRestriction: {
                   enabled: true,
                   restrictionPercentage: 0.9,
@@ -938,10 +1144,18 @@ describe('get-indicators.js', () => {
                 }
               },
               sell: {
+                currentSellGridTradeIndex: 0,
                 currentGridTrade: {
                   triggerPercentage: 1.06,
                   limitPercentage: 0.979
                 },
+                gridTrade: [
+                  {
+                    triggerPercentage: 1.06,
+                    limitPercentage: 0.979,
+                    executed: false
+                  }
+                ],
                 stopLoss: {
                   maxLossPercentage: 0.8
                 },
@@ -971,6 +1185,7 @@ describe('get-indicators.js', () => {
               limitPrice: 15881.746889999999,
               highestPrice: 10000,
               lowestPrice: 8893.03,
+              nextBestBuyAmount: null,
               athPrice: 9000,
               athRestrictionPrice: 8100,
               triggerPrice: 9090,

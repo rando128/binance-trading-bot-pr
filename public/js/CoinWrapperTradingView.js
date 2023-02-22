@@ -60,7 +60,6 @@ class CoinWrapperTradingView extends React.Component {
           },
           candles: { interval },
         },
-        sell: { heikinAshiRestriction: sellHeikinAshiRestriction },
         tradingView,
         overrideData
       }
@@ -326,9 +325,9 @@ class CoinWrapperTradingView extends React.Component {
             </a>{' '}
             &nbsp; | &nbsp;
             <a
-              href={'https://www.tradingview.com/chart/?symbol=' + symbol}
-              rel='noopener noreferrer'
-              target='_blank'>
+                href={ '/chart/?symbol=' + symbol}
+                rel='noopener noreferrer'
+                target='_blank'>
               Chart
             </a>
           </div>

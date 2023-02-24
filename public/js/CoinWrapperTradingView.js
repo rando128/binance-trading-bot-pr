@@ -60,6 +60,7 @@ class CoinWrapperTradingView extends React.Component {
           },
           candles: { interval },
         },
+        sell: { heikinAshiRestriction: sellHeikinAshiRestriction },
         tradingView,
         overrideData
       }

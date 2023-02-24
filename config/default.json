@@ -116,6 +116,9 @@
           },
           "restrictionPercentage": 0.9
         },
+        "heikinAshiRestriction": {
+          "enabled": false
+        },
         "tradingView": {
           "whenStrongBuy": true,
           "whenBuy": true
@@ -148,6 +151,9 @@
         "conservativeMode": {
           "enabled": false,
           "factor": 0.5
+        },
+        "heikinAshiRestriction": {
+          "enabled": false
         }
       },
       "system": {

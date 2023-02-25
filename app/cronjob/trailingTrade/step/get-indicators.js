@@ -77,7 +77,7 @@ const shouldCalculateNextBestBuyAmount = data => {
 
 const calculateNextBestBuyAmount = (
   data,
-  { currentPrice, lastBuyPrice, triggerPercentage, lastExecutedBuyTradeIndex }
+  { currentPrice, lastBuyPrice, sellTrigger, buyTrigger, lastExecutedBuyTradeIndex }
 ) => {
   const {
     symbolConfiguration: {
@@ -119,12 +119,12 @@ const calculateNextBestBuyAmount = (
     //   .map(order => parseFloat(order.executedOrder.executedQty))
     //   .reduce((acc, qty) => acc + qty, 0);
 
-    const buyTrigger = 1 + (currentPrice - lastBuyPrice) / lastBuyPrice;
+    //const buyTrigger = currentGridTrade.triggerPercentage;// 1 + (currentPrice - lastBuyPrice) / lastBuyPrice;
 
     nextBestBuyAmount =
       (totalBought.amount -
-        totalBought.qty * buyTrigger * lastBuyPrice * triggerPercentage) /
-      (triggerPercentage - 1);
+        totalBought.qty * buyTrigger * lastBuyPrice * sellTrigger) /
+      (sellTrigger - 1);
 
     nextBestBuyAmountData = {
       currentPrice,
@@ -132,7 +132,7 @@ const calculateNextBestBuyAmount = (
       bought: totalBought.amount,
       qty: totalBought.qty,
       buyTrigger,
-      triggerPercentage,
+      sellTrigger,
       lastExecutedBuyTradeIndex
     }
   }
@@ -343,6 +343,7 @@ const execute = async (logger, rawData) => {
   let buyTriggerPrice = null;
   let buyDifference = null;
   let buyLimitPrice = null;
+  let buyTriggerPercentage = null;
   if (currentBuyGridTrade !== null) {
     const {
       triggerPercentage: buyTriggerPercentage,
@@ -406,6 +407,7 @@ const execute = async (logger, rawData) => {
       currentPrice,
       lastBuyPrice,
       triggerPercentage,
+      buyTriggerPercentage,
       lastExecutedBuyTradeIndex
     });
   }

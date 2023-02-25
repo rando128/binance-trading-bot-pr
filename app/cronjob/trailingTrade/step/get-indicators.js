@@ -137,7 +137,7 @@ const calculateNextBestBuyAmount = (
     }
   }
 
-  return (nextBestBuyAmount, nextBestBuyAmountData);
+  return { nextBestBuyAmount, nextBestBuyAmountData };
 };
 
 /**
@@ -343,7 +343,6 @@ const execute = async (logger, rawData) => {
   let buyTriggerPrice = null;
   let buyDifference = null;
   let buyLimitPrice = null;
-  let buyTriggerPercentage = null;
   if (currentBuyGridTrade !== null) {
     const {
       triggerPercentage: buyTriggerPercentage,
@@ -375,10 +374,13 @@ const execute = async (logger, rawData) => {
   let sellLimitPrice = null;
   let sellConservativeModeApplicable = false;
   let triggerPercentage = null;
-  let nextBestBuyAmount = null;
-  let nextBestBuyAmountData = null;
+  let nextBestBuy= null;
 
   if (lastBuyPrice > 0 && currentSellGridTrade !== null) {
+    const {
+      triggerPercentage: buyTriggerPercentage,
+    } = currentBuyGridTrade;
+
     const {
       triggerPercentage: sellTriggerPercentage,
       limitPercentage: sellLimitPercentage
@@ -403,7 +405,7 @@ const execute = async (logger, rawData) => {
     sellLimitPrice = currentPrice * sellLimitPercentage;
 
     // Next best grid amount - only for single sell grids without obvious manual buys
-    nextBestBuyAmount, nextBestBuyAmountData = calculateNextBestBuyAmount(data, {
+    nextBestBuy = calculateNextBestBuyAmount(data, {
       currentPrice,
       lastBuyPrice,
       sellTrigger: triggerPercentage,
@@ -489,8 +491,8 @@ const execute = async (logger, rawData) => {
       heikinAshiUpTrend !== null ? heikinAshiUpTrend === false : null,
     triggerPrice: buyTriggerPrice,
     difference: buyDifference,
-    nextBestBuyAmount,
-    nextBestBuyAmountData,
+    nextBestBuyAmount: nextBestBuy.nextBestBuyAmount,
+    nextBestBuyAmountData: nextBestBuy.nextBestBuyAmount,
     openOrders: newOpenOrders?.filter(o => o.side.toLowerCase() === 'buy'),
     processMessage: _.get(data, 'buy.processMessage', ''),
     updatedAt: moment().utc().toDate()

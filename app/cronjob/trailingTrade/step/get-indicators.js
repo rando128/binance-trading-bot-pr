@@ -406,8 +406,8 @@ const execute = async (logger, rawData) => {
     nextBestBuyAmount, nextBestBuyAmountData = calculateNextBestBuyAmount(data, {
       currentPrice,
       lastBuyPrice,
-      triggerPercentage,
-      buyTriggerPercentage,
+      sellTrigger: triggerPercentage,
+      buyTrigger: buyTriggerPercentage,
       lastExecutedBuyTradeIndex
     });
   }

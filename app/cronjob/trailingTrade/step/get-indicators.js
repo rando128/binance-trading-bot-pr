@@ -77,7 +77,7 @@ const shouldCalculateNextBestBuyAmount = data => {
 
 const calculateNextBestBuyAmount = (
   data,
-  { currentPrice, lastBuyPrice, triggerPercentage }
+  { currentPrice, lastBuyPrice, triggerPercentage, lastExecutedBuyTradeIndex }
 ) => {
   const {
     symbolConfiguration: {
@@ -86,6 +86,8 @@ const calculateNextBestBuyAmount = (
   } = data;
 
   let nextBestBuyAmount = null;
+  let nextBestBuyAmountData = null;
+
   if (shouldCalculateNextBestBuyAmount(data)) {
     const totalBought = buyGridTrade
       .filter(trade => trade.executed)
@@ -123,9 +125,19 @@ const calculateNextBestBuyAmount = (
       (totalBought.amount -
         totalBought.qty * buyTrigger * lastBuyPrice * triggerPercentage) /
       (triggerPercentage - 1);
+
+    nextBestBuyAmountData = {
+      currentPrice,
+      lastBuyPrice,
+      bought: totalBought.amount,
+      qty: totalBought.qty,
+      buyTrigger,
+      triggerPercentage,
+      lastExecutedBuyTradeIndex
+    }
   }
 
-  return nextBestBuyAmount;
+  return (nextBestBuyAmount, nextBestBuyAmountData);
 };
 
 /**
@@ -363,6 +375,7 @@ const execute = async (logger, rawData) => {
   let sellConservativeModeApplicable = false;
   let triggerPercentage = null;
   let nextBestBuyAmount = null;
+  let nextBestBuyAmountData = null;
 
   if (lastBuyPrice > 0 && currentSellGridTrade !== null) {
     const {
@@ -389,10 +402,11 @@ const execute = async (logger, rawData) => {
     sellLimitPrice = currentPrice * sellLimitPercentage;
 
     // Next best grid amount - only for single sell grids without obvious manual buys
-    nextBestBuyAmount = calculateNextBestBuyAmount(data, {
+    nextBestBuyAmount, nextBestBuyAmountData = calculateNextBestBuyAmount(data, {
       currentPrice,
       lastBuyPrice,
-      triggerPercentage
+      triggerPercentage,
+      lastExecutedBuyTradeIndex
     });
   }
   // ##############################
@@ -474,6 +488,7 @@ const execute = async (logger, rawData) => {
     triggerPrice: buyTriggerPrice,
     difference: buyDifference,
     nextBestBuyAmount,
+    nextBestBuyAmountData,
     openOrders: newOpenOrders?.filter(o => o.side.toLowerCase() === 'buy'),
     processMessage: _.get(data, 'buy.processMessage', ''),
     updatedAt: moment().utc().toDate()

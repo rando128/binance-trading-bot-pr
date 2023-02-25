@@ -491,8 +491,8 @@ const execute = async (logger, rawData) => {
       heikinAshiUpTrend !== null ? heikinAshiUpTrend === false : null,
     triggerPrice: buyTriggerPrice,
     difference: buyDifference,
-    nextBestBuyAmount: nextBestBuy.nextBestBuyAmount,
-    nextBestBuyAmountData: nextBestBuy.nextBestBuyAmount,
+    nextBestBuyAmount: nextBestBuy ? nextBestBuy.nextBestBuyAmount : null,
+    nextBestBuyAmountData: nextBestBuy ? nextBestBuy.nextBestBuyAmountData : null,
     openOrders: newOpenOrders?.filter(o => o.side.toLowerCase() === 'buy'),
     processMessage: _.get(data, 'buy.processMessage', ''),
     updatedAt: moment().utc().toDate()

@@ -113,8 +113,15 @@ class SymbolGridCalculator extends React.Component {
         currentGridTradeIndex: buyCurrentGridTradeIndex,
         gridTrade: buyGridTrade
       },
-      sell: { gridTrade: sellGridTrade }
+      sell: {
+        gridTrade: sellGridTrade,
+        conservativeMode: {
+          enabled: sellConservativeModeEnabled,
+          factor: conservativeFactor
+        }
+      }
     } = symbolConfiguration;
+
 
     // Detect obvious manual buys
     // Manual buys during an active grid or outside the bot are not currently
@@ -146,8 +153,9 @@ class SymbolGridCalculator extends React.Component {
 
     const currentSellPercentage = parseFloat(sell.triggerPercentage);
 
-    const currentBuyPercentage =
-      1 - (lastBuyPrice - currentPrice) / lastBuyPrice;
+    const currentBuyPercentage = buyGridTrade !== null
+      ? buyGridTrade.triggerPercentage
+      : 1 + (currentPrice - lastBuyPrice) / lastBuyPrice;
 
     const totalBoughtQty = this.state.scenario.totalBoughtQty
       ? parseFloat(this.state.scenario.totalBoughtQty)
@@ -172,8 +180,17 @@ class SymbolGridCalculator extends React.Component {
 
     const buyPriceEquivalent = lastBuyPrice * parseFloat(buyTrigger);
 
+    const lastExecutedBuyTradeIndex = _.findLastIndex(
+      buyGridTrade,
+      trade => trade.executed === true
+    );
+
+    const updatedSellPercentage = sellConservativeModeEnabled
+      ? 1 + (currentSellPercentage - 1) * conservativeFactor ** (lastExecutedBuyTradeIndex + 1)
+      : currentSellPercentage
+
     const sellTrigger =
-      parseFloat(this.state.scenario.sellTrigger) || currentSellPercentage;
+      parseFloat(this.state.scenario.sellTrigger) || updatedSellPercentage;
 
     const sellPriceEquivalent = currentPrice * parseFloat(sellTrigger);
 

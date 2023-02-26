@@ -383,16 +383,16 @@ const execute = async (logger, rawData) => {
   let triggerPercentage = null;
   let nextBestBuy = null;
 
+  const lastExecutedBuyTradeIndex = _.findLastIndex(
+    buyGridTrade,
+    trade => trade.executed === true
+  );
+
   if (lastBuyPrice > 0 && currentSellGridTrade !== null) {
     const {
       triggerPercentage: sellTriggerPercentage,
       limitPercentage: sellLimitPercentage
     } = currentSellGridTrade;
-
-    const lastExecutedBuyTradeIndex = _.findLastIndex(
-      buyGridTrade,
-      trade => trade.executed === true
-    );
 
     sellConservativeModeApplicable =
       sellConservativeModeEnabled && lastExecutedBuyTradeIndex >= 1;
@@ -432,7 +432,7 @@ const execute = async (logger, rawData) => {
     ? applyConservativeSell(data, {
         conservativeFactor,
         sellTriggerPercentage: nextBestBuySellTriggerPercentage,
-        buyGridTradeDepth: currentBuyGridTradeIndex + 1
+        buyGridTradeDepth: lastExecutedBuyTradeIndex + 1
       })
     : nextBestBuySellTriggerPercentage;
 

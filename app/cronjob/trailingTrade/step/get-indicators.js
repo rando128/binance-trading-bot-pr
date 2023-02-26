@@ -30,6 +30,12 @@ const flattenCandlesData = candles => {
   };
 };
 
+/**
+ * Determine the grid state for nextBestBuyAmount calculation
+ * - isSingleSellGrid
+ * - hasObviousManualTrade
+ *
+ */
 const nextBestBuyAmountCalculationConditions = data => {
   const {
     symbolConfiguration: {
@@ -79,6 +85,14 @@ const nextBestBuyAmountCalculationConditions = data => {
   };
 };
 
+/**
+ * Calculate nextBestBuyAmount
+ *
+ * @param {*} currentPrice
+ * @param {*} lastBuyPrice
+ * @param {*} sellTrigger
+ * @param {*} buyTrigger
+ */
 const calculateNextBestBuyAmount = (
   data,
   { currentPrice, lastBuyPrice, sellTrigger, buyTrigger }
@@ -441,7 +455,6 @@ const execute = async (logger, rawData) => {
 
   nextBestBuyAmount = nextBestBuy.amount;
   nextBestBuyCalculation = nextBestBuy.calculation;
-
   // ##############################
 
   // Get stop loss trigger price

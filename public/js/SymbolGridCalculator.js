@@ -147,8 +147,6 @@ class SymbolGridCalculator extends React.Component {
       ? parseFloat(this.state.scenario.totalBoughtAmount)
       : totalBoughtAmount;
 
-    console.log(this.state.scenario);
-
     const equivalentLastBuyPrice = currentTotalBoughtQty
       ? currentTotalBoughtAmount / currentTotalBoughtQty
       : null;

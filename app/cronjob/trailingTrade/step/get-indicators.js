@@ -30,7 +30,7 @@ const flattenCandlesData = candles => {
   };
 };
 
-const shouldCalculateNextBestBuyAmount = data => {
+const nextBestBuyAmountCalculationConditions = data => {
   const {
     symbolConfiguration: {
       buy: {
@@ -72,7 +72,11 @@ const shouldCalculateNextBestBuyAmount = data => {
     currentSellGridTradeIndex >= 0 && sellGridTrade.length === 1;
 
   // Return true if there is no manual trade and it has executed single sell grid trade.
-  return !hasObviousManualTrade && isSingleSellGrid;
+  // Store the manual trade and single trade status for the frontend
+  return {
+    hasObviousManualTrade,
+    isSingleSellGrid
+  };
 };
 
 const calculateNextBestBuyAmount = (
@@ -85,58 +89,48 @@ const calculateNextBestBuyAmount = (
     }
   } = data;
 
-  let nextBestBuyAmount = null;
-  let nextBestBuyAmountData = null;
+  const { hasObviousManualTrade, isSingleSellGrid } =
+    nextBestBuyAmountCalculationConditions(data);
 
-  if (shouldCalculateNextBestBuyAmount(data)) {
-    const totalBought = buyGridTrade
-      .filter(trade => trade.executed)
-      .map(order => ({
-        cummulativeQuoteQty: parseFloat(
-          order.executedOrder.cummulativeQuoteQty
-        ),
-        executedQty: parseFloat(order.executedOrder.executedQty)
-      }))
-      .reduce(
-        (acc, o) => {
-          acc.amount += o.cummulativeQuoteQty;
-          acc.qty += o.executedQty;
-          return acc;
-        },
-        {
-          amount: 0,
-          qty: 0
-        }
-      );
+  const totalBought = buyGridTrade
+    .filter(trade => trade.executed)
+    .map(order => ({
+      cummulativeQuoteQty: parseFloat(order.executedOrder.cummulativeQuoteQty),
+      executedQty: parseFloat(order.executedOrder.executedQty)
+    }))
+    .reduce(
+      (acc, o) => {
+        acc.amount += o.cummulativeQuoteQty;
+        acc.qty += o.executedQty;
+        return acc;
+      },
+      {
+        amount: 0,
+        qty: 0
+      }
+    );
 
-    // const totalBoughtAmount = buyGridTrade
-    //   .filter(trade => trade.executed)
-    //   .map(order => parseFloat(order.executedOrder.cummulativeQuoteQty))
-    //   .reduce((acc, qty) => acc + qty, 0);
+  let amount = null;
 
-    // const totalBoughtQty = buyGridTrade
-    //   .filter(trade => trade.executed)
-    //   .map(order => parseFloat(order.executedOrder.executedQty))
-    //   .reduce((acc, qty) => acc + qty, 0);
-
-    // const buyTrigger = currentGridTrade.triggerPercentage;// 1 + (currentPrice - lastBuyPrice) / lastBuyPrice;
-
-    nextBestBuyAmount =
+  if (!hasObviousManualTrade && isSingleSellGrid) {
+    amount =
       (totalBought.amount -
         totalBought.qty * buyTrigger * lastBuyPrice * sellTrigger) /
       (sellTrigger - 1);
-
-    nextBestBuyAmountData = {
-      currentPrice,
-      lastBuyPrice,
-      bought: totalBought.amount,
-      qty: totalBought.qty,
-      buyTrigger,
-      sellTrigger
-    };
   }
 
-  return { nextBestBuyAmount, nextBestBuyAmountData };
+  const calculation = {
+    currentPrice,
+    lastBuyPrice,
+    totalBoughtAmount: totalBought.amount,
+    totalBoughtQty: totalBought.qty,
+    buyTrigger,
+    sellTrigger,
+    hasObviousManualTrade,
+    isSingleSellGrid
+  };
+
+  return { amount, calculation };
 };
 
 const applyConservativeSell = (
@@ -413,35 +407,42 @@ const execute = async (logger, rawData) => {
 
   // #### Next best buy related variables
   // Only for single sell grids without obvious manual buys.
+  let nextBestBuyAmount = null;
+  let nextBestBuyCalculation = null;
 
-  // Use buy trigger of the current grid, if any.
-  // Otherwise compute with a grid at currentPrice
-  const nextBestBuyTrigger =
-    currentBuyGridTrade !== null
-      ? currentBuyGridTrade.triggerPercentage
-      : 1 + (currentPrice - lastBuyPrice) / lastBuyPrice;
+  if (currentPrice < lastBuyPrice) {
+    // Use buy trigger of the current grid, if any.
+    // Otherwise compute with a grid at currentPrice
+    const nextBestBuyTrigger =
+      currentBuyGridTrade !== null
+        ? currentBuyGridTrade.triggerPercentage
+        : 1 + (currentPrice - lastBuyPrice) / lastBuyPrice;
 
-  // If conservative mode is enabled, update the sell trigger for the next grid
-  // We won't compute nextBestBuy for multi-grid sells
-  const nextBestBuySellTriggerPercentage =
-    currentSellGridTrade !== null
-      ? currentSellGridTrade.triggerPercentage
-      : null;
+    // If conservative mode is enabled, update the sell trigger for the next grid
+    // We won't compute nextBestBuy for multi-grid sells
+    const nextBestBuySellTriggerPercentage =
+      currentSellGridTrade !== null
+        ? currentSellGridTrade.triggerPercentage
+        : null;
 
-  const nextBestBuySellTrigger = sellConservativeModeEnabled
-    ? applyConservativeSell(data, {
-        conservativeFactor,
-        sellTriggerPercentage: nextBestBuySellTriggerPercentage,
-        buyGridTradeDepth: lastExecutedBuyTradeIndex + 1
-      })
-    : nextBestBuySellTriggerPercentage;
+    const nextBestBuySellTrigger = sellConservativeModeEnabled
+      ? applyConservativeSell(data, {
+          conservativeFactor,
+          sellTriggerPercentage: nextBestBuySellTriggerPercentage,
+          buyGridTradeDepth: lastExecutedBuyTradeIndex + 1
+        })
+      : nextBestBuySellTriggerPercentage;
 
-  nextBestBuy = calculateNextBestBuyAmount(data, {
-    currentPrice,
-    lastBuyPrice,
-    sellTrigger: nextBestBuySellTrigger,
-    buyTrigger: nextBestBuyTrigger
-  });
+    nextBestBuy = calculateNextBestBuyAmount(data, {
+      currentPrice,
+      lastBuyPrice,
+      sellTrigger: nextBestBuySellTrigger,
+      buyTrigger: nextBestBuyTrigger
+    });
+
+    nextBestBuyAmount = nextBestBuy.amount;
+    nextBestBuyCalculation = nextBestBuy.calculation;
+  }
   // ##############################
 
   // Get stop loss trigger price
@@ -520,10 +521,8 @@ const execute = async (logger, rawData) => {
       heikinAshiUpTrend !== null ? heikinAshiUpTrend === false : null,
     triggerPrice: buyTriggerPrice,
     difference: buyDifference,
-    nextBestBuyAmount: nextBestBuy ? nextBestBuy.nextBestBuyAmount : null,
-    nextBestBuyAmountData: nextBestBuy
-      ? nextBestBuy.nextBestBuyAmountData
-      : null,
+    nextBestBuyAmount,
+    nextBestBuyCalculation,
     openOrders: newOpenOrders?.filter(o => o.side.toLowerCase() === 'buy'),
     processMessage: _.get(data, 'buy.processMessage', ''),
     updatedAt: moment().utc().toDate()

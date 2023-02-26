@@ -401,7 +401,7 @@ const execute = async (logger, rawData) => {
       ? applyConservativeSell(data, {
           conservativeFactor,
           sellTriggerPercentage,
-        lastExecutedBuyTradeIndex
+          buyGridTradeDepth: lastExecutedBuyTradeIndex
         })
       : sellTriggerPercentage;
 
@@ -416,31 +416,31 @@ const execute = async (logger, rawData) => {
 
   // Use buy trigger of the current grid, if any.
   // Otherwise compute with a grid at currentPrice
-  const buyTrigger =
+  const nextBestBuyTrigger =
     currentBuyGridTrade !== null
       ? currentBuyGridTrade.triggerPercentage
       : 1 + (currentPrice - lastBuyPrice) / lastBuyPrice;
 
   // If conservative mode is enabled, update the sell trigger for the next grid
   // We won't compute nextBestBuy for multi-grid sells
-  const sellTriggerPercentage =
+  const nextBestBuySellTriggerPercentage =
     currentSellGridTrade !== null
       ? currentSellGridTrade.triggerPercentage
       : null;
 
-  const sellTrigger = sellConservativeModeEnabled
+  const nextBestBuySellTrigger = sellConservativeModeEnabled
     ? applyConservativeSell(data, {
         conservativeFactor,
-        sellTriggerPercentage,
+        sellTriggerPercentage: nextBestBuySellTriggerPercentage,
         buyGridTradeDepth: currentBuyGridTradeIndex + 1
       })
-    : sellTriggerPercentage;
+    : nextBestBuySellTriggerPercentage;
 
   nextBestBuy = calculateNextBestBuyAmount(data, {
     currentPrice,
     lastBuyPrice,
-    sellTrigger,
-    buyTrigger
+    sellTrigger: nextBestBuySellTrigger,
+    buyTrigger: nextBestBuyTrigger
   });
   // ##############################
 

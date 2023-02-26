@@ -111,7 +111,8 @@ class SymbolGridCalculator extends React.Component {
     const {
       buy: {
         currentGridTradeIndex: buyCurrentGridTradeIndex,
-        gridTrade: buyGridTrade
+        gridTrade: buyGridTrade,
+        currentGridTrade: currentBuyGridTrade,
       },
       sell: {
         gridTrade: sellGridTrade,
@@ -153,8 +154,8 @@ class SymbolGridCalculator extends React.Component {
 
     const currentSellPercentage = parseFloat(sell.triggerPercentage);
 
-    const currentBuyPercentage = buyGridTrade !== null
-      ? buyGridTrade.triggerPercentage
+    const currentBuyPercentage = currentBuyGridTrade !== null
+      ? parseFloat(currentBuyGridTrade.triggerPercentage)
       : 1 + (currentPrice - lastBuyPrice) / lastBuyPrice;
 
     const totalBoughtQty = this.state.scenario.totalBoughtQty

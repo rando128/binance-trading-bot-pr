@@ -312,7 +312,7 @@ class SymbolGridCalculator extends React.Component {
                   placeholder='Enter price increase percentage'
                   required
                   min='1'
-                  defaultValue={sellPercentage.toFixed(4)}
+                  defaultValue={sellTrigger.toFixed(4)}
                   data-state-key='sellTrigger'
                   onChange={this.handleInputChange}
                 />

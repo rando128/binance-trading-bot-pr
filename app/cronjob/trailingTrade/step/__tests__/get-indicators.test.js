@@ -11,6 +11,15 @@ describe('get-indicators.js', () => {
 
   let mockGetLastBuyPrice;
 
+  const clearMocks = () => {
+    jest.clearAllMocks().resetModules();
+
+    const { cache, logger, mongo } = require('../../../../helpers');
+    cacheMock = cache;
+    loggerMock = logger;
+    mongoMock = mongo;
+  };
+
   const mockLatestCandle = close => {
     cacheMock.hget = jest.fn().mockImplementation((hash, key) => {
       if (
@@ -109,12 +118,7 @@ describe('get-indicators.js', () => {
   };
   describe('execute', () => {
     beforeEach(() => {
-      jest.clearAllMocks().resetModules();
-
-      const { cache, logger, mongo } = require('../../../../helpers');
-      cacheMock = cache;
-      loggerMock = logger;
-      mongoMock = mongo;
+      clearMocks();
     });
 
     describe('with no open orders and no last buy price', () => {
@@ -210,6 +214,16 @@ describe('get-indicators.js', () => {
             triggerPrice: 8893.03,
             difference: 1.2028521212680054,
             nextBestBuyAmount: null,
+            nextBestBuyCalculation: {
+              buyTrigger: 1,
+              currentPrice: 9000,
+              hasObviousManualTrade: true,
+              isSingleSellGrid: true,
+              lastBuyPrice: null,
+              sellTrigger: 1.06,
+              totalBoughtAmount: 0,
+              totalBoughtQty: 0
+            },
             openOrders: [],
             processMessage: '',
             updatedAt: expect.any(Object)
@@ -342,6 +356,16 @@ describe('get-indicators.js', () => {
             athRestrictionPrice: null,
             triggerPrice: 8981.9603,
             nextBestBuyAmount: null,
+            nextBestBuyCalculation: {
+              buyTrigger: 1.01,
+              currentPrice: 15555.09,
+              hasObviousManualTrade: true,
+              isSingleSellGrid: true,
+              lastBuyPrice: null,
+              sellTrigger: 1.06,
+              totalBoughtAmount: 0,
+              totalBoughtQty: 0
+            },
             difference: 73.18146017634923,
             openOrders: [],
             processMessage: '',
@@ -452,6 +476,16 @@ describe('get-indicators.js', () => {
               highestPrice: 10000,
               lowestPrice: 8893.03,
               nextBestBuyAmount: null,
+              nextBestBuyCalculation: {
+                buyTrigger: 0.9888944444444444,
+                currentPrice: 8900.05,
+                hasObviousManualTrade: false,
+                isSingleSellGrid: false,
+                lastBuyPrice: 9000,
+                sellTrigger: null,
+                totalBoughtAmount: 0,
+                totalBoughtQty: 0
+              },
               athPrice: 9887.955549999999,
               athRestrictionPrice: 8899.159995,
               triggerPrice: null,
@@ -580,6 +614,16 @@ describe('get-indicators.js', () => {
               highestPrice: 10000,
               lowestPrice: 8893.03,
               nextBestBuyAmount: null,
+              nextBestBuyCalculation: {
+                buyTrigger: 1.01,
+                currentPrice: 8900.05,
+                hasObviousManualTrade: true,
+                isSingleSellGrid: true,
+                lastBuyPrice: 9000,
+                sellTrigger: 1.06,
+                totalBoughtAmount: 0,
+                totalBoughtQty: 0
+              },
               athPrice: 9887.955549999999,
               athRestrictionPrice: 8899.159995,
               triggerPrice: 8981.9603,
@@ -624,7 +668,7 @@ describe('get-indicators.js', () => {
         });
       });
 
-      describe('when buy grid trade index is 1 after executing the 1st gride trade', () => {
+      describe('when buy grid trade index is 1 after executing the 1st grid trade', () => {
         beforeEach(async () => {
           rawData = {
             ...baseRawData,
@@ -708,7 +752,17 @@ describe('get-indicators.js', () => {
               limitPrice: 9086.951049999998,
               highestPrice: 10000,
               lowestPrice: 8893.03,
-              nextBestBuyAmount: -7234.216666666658,
+              nextBestBuyAmount: -10589.999999999984,
+              nextBestBuyCalculation: {
+                buyTrigger: 1.01,
+                currentPrice: 8900.05,
+                hasObviousManualTrade: false,
+                isSingleSellGrid: true,
+                lastBuyPrice: 9000,
+                sellTrigger: 1.06,
+                totalBoughtAmount: 9000,
+                totalBoughtQty: 1
+              },
               athPrice: 9887.955549999999,
               athRestrictionPrice: 8899.159995,
               triggerPrice: 9090,
@@ -837,6 +891,16 @@ describe('get-indicators.js', () => {
               highestPrice: 10000,
               lowestPrice: 8893.03,
               nextBestBuyAmount: null,
+              nextBestBuyCalculation: {
+                buyTrigger: 1.01,
+                currentPrice: 8900.05,
+                hasObviousManualTrade: true,
+                isSingleSellGrid: true,
+                lastBuyPrice: 9000,
+                sellTrigger: 1.06,
+                totalBoughtAmount: 0,
+                totalBoughtQty: 0
+              },
               athPrice: 9887.955549999999,
               athRestrictionPrice: 8899.159995,
               triggerPrice: 9090,
@@ -968,7 +1032,17 @@ describe('get-indicators.js', () => {
               limitPrice: 9309.452299999999,
               highestPrice: 10000,
               lowestPrice: 8893.03,
-              nextBestBuyAmount: -7234.216666666658,
+              nextBestBuyAmount: 21899.99999999998,
+              nextBestBuyCalculation: {
+                buyTrigger: 0.9,
+                currentPrice: 8900.05,
+                hasObviousManualTrade: false,
+                isSingleSellGrid: true,
+                lastBuyPrice: 9000,
+                sellTrigger: 1.03,
+                totalBoughtAmount: 9000,
+                totalBoughtQty: 1
+              },
               athPrice: 9887.955549999999,
               athRestrictionPrice: 8899.159995,
               triggerPrice: 8100,
@@ -1103,7 +1177,17 @@ describe('get-indicators.js', () => {
               limitPrice: 9309.452299999999,
               highestPrice: 10000,
               lowestPrice: 8893.03,
-              nextBestBuyAmount: -14470.099999999959,
+              nextBestBuyAmount: 97133.33333333228,
+              nextBestBuyCalculation: {
+                buyTrigger: 0.9,
+                currentPrice: 8900.05,
+                hasObviousManualTrade: false,
+                isSingleSellGrid: true,
+                lastBuyPrice: 9000,
+                sellTrigger: 1.0150000000000001,
+                totalBoughtAmount: 17900,
+                totalBoughtQty: 2
+              },
               athPrice: 9887.955549999999,
               athRestrictionPrice: 8899.159995,
               triggerPrice: 8100,
@@ -1289,9 +1373,19 @@ describe('get-indicators.js', () => {
               limitPrice: null,
               highestPrice: 10000,
               lowestPrice: 8893.03,
-              nextBestBuyAmount: null,
               athPrice: 9887.9,
               athRestrictionPrice: 8899.11,
+              nextBestBuyAmount: null,
+              nextBestBuyCalculation: {
+                buyTrigger: 0.9888888888888889,
+                currentPrice: 8900,
+                hasObviousManualTrade: false,
+                isSingleSellGrid: false,
+                lastBuyPrice: 9000,
+                sellTrigger: null,
+                totalBoughtAmount: 0,
+                totalBoughtQty: 0
+              },
               triggerPrice: null,
               difference: null,
               openOrders: [
@@ -1533,6 +1627,16 @@ describe('get-indicators.js', () => {
               highestPrice: 10000,
               lowestPrice: 8893.03,
               nextBestBuyAmount: null,
+              nextBestBuyCalculation: {
+                buyTrigger: 1.01,
+                currentPrice: 8900,
+                hasObviousManualTrade: true,
+                isSingleSellGrid: true,
+                lastBuyPrice: 9000,
+                sellTrigger: 1.06,
+                totalBoughtAmount: 0,
+                totalBoughtQty: 0
+              },
               athPrice: 9887.9,
               athRestrictionPrice: 8899.11,
               triggerPrice: 8981.9603,
@@ -1622,8 +1726,6 @@ describe('get-indicators.js', () => {
 
       describe('when buy grid trade index is 1', () => {
         beforeEach(async () => {
-          step = require('../get-indicators');
-
           rawData = {
             ...baseRawData,
             symbolConfiguration: {
@@ -1779,7 +1881,17 @@ describe('get-indicators.js', () => {
               limitPrice: 9086.9,
               highestPrice: 10000,
               lowestPrice: 8893.03,
-              nextBestBuyAmount: -7233.333333333327,
+              nextBestBuyAmount: -10589.999999999984,
+              nextBestBuyCalculation: {
+                buyTrigger: 1.01,
+                currentPrice: 8900,
+                hasObviousManualTrade: false,
+                isSingleSellGrid: true,
+                lastBuyPrice: 9000,
+                sellTrigger: 1.06,
+                totalBoughtAmount: 9000,
+                totalBoughtQty: 1
+              },
               athPrice: 9887.9,
               athRestrictionPrice: 8899.11,
               triggerPrice: 9090,
@@ -1869,8 +1981,6 @@ describe('get-indicators.js', () => {
 
       describe('when buy grid trade index is 1 with conservative mode enabled', () => {
         beforeEach(async () => {
-          step = require('../get-indicators');
-
           rawData = {
             ...baseRawData,
             symbolConfiguration: {
@@ -2025,7 +2135,17 @@ describe('get-indicators.js', () => {
               limitPrice: 9086.9,
               highestPrice: 10000,
               lowestPrice: 8893.03,
-              nextBestBuyAmount: -7233.333333333327,
+              nextBestBuyAmount: -12090.000000000013,
+              nextBestBuyCalculation: {
+                buyTrigger: 1.01,
+                currentPrice: 8900,
+                hasObviousManualTrade: false,
+                isSingleSellGrid: true,
+                lastBuyPrice: 9000,
+                sellTrigger: 1.03,
+                totalBoughtAmount: 9000,
+                totalBoughtQty: 1
+              },
               athPrice: 9887.9,
               athRestrictionPrice: 8899.11,
               triggerPrice: 9090,
@@ -2115,6 +2235,12 @@ describe('get-indicators.js', () => {
 
       describe('when buy grid trade index is 2 with conservative mode enabled', () => {
         beforeEach(async () => {
+          clearMocks();
+
+          mockLastBuyPrice({ lastBuyPrice: 9966.66666666667, quantity: 1.5 });
+
+          mockLatestCandle(8900);
+
           step = require('../get-indicators');
 
           rawData = {
@@ -2264,8 +2390,8 @@ describe('get-indicators.js', () => {
                 currentPrice: 8900,
                 differenceToCancel: -82.4838461626746,
                 differenceToExecute: -78.65168539325842,
-                minimumProfit: 35,
-                minimumProfitPercentage: 77.77777777777777,
+                minimumProfit: 30.166666666666654,
+                minimumProfitPercentage: 60.535117056856144,
                 updatedAt: expect.any(Object)
               }
             ],
@@ -2283,11 +2409,21 @@ describe('get-indicators.js', () => {
               limitPrice: 9086.9,
               highestPrice: 10000,
               lowestPrice: 8893.03,
-              nextBestBuyAmount: 204983.33333333314,
+              nextBestBuyAmount: 304933.8333333303,
+              nextBestBuyCalculation: {
+                buyTrigger: 1.01,
+                currentPrice: 8900,
+                hasObviousManualTrade: false,
+                isSingleSellGrid: true,
+                lastBuyPrice: 9966.66666666667,
+                sellTrigger: 1.0150000000000001,
+                totalBoughtAmount: 19900,
+                totalBoughtQty: 1.5
+              },
               athPrice: 9887.9,
               athRestrictionPrice: 8899.11,
-              triggerPrice: 9090,
-              difference: -2.0902090209020896,
+              triggerPrice: 10066.333333333336,
+              difference: -11.586476373389864,
               openOrders: [
                 {
                   orderId: 1,
@@ -2321,13 +2457,13 @@ describe('get-indicators.js', () => {
             sell: {
               currentPrice: 8900,
               limitPrice: 8713.1,
-              lastBuyPrice: 9000,
-              triggerPrice: 9270,
-              difference: -4.157303370786525,
-              currentProfit: -150,
-              currentProfitPercentage: -1.1111111111111072,
-              stopLossDifference: -51.685393258426956,
-              stopLossTriggerPrice: 13500,
+              lastBuyPrice: 9966.66666666667,
+              triggerPrice: 10265.66666666667,
+              difference: -15.344569288389543,
+              currentProfit: -1600.0000000000045,
+              currentProfitPercentage: -10.702341137123772,
+              stopLossDifference: -67.97752808988768,
+              stopLossTriggerPrice: 14950.000000000004,
               openOrders: [
                 {
                   orderId: 3,
@@ -2341,8 +2477,8 @@ describe('get-indicators.js', () => {
                   currentPrice: 8900,
                   differenceToCancel: -82.4838461626746,
                   differenceToExecute: -78.65168539325842,
-                  minimumProfit: 35,
-                  minimumProfitPercentage: 77.77777777777777,
+                  minimumProfit: 30.166666666666654,
+                  minimumProfitPercentage: 60.535117056856144,
                   updatedAt: expect.any(Object)
                 }
               ],
@@ -2536,6 +2672,16 @@ describe('get-indicators.js', () => {
             highestPrice: 10000,
             lowestPrice: 8893.03,
             nextBestBuyAmount: null,
+            nextBestBuyCalculation: {
+              buyTrigger: 1.01,
+              currentPrice: 9000,
+              hasObviousManualTrade: true,
+              isSingleSellGrid: true,
+              lastBuyPrice: null,
+              sellTrigger: 1.06,
+              totalBoughtAmount: 0,
+              totalBoughtQty: 0
+            },
             triggerPrice: 8981.9603,
             athPrice: 9999,
             athRestrictionPrice: 8999.1,
@@ -2721,6 +2867,16 @@ describe('get-indicators.js', () => {
             highestPrice: 17110.599000000002,
             lowestPrice: 8893.03,
             nextBestBuyAmount: null,
+            nextBestBuyCalculation: {
+              buyTrigger: 1.01,
+              currentPrice: 15555.09,
+              hasObviousManualTrade: true,
+              isSingleSellGrid: true,
+              lastBuyPrice: null,
+              sellTrigger: 0.99,
+              totalBoughtAmount: 0,
+              totalBoughtQty: 0
+            },
             athPrice: 17281.704990000002,
             athRestrictionPrice: 15553.534491000002,
             triggerPrice: 8981.9603,
@@ -2935,6 +3091,16 @@ describe('get-indicators.js', () => {
             highestPrice: 10888.955,
             lowestPrice: 8893.03,
             nextBestBuyAmount: null,
+            nextBestBuyCalculation: {
+              buyTrigger: 1.01,
+              currentPrice: 9899.05,
+              hasObviousManualTrade: true,
+              isSingleSellGrid: true,
+              lastBuyPrice: null,
+              sellTrigger: 1.06,
+              totalBoughtAmount: 0,
+              totalBoughtQty: 0
+            },
             athPrice: 10997.84455,
             athRestrictionPrice: 9898.060095,
             triggerPrice: 8981.9603,
@@ -3069,6 +3235,16 @@ describe('get-indicators.js', () => {
             highestPrice: 10888.955,
             lowestPrice: 8893.03,
             nextBestBuyAmount: null,
+            nextBestBuyCalculation: {
+              buyTrigger: 1.01,
+              currentPrice: 9899.05,
+              hasObviousManualTrade: true,
+              isSingleSellGrid: true,
+              lastBuyPrice: null,
+              sellTrigger: 1.06,
+              totalBoughtAmount: 0,
+              totalBoughtQty: 0
+            },
             triggerPrice: 8981.9603,
             athPrice: 10997.84455,
             athRestrictionPrice: 9898.060095,

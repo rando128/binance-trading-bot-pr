@@ -148,12 +148,9 @@ const calculateNextBestBuyAmount = (
 };
 
 const applyConservativeSell = (
-  data,
+  _data,
   { conservativeFactor, sellTriggerPercentage, buyGridTradeDepth }
-) =>
-  sellTriggerPercentage
-    ? 1 + (sellTriggerPercentage - 1) * conservativeFactor ** buyGridTradeDepth
-    : null;
+) => 1 + (sellTriggerPercentage - 1) * conservativeFactor ** buyGridTradeDepth;
 
 /**
  * Get symbol information, buy/sell indicators

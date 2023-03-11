@@ -378,9 +378,10 @@ const handleUDF = async (funcLogger, app) => {
 
     const symbolConfiguration = await getSymbolConfiguration(logger, symbol);
 
-    const conservativeFactor = symbolConfiguration.sell.conservativeMode.enabled
+    const conservativeFactor = symbolConfiguration ?
+      (symbolConfiguration.sell.conservativeMode.enabled
       ? symbolConfiguration.sell.conservativeMode.factor
-      : 1;
+      : 1) : 1;
 
     const archivedGrids = await mongo.findAll(
       logger,

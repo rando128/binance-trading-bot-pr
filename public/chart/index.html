@@ -81,51 +81,75 @@
                   }
                 });
 
-              //Add sell/buy % only if different
-              if (sellTrigger !== lastSellTrigger || idx % 5 == 0) {
-                tvWidget.activeChart().createShape(
-                  {
-                    time: (grid.to) ? grid.to : (Date.now() / 1000),
-                    price: grid.lastBuyPrice * grid.sellTrigger / grid.scale
-                  },
-                  {
-                    shape: "text",
-                    lock: true,
-                    disableSelection: true,
-                    disableSave: true,
-                    disableUndo: true,
-                    zOrder: "top",
-                    text: `${sellTrigger.toFixed(2)}%`,
-                    overrides: {
-                      fontsize: 6,
-                      color: "rgba(14, 203, 129, 0.85)",
-                    }
-                  });
+              //Add sell/buy %
+              tvWidget.activeChart().createShape(
+                {
+                  time: (grid.to) ? grid.to : (Date.now() / 1000),
+                  price: grid.lastBuyPrice * grid.sellTrigger / grid.scale
+                },
+                {
+                  shape: "text",
+                  lock: true,
+                  disableSelection: true,
+                  disableSave: true,
+                  disableUndo: true,
+                  zOrder: "top",
+                  text: `${sellTrigger.toFixed(2)}%`,
+                  overrides: {
+                    fontsize: 6,
+                    color: "rgba(14, 203, 129, 0.85)",
+                  }
+                });
 
-                lastSellTrigger = sellTrigger;
-              }
+              lastSellTrigger = sellTrigger;
 
-              if (buyTrigger !== lastBuyTrigger || idx % 5 == 0) {
-                tvWidget.activeChart().createShape(
+              tvWidget.activeChart().createShape(
+                {
+                  time: grid.from,
+                  price: grid.lastBuyPrice * grid.buyTrigger / grid.scale
+                },
+                {
+                  shape: "text",
+                  lock: true,
+                  disableSelection: true,
+                  disableSave: true,
+                  disableUndo: true,
+                  zOrder: "top",
+                  text: `${buyTrigger.toFixed(2)}%`,
+                  overrides: {
+                    fontsize: 6,
+                    color: "rgba(246, 70, 93, 0.85)",
+                  }
+                });
+
+              lastBuyTrigger = buyTrigger;
+
+              //add conservativeTrigger
+              tvWidget.activeChart().createMultipointShape(
+                [
                   {
                     time: grid.from,
-                    price: grid.lastBuyPrice * grid.buyTrigger / grid.scale
+                    price: grid.lastBuyPrice * grid.conservativeTrigger / grid.scale
                   },
                   {
-                    shape: "text",
-                    lock: true,
-                    disableSelection: true,
-                    disableSave: true,
-                    disableUndo: true,
-                    zOrder: "top",
-                    text: `${buyTrigger.toFixed(2)}%`,
-                    overrides: {
-                      fontsize: 6,
-                      color: "rgba(246, 70, 93, 0.85)",
-                    }
-                  });
-                lastBuyTrigger = buyTrigger;
-              }
+                    time: (grid.to) ? grid.to : (Date.now() / 1000),
+                    price: grid.lastBuyPrice * grid.conservativeTrigger / grid.scale
+                  }
+                ],
+                {
+                  shape: "trend_line",
+                  lock: true,
+                  disableSelection: true,
+                  disableSave: true,
+                  disableUndo: true,
+                  zOrder: "top",
+                  overrides: {
+                    linecolor: "green",
+                    linewidth: 1,
+                    linestyle: 1,
+                  }
+                }
+              );
             }
 
             //current lastBuyPrice
@@ -152,9 +176,11 @@
                   overrides: {
                     linecolor: "gray",
                     extendRight: true,
-                    linestyle: 1
+                    linestyle: 1,
+                    linewidth: 1
                   }
-                });
+                }
+              );
             }
           });
 
@@ -185,8 +211,8 @@
 
       exitLine = tvWidget.activeChart().createShape(
         {
-            price: price * ( 100 + trigger) / 100,
-            time: Date.now()
+          price: price * ( 100 + trigger) / 100,
+          time: Date.now()
         },
         {
           shape: "horizontal_line",
@@ -199,11 +225,11 @@
           overrides: {
             linecolor: "blue",
             linewidth: 1,
-            linestyle: 1,
+            loninestyle: 1,
             showLabel: true,
             horzLabelsAlign: 'right',
             fontsize: 10,
-            textcolor: 'gray',
+            textcolor: 'blue',
           }
         })
     }
@@ -220,25 +246,20 @@
       var widget = window.tvWidget = new TradingView.widget({
         debug: true, // uncomment this line to see Library errors and warnings in the console
         fullscreen: true,
+        autosize: true,
         symbol: symbol,
-        //interval: interval,
+        interval: "1",
         container: "tv_chart_container",
-
-        //	BEWARE: no trailing slash is expected in feed URL
-        datafeed: new Datafeeds.UDFCompatibleDatafeed(datafeedUrl),
+        datafeed: new Datafeeds.UDFCompatibleDatafeed(datafeedUrl,3000, { maxResponseLength: 800, expectedOrder: 'latestFirst'}),
         library_path: "charting_library/",
         locale: getParameterByName("lang") || "en",
         timezone: "exchange",
         disabled_features: ["create_volume_indicator_by_default", "left_toolbar", "header_settings", "header_compare", "header_screenshot", "header_undo_redo"], //"header_symbol_search"
-        // enabled_features: ["study_templates"],
-        // charts_storage_url: 'https://saveload.tradingview.com',
-        // charts_storage_api_version: "1.1",
-        // client_id: 'tradingview.com',
+        enabled_features: ["countdown", "use_localstorage_for_settings"],
         user_id: "public_user_id",
         theme: getParameterByName("theme"),
-        //default bar style
         overrides: {
-            "mainSeriesProperties.style": 8,
+          "mainSeriesProperties.style": 8, //default bar style
         },
         custom_indicators_getter: function(PineJS) {
           return Promise.resolve([
@@ -293,7 +314,7 @@
                   const v = 100 * (PineJS.Std.high(this._context) - PineJS.Std.low(this._context) ) / PineJS.Std.low(this._context);
                   return [v];
                 }
-        }
+              }
             }
           ]);
         },
@@ -307,16 +328,16 @@
         button.setAttribute("title", "Toggle marks");
         button.textContent = "Marks ON";
         button.addEventListener("click", function() {
-              if (marksEnabled) {
-                clearShapes()
-                marksEnabled = false;
-                button.textContent = "Marks OFF";
-              } else {
-                drawShapes()
-                marksEnabled = true;
-                button.textContent = "Marks ON";
-              }
-          });
+          if (marksEnabled) {
+            clearShapes()
+            marksEnabled = false;
+            button.textContent = "Marks OFF";
+          } else {
+            drawShapes()
+            marksEnabled = true;
+            button.textContent = "Marks ON";
+          }
+        });
       });
 
       tvWidget.onChartReady(function() {
@@ -324,6 +345,7 @@
 
         tvWidget.activeChart().onIntervalChanged().subscribe(
           null, (interval, timeframeObj) => {
+            console.log("onIntervalChanged")
             setTimeout(function() {
               redrawShapes();
             }, 2000)
@@ -334,6 +356,8 @@
         })
 
         tvWidget.subscribe('reset_scales', (e) => {
+          console.log("reset_scales")
+
           redrawShapes()
         })
 
@@ -344,14 +368,17 @@
 
         tvWidget.activeChart().onSymbolChanged().subscribe(null, (data) => {
           symbol = data.symbol
-
           const url = new URL(window.location);
-          url.searchParams.set('symbol', symbol);
-          window.history.pushState({symbol}, symbol, url);
+          const currentSymbol = url.searchParams.get('symbol');
+            if (currentSymbol !== symbol) {
+              console.log("onSymbolChanged")
+              url.searchParams.set('symbol', symbol);
+              window.history.pushState({ symbol }, symbol, url);
 
-          setTimeout(function() {
-            redrawShapes();
-          }, 2000)
+              setTimeout(function() {
+                redrawShapes();
+              }, 2000)
+            }
           }
         );
 

@@ -198,7 +198,6 @@ const handleUDF = async (funcLogger, app) => {
     const interval = RESOLUTIONS_INTERVALS_MAP[req.query.resolution];
     if (!interval) {
       return res.send({ s: 'no_data', m: 'invalid resolution' });
-      //throw new Error(`Invalid resolution ${req.query.resolution}`);
     }
 
     const candles = await binance.client.candles({
@@ -223,6 +222,7 @@ const handleUDF = async (funcLogger, app) => {
   });
 
   // UDF marks
+  /*
   app.get('/marks', async (req, res) => {
     const { symbol } = req.query;
 
@@ -329,8 +329,8 @@ const handleUDF = async (funcLogger, app) => {
         return 'green';
       }),
       text: _.map(allOrders, v => {
-          if (v.side === 'BUY') return `@${v.price} ${moment(v.time).tz('Europe/Madrid')}`;
-          if (v.sell == 'GTC') return `@${v.price} ${moment(v.time).tz('Europe/Madrid')}`;
+          if (v.side === 'BUY' || v.sell == 'GTC') return `@${v.price}`;
+          //if (v.sell == 'GTC') return `@${v.price} ${moment(v.time).tz('Europe/Madrid')}`;
           return `@${v.price} ${moment(v.time).tz('Europe/Madrid')}`
         }
       ),
@@ -371,12 +371,16 @@ const handleUDF = async (funcLogger, app) => {
 
     res.send(allOrders);
   });
-
+  */
   // Grids endpoints
   app.get('/grid_trades', async (req, res) => {
     const { symbol } = req.query;
 
     const symbolConfiguration = await getSymbolConfiguration(logger, symbol);
+
+    const conservativeFactor = symbolConfiguration.sell.conservativeMode.enabled
+      ? symbolConfiguration.sell.conservativeMode.factor
+      : 1;
 
     const archivedGrids = await mongo.findAll(
       logger,
@@ -401,7 +405,6 @@ const handleUDF = async (funcLogger, app) => {
           ]
       },
     );
-
     const activeGrid = await mongo.findAll(
       logger,
       'trailing-trade-grid-trade',
@@ -411,11 +414,6 @@ const handleUDF = async (funcLogger, app) => {
     );
 
     const allGrids = archivedGrids.concat(activeGrid);
-
-    // allOrders.sort( (a,b) => {
-    //   return a.time - b.time
-    // })
-
     /*
     trade:
       side: buy, sell,
@@ -430,59 +428,62 @@ const handleUDF = async (funcLogger, app) => {
     const exchangeSymbol = symbols.filter(s => s.symbol === symbol)[0];
     const scale = exchangeSymbol.pricescale;
 
-    //console.log(`scale ${symbol}: ${scale}`)
-    //res.send(allGrids)
-
     let allTrades = []
     allGrids.forEach( (grid, idx, grids) => {
 
       let qty = 0;
       let amount = 0;
+      let sell;
 
       //sell or stoploss element if any
-      let sell;
-      if (grid.sell[0].executed)
-        sell = grid.sell[0].executedOrder;
-      else if (grid.stopLossQuoteQty)
-        sell = grid.stopLoss;
-      if (sell)
-        allTrades.push({
-          time: sell.transactTime / 1000,
-          side: 'SELL',
-          price: (grid.stopLossQuoteQty) ? parseFloat(sell.fills[0].price) : parseFloat(sell.price),
-          qty: sell.executedQty,
-          stopLoss: (grid.stopLossQuoteQty) ? true : false,
-          scale: scale,
-        })
+      if (grid.sell) {
+        if (grid.sell[0].executed)
+          sell = grid.sell[0].executedOrder;
+        else if (grid.stopLossQuoteQty)
+          sell = grid.stopLoss;
+        if (sell)
+          allTrades.push({
+            time: sell.transactTime / 1000,
+            side: 'SELL',
+            price: (grid.stopLossQuoteQty) ? parseFloat(sell.fills[0].price) : parseFloat(sell.price),
+            qty: sell.executedQty,
+            stopLoss: (grid.stopLossQuoteQty) ? true : false,
+            scale: scale,
+          })
+      }
 
       //go over each buy element
-      grid.buy.forEach( (buy, b, buys) => {
+      if (grid.buy)
+        grid.buy.forEach( (buy, b, buys) => {
 
-        if (buy.executed) {
+          if (buy.executed) {
 
-            qty += parseFloat(buy.executedOrder.executedQty);
-            amount += parseFloat(buy.executedOrder.cummulativeQuoteQty);
+              qty += parseFloat(buy.executedOrder.executedQty);
+              amount += parseFloat(buy.executedOrder.cummulativeQuoteQty);
 
-            let sellTrigger = grid.sell[0].triggerPercentage;
-            let buyTrigger = (b < (buys.length - 1)) ?  buys[b + 1].triggerPercentage  : 0;
-            if (sell === undefined && symbolConfiguration.buy !== undefined) { //take live configuration for active grids
-              buyTrigger = (b < (symbolConfiguration.buy.gridTrade.length - 1)) ? symbolConfiguration.buy.gridTrade[b+1].triggerPercentage : 0;
-              sellTrigger = symbolConfiguration.sell.gridTrade[0].triggerPercentage;
+              let sellTrigger = grid.sell[0].triggerPercentage;
+              let buyTrigger = (b < (buys.length - 1)) ?  buys[b + 1].triggerPercentage  : 0;
+              let conservativeTrigger = sellTrigger * conservativeFactor ** (buys.length - 1);
+              if (sell === undefined && symbolConfiguration.buy !== undefined) { //take live configuration for active grids
+                buyTrigger = (b < (symbolConfiguration.buy.gridTrade.length - 1)) ? symbolConfiguration.buy.gridTrade[b+1].triggerPercentage : 0;
+                sellTrigger = symbolConfiguration.sell.gridTrade[0].triggerPercentage;
+                conservativeTrigger = 1 + (sellTrigger - 1) * conservativeFactor ** (buys.length - 1);
+              }
+
+              allTrades.push({
+                time: buy.executedOrder.transactTime / 1000,
+                side: 'BUY',
+                price: parseFloat(buy.executedOrder.price),
+                qty: parseFloat(buy.executedOrder.executedQty),
+                sellTrigger: sellTrigger * scale,
+                buyTrigger: buyTrigger * scale,
+                conservativeTrigger: conservativeTrigger * scale,
+                lastBuyPrice: amount / qty,
+                totalQty: qty,
+                scale: scale,
+              })
             }
-
-            allTrades.push({
-              time: buy.executedOrder.transactTime / 1000,
-              side: 'BUY',
-              price: parseFloat(buy.executedOrder.price),
-              qty: parseFloat(buy.executedOrder.executedQty),
-              sellTrigger: sellTrigger * scale,
-              buyTrigger: buyTrigger * scale,
-              lastBuyPrice: amount / qty,
-              totalQty: qty,
-              scale: scale,
-            })
-          }
-      })
+        })
 
     });
 

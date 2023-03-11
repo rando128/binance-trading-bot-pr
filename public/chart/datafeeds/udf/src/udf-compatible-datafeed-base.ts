@@ -18,6 +18,7 @@ import {
 	SubscribeBarsCallback,
 	TimescaleMark,
 	SymbolResolveExtension,
+	VisiblePlotsSet,
 } from '../../../charting_library/datafeed-api';
 
 import {
@@ -30,6 +31,7 @@ import {
 import {
 	GetBarsResult,
 	HistoryProvider,
+	LimitedResponseConfiguration,
 	PeriodParamsWithOptionalCountback,
 } from './history-provider';
 
@@ -48,6 +50,32 @@ export interface UdfCompatibleConfiguration extends DatafeedConfiguration {
 
 export interface ResolveSymbolResponse extends LibrarySymbolInfo {
 	s: undefined;
+
+	'exchange-listed': string;
+	'exchange-traded': string;
+
+	'currency-code': string;
+	'unit-id': string;
+
+	'original-currency-code': string;
+
+	'original-unit-id': string;
+
+	'unit-conversion-types': string[];
+	'has-intraday': boolean;
+	'has-no-volume': boolean;
+	'visible-plots-set'?: VisiblePlotsSet;
+	minmovement: number;
+	minmovement2?: number;
+	minmov2?: number;
+	'session-regular': string;
+	'session-holidays': string;
+	'supported-resolutions': ResolutionString[];
+	'has-daily': boolean;
+	'intraday-multipliers': string[];
+	'has-weekly-and-monthly'?: boolean;
+	'has-empty-bars'?: boolean;
+	'volume-precision'?: number;
 }
 
 // it is hack to let's TypeScript make code flow analysis
@@ -94,10 +122,20 @@ export class UDFCompatibleDatafeedBase implements IExternalDatafeed, IDatafeedQu
 
 	private readonly _requester: Requester;
 
-	protected constructor(datafeedURL: string, quotesProvider: IQuotesProvider, requester: Requester, updateFrequency: number = 10 * 1000) {
+	protected constructor(
+		datafeedURL: string,
+		quotesProvider: IQuotesProvider,
+		requester: Requester,
+		updateFrequency: number = 10 * 1000,
+		limitedServerResponse?: LimitedResponseConfiguration
+	) {
 		this._datafeedURL = datafeedURL;
 		this._requester = requester;
-		this._historyProvider = new HistoryProvider(datafeedURL, this._requester);
+		this._historyProvider = new HistoryProvider(
+			datafeedURL,
+			this._requester,
+			limitedServerResponse
+		);
 		this._quotesProvider = quotesProvider;
 
 		this._dataPulseProvider = new DataPulseProvider(this._historyProvider, updateFrequency);
@@ -286,7 +324,40 @@ export class UDFCompatibleDatafeedBase implements IExternalDatafeed, IDatafeedQu
 					if (response.s !== undefined) {
 						onError('unknown_symbol');
 					} else {
-						onResultReady(response);
+						const symbol = response.name;
+						const listedExchange = response.listed_exchange ?? response['exchange-listed'];
+						const tradedExchange = response.exchange ?? response['exchange-traded'];
+						const fullName = response.full_name ?? `${tradedExchange}:${symbol}`;
+
+						const result: LibrarySymbolInfo = {
+							...response,
+							name: symbol,
+							base_name: [listedExchange + ':' + symbol],
+							full_name: fullName,
+							listed_exchange: listedExchange,
+							exchange: tradedExchange,
+							currency_code: response.currency_code ?? response['currency-code'],
+							original_currency_code: response.original_currency_code ?? response['original-currency-code'],
+							unit_id: response.unit_id ?? response['unit-id'],
+							original_unit_id: response.original_unit_id ?? response['original-unit-id'],
+							unit_conversion_types: response.unit_conversion_types ?? response['unit-conversion-types'],
+							has_intraday: response.has_intraday ?? response['has-intraday'] ?? false,
+							// eslint-disable-next-line deprecation/deprecation
+							has_no_volume: response.has_no_volume ?? response['has-no-volume'],
+							visible_plots_set: response.visible_plots_set ?? response['visible-plots-set'],
+							minmov: response.minmovement ?? response.minmov ?? 0,
+							minmove2: response.minmovement2 ?? response.minmove2 ?? response.minmov2,
+							session: response.session ?? response['session-regular'],
+							session_holidays: response.session_holidays ?? response['session-holidays'],
+							supported_resolutions: response.supported_resolutions ?? response['supported-resolutions'] ?? this._configuration.supported_resolutions ?? [],
+							has_daily: response.has_daily ?? response['has-daily'] ?? true,
+							intraday_multipliers: response.intraday_multipliers ?? response['intraday-multipliers'] ?? ['1', '5', '15', '30', '60'],
+							has_weekly_and_monthly: response.has_weekly_and_monthly ?? response['has-weekly-and-monthly'],
+							has_empty_bars: response.has_empty_bars ?? response['has-empty-bars'],
+							volume_precision: response.volume_precision ?? response['volume-precision'],
+							format: response.format ?? 'price',
+						};
+						onResultReady(result);
 					}
 				})
 				.catch((reason?: string | Error) => {

@@ -154,6 +154,41 @@ const applyConservativeSell = (
 ) => 1 + (sellTriggerPercentage - 1) * conservativeFactor ** buyGridTradeDepth;
 
 /**
+ * Determine Kagi trend
+ * @param {*} candles
+ * @param {*} length
+ */
+const getKagiTrend = ({ lastTrend, candles }) => {
+
+  // const {
+  //   buy: {
+  //     latestKagiTrend
+  //   },
+  // } = data;
+
+  //console.log(lastTrend)
+
+  if (lastTrend === 0) {
+    return (candles[0].close > candles[1].close) ? 1 : -1
+  }
+
+  const atr = 0.001
+  const highest_close = Math.max(candles)
+  const lowest_close = Math.min(candles)
+
+  // console.log(highest_close)
+  // console.log(lowest_close)
+
+  let trend = null;
+  if (latestKagiTrend === 1 && (close < highest_close - atr)) {
+    trend = -1
+  } else if (latestKagiTrend === -1 && (close > lowest_close + atr)) {
+    trend = 1
+  }
+  return trend;
+}
+
+    /**
  * Get symbol information, buy/sell indicators
  *
  * @param {*} logger
@@ -161,7 +196,6 @@ const applyConservativeSell = (
  */
 const execute = async (logger, rawData) => {
   const data = rawData;
-
   const {
     symbol,
     symbolInfo: {
@@ -325,6 +359,7 @@ const execute = async (logger, rawData) => {
       high: candles[0].high,
       low: candles[0].low
     };
+
     const currentHeikinAshiUpTrend =
       currentHeikinAshiCandle.close - currentHeikinAshiCandle.open > 0;
 
@@ -341,6 +376,7 @@ const execute = async (logger, rawData) => {
     };
     const previousHeikinAshiUpTrend =
       previousHeikinAshiCandle.close - previousHeikinAshiCandle.open > 0;
+
     heikinAshiUpTrend = currentHeikinAshiUpTrend && previousHeikinAshiUpTrend;
   }
 
@@ -507,6 +543,9 @@ const execute = async (logger, rawData) => {
     }
     return newOrder;
   });
+
+  const kagi = getKagiTrend({ lastTrend: data.lastTrend, candles });
+  data.lastTrend = kagi;
 
   // Populate data
   data.baseAssetBalance.estimatedValue = baseAssetEstimatedValue;

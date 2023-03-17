@@ -397,6 +397,9 @@ const isHeikinAshiRestrictingBuy = (logger, data) => {
   ) {
     return heikinAshiRestriction;
   }
+
+  logger.info({ isSignalFresh, saveLog: true }, "heikin akin is not fresh");
+
   return false;
 };
 

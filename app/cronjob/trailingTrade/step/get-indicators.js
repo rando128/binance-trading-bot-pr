@@ -154,6 +154,39 @@ const applyConservativeSell = (
 ) => 1 + (sellTriggerPercentage - 1) * conservativeFactor ** buyGridTradeDepth;
 
 /**
+ * Converts OHLC data to Heikin-Ashi based on the following:
+ * HA-Close = (Open(0) + High(0) + Low(0) + Close(0)) / 4
+ * HA-Open = (HA-Open(-1) + HA-Close(-1)) / 2
+ * HA-High = MAX (High(0), HA-Open(0) or HA-Close(0))
+ * HA-Low = Min (Low(0), HA-Open(0) or HA-Close(0) )
+ * @param {Array} ohlc Array of ohlc values
+ */
+const computeHeikinAshi = ohlc => {
+  if (!ohlc || ohlc.length === 0) {
+    return [];
+  }
+
+  const result = [];
+  for (let i = 0; i < ohlc.length; i += 1) {
+    const element = ohlc[i];
+
+    const haCandle = JSON.parse(JSON.stringify(element));
+
+    haCandle.close =
+      (element.open + element.high + element.low + element.close) / 4;
+
+    if (i > 0) {
+      const result1 = result[i - 1];
+      haCandle.open = (result1.open + result1.close) / 2;
+      haCandle.high = Math.max(element.high, haCandle.open, haCandle.close);
+      haCandle.low = Math.min(element.low, haCandle.open, haCandle.close);
+    }
+    result.push(haCandle);
+  }
+  return result;
+}
+
+/**
  * Get symbol information, buy/sell indicators
  *
  * @param {*} logger
@@ -180,7 +213,8 @@ const execute = async (logger, rawData) => {
             interval: buyATHRestrictionCandlesInterval
           },
           restrictionPercentage: buyATHRestrictionPercentage
-        }
+        },
+        heikinAshiRestriction: { enabled: buyHeikinAshiRestriction }
       },
       sell: {
         currentGridTrade: currentSellGridTrade,
@@ -188,7 +222,8 @@ const execute = async (logger, rawData) => {
         conservativeMode: {
           enabled: sellConservativeModeEnabled,
           factor: conservativeFactor
-        }
+        },
+        heikinAshiRestriction: { enabled: sellHeikinAshiRestriction }
       }
     },
     baseAssetBalance: { total: baseAssetTotalBalance },
@@ -311,36 +346,20 @@ const execute = async (logger, rawData) => {
     ...latestIndicators
   };
 
-  // Compute Heikin-Ashi indicator with last 2 candles and determine if uptrend
+  // Compute Heikin-Ashi indicator with last 3 candles and determine if confirmed uptrend
   let heikinAshiUpTrend = null;
-  if (candles.length >= 3) {
-    const currentHeikinAshiCandle = {
-      open: (candles[1].open + candles[1].close) / 2,
-      close:
-        (candles[0].open +
-          candles[0].close +
-          candles[0].high +
-          candles[0].low) /
-        4,
-      high: candles[0].high,
-      low: candles[0].low
-    };
-    const currentHeikinAshiUpTrend =
-      currentHeikinAshiCandle.close - currentHeikinAshiCandle.open > 0;
+  if (
+    (buyHeikinAshiRestriction || sellHeikinAshiRestriction) &&
+    candles.length >= 4
+  ) {
+    const heikinAshi = _.reverse(
+      computeHeikinAshi(_.reverse(_.slice(candles,0,4))))
 
-    const previousHeikinAshiCandle = {
-      open: (candles[2].open + candles[2].close) / 2,
-      close:
-        (candles[1].open +
-          candles[1].close +
-          candles[1].high +
-          candles[1].low) /
-        4,
-      high: candles[1].high,
-      low: candles[1].low
-    };
+    const currentHeikinAshiUpTrend =
+      heikinAshi[0].close - heikinAshi[0].open > 0;
     const previousHeikinAshiUpTrend =
-      previousHeikinAshiCandle.close - previousHeikinAshiCandle.open > 0;
+      heikinAshi[1].close - heikinAshi[1].open > 0;
+
     heikinAshiUpTrend = currentHeikinAshiUpTrend && previousHeikinAshiUpTrend;
   }
 

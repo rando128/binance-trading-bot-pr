@@ -378,7 +378,7 @@ const handleUDF = async (funcLogger, app) => {
 
     const symbolConfiguration = await getSymbolConfiguration(logger, symbol);
 
-    const conservativeFactor = symbolConfiguration ?
+    const conservativeFactor = symbolConfiguration && symbolConfiguration.sell ?
       (symbolConfiguration.sell.conservativeMode.enabled
       ? symbolConfiguration.sell.conservativeMode.factor
       : 1) : 1;

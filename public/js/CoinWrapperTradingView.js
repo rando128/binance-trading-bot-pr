@@ -1,12 +1,14 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/jsx-no-undef */
 /* eslint-disable no-undef */
+
 class CoinWrapperTradingView extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      collapsed: true
+      collapsed: true,
+      dataKagi: [],
     };
 
     this.toggleCollapse = this.toggleCollapse.bind(this);
@@ -39,7 +41,7 @@ class CoinWrapperTradingView extends React.Component {
   }
 
   render() {
-    const { collapsed } = this.state;
+    const { collapsed, dataKagi } = this.state;
     const {
       connected,
       symbolInfo: {
@@ -60,7 +62,7 @@ class CoinWrapperTradingView extends React.Component {
           },
           candles: { interval },
         },
-        sell: { heikinAshiRestriction: sellHeikinAshiRestriction },
+        sell: { heikinAshiRestriction: sellHeikinAshiRestriction, kagi, updatedAt: kagiTime },
         tradingView,
         overrideData
       }
@@ -69,6 +71,18 @@ class CoinWrapperTradingView extends React.Component {
     if (_.isEmpty(tradingView)) {
       return '';
     }
+
+
+    const currentTick = moment(kagiTime).set({ second: 0, millisecond: 0, }).unix() * 1000
+
+    if (this.state.dataKagi.filter(point => point.x == currentTick).length > 0) {
+      this.state.dataKagi.pop()
+    }
+    this.state.dataKagi.push({
+      x: currentTick, y: kagi
+    });
+    this.state.dataKagi = this.state.dataKagi.slice(-60);
+    console.log(`${symbol}: ${currentTick} ${kagi}`)
 
     const quotePrecision =
       parseFloat(tickSize) === 1 ? 0 : tickSize.indexOf(1) - 1;
@@ -435,6 +449,13 @@ class CoinWrapperTradingView extends React.Component {
                 .fromNow()}
             </span>
           </div>
+          <FlexibleWidthXYPlot xType="time"
+            height={100}>
+            <VerticalBarSeries
+              data={this.state.dataKagi} />
+            <XAxis />
+            <YAxis />
+          </FlexibleWidthXYPlot>
           {updatedWithinAlert}
           <div
             className={`coin-info-content-setting ${

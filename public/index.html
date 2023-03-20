@@ -41,16 +41,15 @@
   <body class="dark-theme dark-mode">
     <div id="app" class="app"></div>
 
-    <!--
-    <script
-      src="https://unpkg.com/react@17/umd/react.production.min.js"
-      crossorigin
-    ></script>
-    <script
-      src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"
-      crossorigin
-    ></script>
-    -->
+<!--    <script-->
+<!--      src="https://unpkg.com/react@17/umd/react.production.min.js"-->
+<!--      crossorigin-->
+<!--    ></script>-->
+<!--    <script-->
+<!--      src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"-->
+<!--      crossorigin-->
+<!--    ></script>-->
+
 
     <script
       src="https://unpkg.com/react@17/umd/react.development.js"
@@ -88,6 +87,9 @@
       crossorigin></script>
     <script src="https://unpkg.com/react-dropzone@14.2.2" crossorigin></script>
 
+    <link rel='stylesheet' href='https://unpkg.com/react-vis/dist/style.css'>
+    <script type='text/javascript' src='https://unpkg.com/react-vis/dist/dist.min.js'></script>
+
     <script>
       const { useState, useRef, useEffect } = React;
 
@@ -114,6 +116,17 @@
       const { Typeahead, Highlighter } = ReactBootstrapTypeahead;
 
       const { default: Dropzone } = reactDropzone;
+
+      const {
+        XYPlot,
+        XAxis,
+        YAxis,
+        VerticalBarSeries,
+        FlexibleWidthXYPlot,
+        HorizontalGridLines,
+        VerticalGridLines,
+        LineSeries } = reactVis;
+
     </script>
 
     <script type="text/babel" src="./js/Config.js"></script>

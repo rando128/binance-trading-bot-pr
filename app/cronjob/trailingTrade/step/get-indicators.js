@@ -2,7 +2,7 @@
 const _ = require('lodash');
 const moment = require('moment');
 const { cache, mongo } = require('../../../helpers');
-const { getLastBuyPrice } = require('../../trailingTradeHelper/common');
+const { getLastBuyPrice, saveCandle } = require('../../trailingTradeHelper/common');
 
 /**
  * Flatten candle data
@@ -156,39 +156,69 @@ const applyConservativeSell = (
 /**
  * Determine Kagi trend
  * @param {*} candles
- * @param {*} length
  */
-const getKagiTrend = ({ lastTrend, candles }) => {
+const getKagiTrend = (candles, period) => {
 
-  // const {
-  //   buy: {
-  //     latestKagiTrend
-  //   },
-  // } = data;
+  const periodCandles = _.take(candles, period);
+  const ohlc = _.reverse(periodCandles);
 
-  //console.log(lastTrend)
+  // Compute the Normalized True Range for each candle of the array
+  const normalizedTrueRange = [];
+  for (let i = 0; i < ohlc.length; i += 1) {
+    const candle = ohlc[i];
+    let ntr = 0;
 
-  if (lastTrend === 0) {
-    return (candles[0].close > candles[1].close) ? 1 : -1
+    if (i ===0) {
+      ntr = Math.max(
+        candle.high - candle.low,
+        candle.high - candle.close,
+        candle.close - candle.low
+      );
+      // candle.close
+    } else {
+      ntr = Math.max(
+        candle.high - candle.low,
+        candle.high - ohlc[i - 1].close,
+        ohlc[i - 1].close - candle.low
+      ); // ohlc[i-1].close
+    }
+    normalizedTrueRange.push(ntr);
   }
 
-  const atr = 0.001
-  const highest_close = Math.max(candles)
-  const lowest_close = Math.min(candles)
+  // Compute EMA Average Normalized True Range over the period
+  // const k = 2 / (period + 1);
+  // let antr = normalizedTrueRange[0];
+  // for (let i = 1; i < normalizedTrueRange.length; i += 1) {
+  //   antr = normalizedTrueRange[i] * k + antr * (1 - k);
+  // }
 
-  // console.log(highest_close)
-  // console.log(lowest_close)
+  // Compute SMA
 
-  let trend = null;
-  if (latestKagiTrend === 1 && (close < highest_close - atr)) {
-    trend = -1
-  } else if (latestKagiTrend === -1 && (close > lowest_close + atr)) {
-    trend = 1
+  // Determine trend over the period
+  let trend = ohlc[1].close > ohlc[0].close ? 1 : -1;
+  let highestClose = trend > 0 ? ohlc[1].close : ohlc[0].close;
+  let lowestClose = trend < 0 ? ohlc[1].close : ohlc[0].close;
+
+  for (let i = 2; i < ohlc.length; i += 1) {
+
+    if (trend === 1) {
+      highestClose =
+        ohlc[i].close > highestClose ? ohlc[i].close : highestClose;
+      if (ohlc[i].close < highestClose - antr) trend = -1;
+    }
+
+    if (trend === -1) {
+      lowestClose = ohlc[i].close < lowestClose ? ohlc[i].close : lowestClose;
+
+      if (ohlc[i].close > lowestClose + antr) trend = 1;
+    }
   }
-  return trend;
-}
+  //console.log(`Length: ${period}, lastTrend: ${trend}, natr: ${antr}`)
 
-    /**
+  return trend * antr;
+};
+
+/**
  * Get symbol information, buy/sell indicators
  *
  * @param {*} logger
@@ -544,8 +574,26 @@ const execute = async (logger, rawData) => {
     return newOrder;
   });
 
-  const kagi = getKagiTrend({ lastTrend: data.lastTrend, candles });
-  data.lastTrend = kagi;
+  const kagi = (candles.length >= 10) ? getKagiTrend(candles, 10) : 0;
+
+  // logger.info(
+  //   {
+  //     saveLog:true
+  //   },
+  //   `Kagi trend: ${kagi}`
+  // );
+  // saveCandle(logger, 'trailing-kagi-candles', {
+  //   key: candles[0].key,
+  //   interval: candles[0].interval,
+  //   time: +candles[0].time,
+  //   open: +candles[0].open,
+  //   high: +candles[0].high,
+  //   low: +candles[0].low,
+  //   close: +candles[0].close,
+  //   volume: +candles[0].volume,
+  //   kagi: kagi > 0 ? 1 : -1,
+  //   antr: Math.abs(kagi)
+  // });
 
   // Populate data
   data.baseAssetBalance.estimatedValue = baseAssetEstimatedValue;
@@ -560,6 +608,7 @@ const execute = async (logger, rawData) => {
     athRestrictionPrice: buyATHRestrictionPrice,
     heikinAshiRestriction:
       heikinAshiUpTrend !== null ? heikinAshiUpTrend === false : null,
+    kagi,
     triggerPrice: buyTriggerPrice,
     difference: buyDifference,
     nextBestBuyAmount,
@@ -583,6 +632,7 @@ const execute = async (logger, rawData) => {
     triggerPercentage,
     heikinAshiRestriction:
       heikinAshiUpTrend !== null ? heikinAshiUpTrend === true : null,
+    kagi,
     openOrders: newOpenOrders?.filter(o => o.side.toLowerCase() === 'sell'),
     processMessage: _.get(data, 'sell.processMessage', ''),
     updatedAt: moment().utc().toDate()

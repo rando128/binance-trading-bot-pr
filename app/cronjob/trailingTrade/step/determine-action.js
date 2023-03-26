@@ -366,22 +366,22 @@ const shouldForceSellByTradingViewRecommendation = (logger, data) => {
 };
 
 /**
- * Check whether heikin-ashi signal prevents buy trade (except the first one)
+ * Check whether kagi signal prevents buy trade (except the first one)
  *
  * @param {*} logger
  * @param {*} data
  * @returns
  */
-const isHeikinAshiRestrictingBuy = (logger, data) => {
+const isKagiRestrictingBuy = (logger, data) => {
   const {
     symbolConfiguration: {
       buy: {
-        heikinAshiRestriction: { enabled: heikinAshiRestrictionEnabled },
+        kagiRestriction: { enabled: kagiRestrictionEnabled },
         currentGridTradeIndex
       },
       candles: { interval: humanizedInterval }
     },
-    buy: { heikinAshiRestriction, updatedAt }
+    buy: { kagiRestriction, updatedAt }
   } = data;
 
   const interval = humanizedInterval.match(/\d/)[0];
@@ -390,12 +390,12 @@ const isHeikinAshiRestrictingBuy = (logger, data) => {
     moment().utc().diff(moment(updatedAt), unit, true) <= interval;
 
   if (
-    heikinAshiRestrictionEnabled &&
+    kagiRestrictionEnabled &&
     currentGridTradeIndex >= 1 &&
-    heikinAshiRestriction !== null &&
+    kagiRestriction !== null &&
     isSignalFresh
   ) {
-    return heikinAshiRestriction;
+    return kagiRestriction;
   }
   return false;
 };
@@ -511,7 +511,7 @@ const execute = async (logger, rawData) => {
   //    and current price is less or equal than lowest price
   //    and current balance has not enough value to sell,
   //    and current price is lower than the restriction price
-  //    and heikin-ashi signal is bullish
+  //    and kagi signal is bullish
   //  then buy.
   if (canBuy(data)) {
     if (
@@ -583,12 +583,12 @@ const execute = async (logger, rawData) => {
       );
     }
 
-    if (await isHeikinAshiRestrictingBuy(logger, data)) {
+    if (await isKagiRestrictingBuy(logger, data)) {
       return setBuyActionAndMessage(
         logger,
         data,
         'wait',
-        `The Heikin-Ashi signal is still bearish. Wait before buying.`
+        `The Kagi signal is still bearish. Wait before buying.`
       );
     }
 

@@ -255,10 +255,10 @@
             "__format": "number"
           }
         },
-        "heikinAshiRestriction": {
+        "kagiRestriction": {
           "enabled": {
-            "__name": "BINANCE_JOBS_TRAILING_TRADE_BUY_HEIKINASHI_RESTRICTION_ENABLE",
-            "__description": "If enabled, the bot will buy if the last 2 Heikin Ashi candles are bullish. This increases the chance to buy right after a trend reversal. It doesn't apply for the first grid buy.",
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_BUY_kagi_RESTRICTION_ENABLE",
+            "__description": "If enabled, the bot will buy if the last 2 Kagi are bullish. This increases the chance to buy right after a trend reversal. It doesn't apply for the first grid buy.",
             "__format": "boolean"
           }
         },

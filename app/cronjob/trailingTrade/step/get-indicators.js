@@ -154,16 +154,45 @@ const applyConservativeSell = (
 ) => 1 + (sellTriggerPercentage - 1) * conservativeFactor ** buyGridTradeDepth;
 
 /**
- * Determine Kagi trend
+ * Compute Heikin ashi candles
+ * @param {*} candles
+ */
+const getHeikinAshiCandles = ohlc => {
+  const heikinAshi = [];
+  for (let i = 0; i < ohlc.length; i += 1) {
+    const candle = ohlc[i];
+    const ha = {
+      openTime: candle.openTime,
+      open: 0,
+      high: candle.high,
+      low: candle.low,
+      close: 0
+    };
+
+    if (i === 0) {
+      ha.open = (candle.open + candle.close) / 2;
+      ha.close = (candle.open + candle.high + candle.low + candle.close) / 4;
+    } else {
+      ha.open = (heikinAshi[i - 1].open + heikinAshi[i - 1].close) / 2;
+      ha.close = (candle.open + candle.high + candle.low + candle.close) / 4;
+    }
+
+    heikinAshi.push(ha);
+  }
+
+  return heikinAshi;
+}
+
+/**
+ * Determine Kagi trend line
  * @param {*} candles
  */
 const getKagiTrend = (candles, period) => {
 
-  const periodCandles = _.take(candles, period);
-  const ohlc = _.reverse(periodCandles);
+  const ohlc = candles.slice(-period);
 
-  // Compute the Normalized True Range for each candle of the array
-  const normalizedTrueRange = [];
+  // Compute the True Range for each candle of the array
+  const trueRange = [];
   for (let i = 0; i < ohlc.length; i += 1) {
     const candle = ohlc[i];
     let ntr = 0;
@@ -174,48 +203,44 @@ const getKagiTrend = (candles, period) => {
         candle.high - candle.close,
         candle.close - candle.low
       );
-      // candle.close
     } else {
       ntr = Math.max(
         candle.high - candle.low,
         candle.high - ohlc[i - 1].close,
         ohlc[i - 1].close - candle.low
-      ); // ohlc[i-1].close
+      );
     }
-    normalizedTrueRange.push(ntr);
+    trueRange.push(ntr);
   }
 
-  // Compute EMA Average Normalized True Range over the period
-  // const k = 2 / (period + 1);
-  // let antr = normalizedTrueRange[0];
-  // for (let i = 1; i < normalizedTrueRange.length; i += 1) {
-  //   antr = normalizedTrueRange[i] * k + antr * (1 - k);
-  // }
-
-  // Compute SMA
+  // Compute SMA average of the True Range over the period
+  let sum = 0;
+  for (let i = 0; i < trueRange.length; i += 1) {
+    sum += trueRange[i];
+  }
+  const atr = sum/trueRange.length;
 
   // Determine trend over the period
   let trend = ohlc[1].close > ohlc[0].close ? 1 : -1;
   let highestClose = trend > 0 ? ohlc[1].close : ohlc[0].close;
   let lowestClose = trend < 0 ? ohlc[1].close : ohlc[0].close;
 
-  for (let i = 2; i < ohlc.length; i += 1) {
+  for (let i = 1; i < ohlc.length; i += 1) {
 
     if (trend === 1) {
       highestClose =
         ohlc[i].close > highestClose ? ohlc[i].close : highestClose;
-      if (ohlc[i].close < highestClose - antr) trend = -1;
+      if (ohlc[i].close < highestClose - atr) trend = -1;
     }
 
     if (trend === -1) {
       lowestClose = ohlc[i].close < lowestClose ? ohlc[i].close : lowestClose;
 
-      if (ohlc[i].close > lowestClose + antr) trend = 1;
+      if (ohlc[i].close > lowestClose + atr) trend = 1;
     }
   }
-  //console.log(`Length: ${period}, lastTrend: ${trend}, natr: ${antr}`)
 
-  return trend * antr;
+  return trend * atr;
 };
 
 /**
@@ -374,42 +399,6 @@ const execute = async (logger, rawData) => {
     ...data.indicators,
     ...latestIndicators
   };
-
-  // Compute Heikin-Ashi indicator with last 2 candles and determine if uptrend
-  let heikinAshiUpTrend = null;
-  if (candles.length >= 3) {
-    const currentHeikinAshiCandle = {
-      open: (candles[1].open + candles[1].close) / 2,
-      close:
-        (candles[0].open +
-          candles[0].close +
-          candles[0].high +
-          candles[0].low) /
-        4,
-      high: candles[0].high,
-      low: candles[0].low
-    };
-
-    const currentHeikinAshiUpTrend =
-      currentHeikinAshiCandle.close - currentHeikinAshiCandle.open > 0;
-
-    const previousHeikinAshiCandle = {
-      open: (candles[2].open + candles[2].close) / 2,
-      close:
-        (candles[1].open +
-          candles[1].close +
-          candles[1].high +
-          candles[1].low) /
-        4,
-      high: candles[1].high,
-      low: candles[1].low
-    };
-    const previousHeikinAshiUpTrend =
-      previousHeikinAshiCandle.close - previousHeikinAshiCandle.open > 0;
-
-    heikinAshiUpTrend = currentHeikinAshiUpTrend && previousHeikinAshiUpTrend;
-  }
-
   // Get current price
   const currentPrice = parseFloat(cachedLatestCandle.close);
 
@@ -574,26 +563,31 @@ const execute = async (logger, rawData) => {
     return newOrder;
   });
 
-  const kagi = (candles.length >= 10) ? getKagiTrend(candles, 10) : 0;
+  // Sell restriction if last 2 candles are bearish
+  const heikinAshiCandles = getHeikinAshiCandles(_.reverse(candles));
+  const heikinAshiUpTrend =
+    heikinAshiCandles[candlesLimit - 1].close >
+      heikinAshiCandles[candlesLimit - 1].open &&
+    heikinAshiCandles[candlesLimit - 2].close >
+      heikinAshiCandles[candlesLimit - 2].open;
 
-  // logger.info(
-  //   {
-  //     saveLog:true
-  //   },
-  //   `Kagi trend: ${kagi}`
-  // );
-  // saveCandle(logger, 'trailing-kagi-candles', {
-  //   key: candles[0].key,
-  //   interval: candles[0].interval,
-  //   time: +candles[0].time,
-  //   open: +candles[0].open,
-  //   high: +candles[0].high,
-  //   low: +candles[0].low,
-  //   close: +candles[0].close,
-  //   volume: +candles[0].volume,
-  //   kagi: kagi > 0 ? 1 : -1,
-  //   antr: Math.abs(kagi)
-  // });
+  // Buy restriction on Kagi downtrend
+  // computed on HeikinAshi of HeikinAsh to confirm the trend
+  const doubleHeikinAshiCandles = getHeikinAshiCandles(heikinAshiCandles);
+  const previousKagi =
+    candles.length >= 10
+      ? getKagiTrend(
+          doubleHeikinAshiCandles.slice(0, doubleHeikinAshiCandles.length - 1),
+          10
+        )
+      : null;
+  const currentKagi =
+    candles.length >= 10 ? getKagiTrend(doubleHeikinAshiCandles, 10) : null;
+
+  const kagiUpTrend =
+    previousKagi !== null && currentKagi !== null
+      ? previousKagi > 0 && currentKagi > 0
+      : null;
 
   // Populate data
   data.baseAssetBalance.estimatedValue = baseAssetEstimatedValue;
@@ -606,9 +600,7 @@ const execute = async (logger, rawData) => {
     lowestPrice,
     athPrice,
     athRestrictionPrice: buyATHRestrictionPrice,
-    heikinAshiRestriction:
-      heikinAshiUpTrend !== null ? heikinAshiUpTrend === false : null,
-    kagi,
+    kagiRestriction: kagiUpTrend,
     triggerPrice: buyTriggerPrice,
     difference: buyDifference,
     nextBestBuyAmount,
@@ -630,9 +622,7 @@ const execute = async (logger, rawData) => {
     currentProfitPercentage: sellCurrentProfitPercentage,
     conservativeModeApplicable: sellConservativeModeApplicable,
     triggerPercentage,
-    heikinAshiRestriction:
-      heikinAshiUpTrend !== null ? heikinAshiUpTrend === true : null,
-    kagi,
+    heikinAshiRestriction: heikinAshiUpTrend,
     openOrders: newOpenOrders?.filter(o => o.side.toLowerCase() === 'sell'),
     processMessage: _.get(data, 'sell.processMessage', ''),
     updatedAt: moment().utc().toDate()

@@ -62,7 +62,8 @@ class CoinWrapperTradingView extends React.Component {
           },
           candles: { interval },
         },
-        sell: { heikinAshiRestriction: sellHeikinAshiRestriction, kagi, updatedAt: kagiTime },
+        sell: { heikinAshiRestriction: sellHeikinAshiRestriction },
+        buy: { kagiRestriction: buyKagiRestriction },
         tradingView,
         overrideData
       }
@@ -71,18 +72,6 @@ class CoinWrapperTradingView extends React.Component {
     if (_.isEmpty(tradingView)) {
       return '';
     }
-
-
-    const currentTick = moment(kagiTime).set({ second: 0, millisecond: 0, }).unix() * 1000
-
-    if (this.state.dataKagi.filter(point => point.x == currentTick).length > 0) {
-      this.state.dataKagi.pop()
-    }
-    this.state.dataKagi.push({
-      x: currentTick, y: kagi
-    });
-    this.state.dataKagi = this.state.dataKagi.slice(-60);
-    console.log(`${symbol}: ${currentTick} ${kagi}`)
 
     const quotePrecision =
       parseFloat(tickSize) === 1 ? 0 : tickSize.indexOf(1) - 1;
@@ -340,9 +329,9 @@ class CoinWrapperTradingView extends React.Component {
             </a>{' '}
             &nbsp; | &nbsp;
             <a
-                href={ '/chart/?symbol=' + symbol}
-                rel='noopener noreferrer'
-                target='_blank'>
+              href={'/chart/?symbol=' + symbol}
+              rel='noopener noreferrer'
+              target='_blank'>
               Chart
             </a>
           </div>
@@ -429,10 +418,23 @@ class CoinWrapperTradingView extends React.Component {
           <div className='coin-info-column coin-info-column-price'>
             {sellHeikinAshiRestriction !== null ? (
               <span className='coin-info-label fs-8'>
-                Heikin Ashi trend{' '}({interval}){' '}
+                Heikin Ashi ({interval}){' '}
                 <i
                   className={`fas fa-sm mb-1 ${
                     sellHeikinAshiRestriction
+                      ? 'fa-arrow-up text-success'
+                      : 'fa-arrow-down text-danger'
+                  }`}></i>
+              </span>
+            ) : (
+              ''
+            )}
+            {buyKagiRestriction !== null ? (
+              <span className='coin-info-label fs-8'>
+                Kagi ({interval}){' '}
+                <i
+                  className={`fas fa-sm mb-1 ${
+                    buyKagiRestriction
                       ? 'fa-arrow-up text-success'
                       : 'fa-arrow-down text-danger'
                   }`}></i>
@@ -449,13 +451,6 @@ class CoinWrapperTradingView extends React.Component {
                 .fromNow()}
             </span>
           </div>
-          <FlexibleWidthXYPlot xType="time"
-            height={100}>
-            <VerticalBarSeries
-              data={this.state.dataKagi} />
-            <XAxis />
-            <YAxis />
-          </FlexibleWidthXYPlot>
           {updatedWithinAlert}
           <div
             className={`coin-info-content-setting ${

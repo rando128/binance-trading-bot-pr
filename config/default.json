@@ -120,7 +120,7 @@
           },
           "restrictionPercentage": 0.9
         },
-        "heikinAshiRestriction": {
+        "kagiRestriction": {
           "enabled": false
         },
         "tradingView": {

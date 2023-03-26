@@ -519,33 +519,33 @@ class SymbolSettingIcon extends React.Component {
                               <div className='row'>
                                 <div className='col-12'>
                                   <Form.Group
-                                    controlId='field-buy-heikinashi-restriction-enabled'
+                                    controlId='field-buy-kagi-restriction-enabled'
                                     className='mb-2'>
                                     <Form.Check size='sm'>
                                       <Form.Check.Input
                                         type='checkbox'
-                                        data-state-key='buy.heikinAshiRestriction.enabled'
+                                        data-state-key='buy.kagiRestriction.enabled'
                                         checked={
                                           symbolConfiguration.buy
-                                            .heikinAshiRestriction.enabled
+                                            .kagiRestriction.enabled
                                         }
                                         onChange={this.handleInputChange}
                                       />
                                       <Form.Check.Label>
-                                        Heikin-Ashi Buy Restriction Enabled -
-                                        applies only to grids with at least one
-                                        executed buy trade{' '}
+                                        Kagi Buy Restriction Enabled - only for
+                                        grids with at least one executed buy
+                                        trade{' '}
                                         <OverlayTrigger
                                           trigger='click'
-                                          key='buy-heikinashi-restriction-enabled-overlay'
+                                          key='buy-kagi-restriction-enabled-overlay'
                                           placement='bottom'
                                           overlay={
-                                            <Popover id='buy-heikinashi-restriction-enabled-overlay-right'>
+                                            <Popover id='buy-kagi-restriction-enabled-overlay-right'>
                                               <Popover.Content>
-                                                If enabled, the bot will buy if
-                                                the last 2 Heikin-Ashi candles
-                                                are bullish. This increases the
-                                                chance to buy right after a
+                                                If enabled, the bot buys if the
+                                                Kagi signal is bullish on the
+                                                last 2 candles. This increases
+                                                the chance to buy right after a
                                                 trend reversal. It uses the
                                                 interval defined in the{' '}
                                                 <i>candle settings</i>.

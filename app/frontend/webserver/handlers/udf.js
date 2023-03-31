@@ -6,7 +6,7 @@ const {
 } = require('../../../cronjob/trailingTradeHelper/common');
 
 const {
-  getSymbolConfiguration,
+  getSymbolConfiguration
 } = require('../../../cronjob/trailingTradeHelper/configuration');
 
 const {
@@ -154,7 +154,6 @@ const handleUDF = async (funcLogger, app) => {
 
   // UDF search - respond with the list of monitored coins
   app.get('/search', async (req, res) => {
-
     const trailingTradeCacheQuery = [
       {
         $match: {}
@@ -174,7 +173,7 @@ const handleUDF = async (funcLogger, app) => {
           sortField: '$symbol'
         }
       }
-    ]
+    ];
     const monitoredCoins = await mongo.aggregate(
       logger,
       'trailing-trade-cache',
@@ -378,40 +377,44 @@ const handleUDF = async (funcLogger, app) => {
 
     const symbolConfiguration = await getSymbolConfiguration(logger, symbol);
 
-    const conservativeFactor = symbolConfiguration ?
-      (symbolConfiguration.sell.conservativeMode.enabled
-      ? symbolConfiguration.sell.conservativeMode.factor
-      : 1) : 1;
+    const conservativeFactor =
+      symbolConfiguration &&
+      symbolConfiguration.sell &&
+      symbolConfiguration.sell.conservativeMode.enabled
+        ? symbolConfiguration.sell.conservativeMode.factor
+        : 1;
 
     const archivedGrids = await mongo.findAll(
       logger,
       'trailing-trade-grid-trade-archive',
       {
-          $or: [
-            { //fully executed grids
-              $and: [
-                { 'symbol': symbol },
-                { 'buyGridTradeExecuted': true },
-                { 'sellGridTradeExecuted': true },
-              ]
-            },
-            { //grids exited via stoploss - TODO: handle manually exited traded
+        $or: [
+          {
+            // fully executed grids
             $and: [
-              { 'symbol': symbol },
-              { 'buyGridTradeExecuted': true },
-              { 'sellGridTradeExecuted': false },
+              { symbol },
+              { buyGridTradeExecuted: true },
+              { sellGridTradeExecuted: true }
+            ]
+          },
+          {
+            // grids exited via stoploss - TODO: handle manually exited traded
+            $and: [
+              { symbol },
+              { buyGridTradeExecuted: true },
+              { sellGridTradeExecuted: false },
               { 'stopLoss.orderId': { $exists: true } }
             ]
-            }
-          ]
-      },
+          }
+        ]
+      }
     );
     const activeGrid = await mongo.findAll(
       logger,
       'trailing-trade-grid-trade',
       {
-          'key': symbol
-      },
+        key: symbol
+      }
     );
 
     const allGrids = archivedGrids.concat(activeGrid);
@@ -429,74 +432,77 @@ const handleUDF = async (funcLogger, app) => {
     const exchangeSymbol = symbols.filter(s => s.symbol === symbol)[0];
     const scale = exchangeSymbol.pricescale;
 
-    let allTrades = []
-    allGrids.forEach( (grid, idx, grids) => {
-
+    let allTrades = [];
+    allGrids.forEach(grid => {
       let qty = 0;
       let amount = 0;
       let sell;
 
-      //sell or stoploss element if any
+      // sell or stoploss element if any
       if (grid.sell) {
-        if (grid.sell[0].executed)
-          sell = grid.sell[0].executedOrder;
-        else if (grid.stopLossQuoteQty)
-          sell = grid.stopLoss;
+        if (grid.sell[0].executed) sell = grid.sell[0].executedOrder;
+        else if (grid.stopLossQuoteQty) sell = grid.stopLoss;
         if (sell)
           allTrades.push({
             time: sell.transactTime / 1000,
             side: 'SELL',
-            price: (grid.stopLossQuoteQty) ? parseFloat(sell.fills[0].price) : parseFloat(sell.price),
+            price: grid.stopLossQuoteQty
+              ? parseFloat(sell.fills[0].price)
+              : parseFloat(sell.price),
             qty: sell.executedQty,
-            stopLoss: (grid.stopLossQuoteQty) ? true : false,
-            scale: scale,
-          })
+            stopLoss: grid.stopLossQuoteQty ? true : false,
+            scale
+          });
       }
 
-      //go over each buy element
+      // go over each buy element
       if (grid.buy)
-        grid.buy.forEach( (buy, b, buys) => {
-
+        grid.buy.forEach((buy, b, buys) => {
           if (buy.executed) {
+            qty += parseFloat(buy.executedOrder.executedQty);
+            amount += parseFloat(buy.executedOrder.cummulativeQuoteQty);
 
-              qty += parseFloat(buy.executedOrder.executedQty);
-              amount += parseFloat(buy.executedOrder.cummulativeQuoteQty);
-
-              let sellTrigger = grid.sell[0].triggerPercentage;
-              let buyTrigger = (b < (buys.length - 1)) ?  buys[b + 1].triggerPercentage  : 0;
-              let conservativeTrigger = sellTrigger * conservativeFactor ** (buys.length - 1);
-              if (sell === undefined && symbolConfiguration.buy !== undefined) { //take live configuration for active grids
-                buyTrigger = (b < (symbolConfiguration.buy.gridTrade.length - 1)) ? symbolConfiguration.buy.gridTrade[b+1].triggerPercentage : 0;
-                sellTrigger = symbolConfiguration.sell.gridTrade[0].triggerPercentage;
-                conservativeTrigger = 1 + (sellTrigger - 1) * conservativeFactor ** (buys.length - 1);
-              }
-
-              allTrades.push({
-                time: buy.executedOrder.transactTime / 1000,
-                side: 'BUY',
-                price: parseFloat(buy.executedOrder.price),
-                qty: parseFloat(buy.executedOrder.executedQty),
-                sellTrigger: sellTrigger * scale,
-                buyTrigger: buyTrigger * scale,
-                conservativeTrigger: conservativeTrigger * scale,
-                lastBuyPrice: amount / qty,
-                totalQty: qty,
-                scale: scale,
-              })
+            let sellTrigger = grid.sell[0].triggerPercentage;
+            let buyTrigger =
+              b < buys.length - 1 ? buys[b + 1].triggerPercentage : 0;
+            let conservativeTrigger =
+              sellTrigger * conservativeFactor ** (buys.length - 1);
+            if (sell === undefined && symbolConfiguration.buy !== undefined) {
+              // take live configuration for active grids
+              buyTrigger =
+                b < symbolConfiguration.buy.gridTrade.length - 1
+                  ? symbolConfiguration.buy.gridTrade[b + 1].triggerPercentage
+                  : 0;
+              sellTrigger =
+                symbolConfiguration.sell.gridTrade[0].triggerPercentage;
+              conservativeTrigger =
+                1 + (sellTrigger - 1) * conservativeFactor ** (buys.length - 1);
             }
-        })
 
+            allTrades.push({
+              time: buy.executedOrder.transactTime / 1000,
+              side: 'BUY',
+              price: parseFloat(buy.executedOrder.price),
+              qty: parseFloat(buy.executedOrder.executedQty),
+              sellTrigger: sellTrigger * scale,
+              buyTrigger: buyTrigger * scale,
+              conservativeTrigger: conservativeTrigger * scale,
+              lastBuyPrice: amount / qty,
+              totalQty: qty,
+              scale: scale
+            });
+          }
+        });
     });
 
-    allTrades.sort( (a,b) => { return a.time - b.time })
+    allTrades.sort((a, b) => a.time - b.time);
 
-    allTrades.map( (order, i, orders) => {
-      order.from = order.time
-      order.to = (i == orders.length - 1) ? null : orders[i + 1].time
-    })
+    allTrades.map((order, i, orders) => {
+      order.from = order.time;
+      order.to = i == orders.length - 1 ? null : orders[i + 1].time;
+    });
 
-    res.send(allTrades)
-
+    res.send(allTrades);
   });
 };
 

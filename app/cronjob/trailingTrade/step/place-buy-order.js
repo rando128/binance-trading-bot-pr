@@ -168,11 +168,19 @@ const execute = async (logger, rawData) => {
     },
     symbolConfiguration: {
       symbols,
-      buy: { enabled: tradingEnabled, currentGridTradeIndex, currentGridTrade }
+      buy: {
+        enabled: tradingEnabled,
+        automaticBuyAmount: {
+          enabled: automaticBuyAmountEnabled,
+          drainWallet: automaticBuyAmountCanDrainWallet
+        },
+        currentGridTradeIndex,
+        currentGridTrade
+      }
     },
     action,
     quoteAssetBalance: { free: quoteAssetFreeBalance },
-    buy: { currentPrice, triggerPrice, openOrders },
+    buy: { currentPrice, triggerPrice, openOrders, nextBestBuyAmount, nextBestBuyAmountData },
     tradingView,
     overrideData
   } = data;
@@ -244,7 +252,7 @@ const execute = async (logger, rawData) => {
     );
   }
 
-  logger.info({ currentPrice, openOrders }, 'Attempting to place buy order');
+  logger.info({ currentPrice, openOrders, saveLog: true }, 'Attempting to place buy order');
 
   const lotStepSizePrecision =
     parseFloat(stepSize) === 1 ? 0 : stepSize.indexOf(1) - 1;
@@ -257,18 +265,31 @@ const execute = async (logger, rawData) => {
   let freeBalance = orgFreeBalance;
 
   logger.info({ freeBalance }, 'Free balance');
-  if (freeBalance > maxPurchaseAmount) {
+
+  if (automaticBuyAmountEnabled && nextBestBuyAmount) {
+    logger.info(
+      { nextBestBuyAmount, nextBestBuyAmountData, saveLog: true },
+      'Next grid best buy amount '
+    );
+
+    let automaticBuyAmount = nextBestBuyAmount;
+    if (automaticBuyAmountCanDrainWallet) {
+      automaticBuyAmount = Math.min(freeBalance, nextBestBuyAmount);
+    } else {
+      // Respect maxPurchaseAmount
+      automaticBuyAmount = Math.min(maxPurchaseAmount, nextBestBuyAmount);
+    }
+
+    // Can't be less than minPurchaseAmount
+    freeBalance = Math.max(minPurchaseAmount, automaticBuyAmount);
+
+    logger.info(
+      { freeBalance, saveLog: true },
+      'Free balance after break-even adjust'
+    );
+  } else if (freeBalance > maxPurchaseAmount) {
     freeBalance = maxPurchaseAmount;
     logger.info({ freeBalance }, 'Free balance after adjust');
-  }
-
-  if (freeBalance < parseFloat(minNotional)) {
-    return setMessage(
-      logger,
-      data,
-      `Do not place a buy order for the grid trade #${humanisedGridTradeIndex} ` +
-        `as not enough ${quoteAsset} to buy ${baseAsset}.`
-    );
   }
 
   if (freeBalance < minPurchaseAmount) {
@@ -280,6 +301,14 @@ const execute = async (logger, rawData) => {
     );
   }
 
+  if (freeBalance < parseFloat(minNotional)) {
+    return setMessage(
+      logger,
+      data,
+      `Do not place a buy order for the grid trade #${humanisedGridTradeIndex} ` +
+        `as not enough ${quoteAsset} to buy ${baseAsset}.`
+    );
+  }
   const stopPrice = _.floor(currentPrice * stopPercentage, priceTickPrecision);
   const limitPrice = _.floor(
     currentPrice * limitPercentage,
@@ -378,6 +407,7 @@ const execute = async (logger, rawData) => {
     orderQuantityBeforeCommission,
     orderQuantity,
     currentPrice,
+    nextBestBuyAmount,
     stopPercentage,
     limitPrice,
     triggerPrice,

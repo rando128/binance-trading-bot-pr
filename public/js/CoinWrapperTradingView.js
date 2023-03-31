@@ -1,12 +1,14 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/jsx-no-undef */
 /* eslint-disable no-undef */
+
 class CoinWrapperTradingView extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      collapsed: true
+      collapsed: true,
+      dataKagi: [],
     };
 
     this.toggleCollapse = this.toggleCollapse.bind(this);
@@ -39,7 +41,7 @@ class CoinWrapperTradingView extends React.Component {
   }
 
   render() {
-    const { collapsed } = this.state;
+    const { collapsed, dataKagi } = this.state;
     const {
       connected,
       symbolInfo: {
@@ -57,8 +59,11 @@ class CoinWrapperTradingView extends React.Component {
                 }
               }
             }
-          }
+          },
+          candles: { interval },
         },
+        sell: { heikinAshiRestriction: sellHeikinAshiRestriction },
+        buy: { kagiRestriction: buyKagiRestriction },
         tradingView,
         overrideData
       }
@@ -311,22 +316,22 @@ class CoinWrapperTradingView extends React.Component {
     return (
       <div className='coin-info-sub-wrapper'>
         <div className='coin-info-column coin-info-column-title'>
-          <div className='coin-info-label'>
-            Tradingview
-          </div>
+          <div className='coin-info-label'>Tradingview</div>
           <div className='coin-info-value'>
-            Open: <a
+            Open:{' '}
+            <a
               href={
                 'https://www.tradingview.com/symbols/' + symbol + '/technicals/'
               }
               rel='noopener noreferrer'
               target='_blank'>
-            Technical analysis
-          </a> &nbsp; | &nbsp;
+              Technical analysis
+            </a>{' '}
+            &nbsp; | &nbsp;
             <a
-                href={ '/chart/?symbol=' + symbol}
-                rel='noopener noreferrer'
-                target='_blank'>
+              href={'/chart/?symbol=' + symbol}
+              rel='noopener noreferrer'
+              target='_blank'>
               Chart
             </a>
           </div>
@@ -411,6 +416,32 @@ class CoinWrapperTradingView extends React.Component {
             </div>
           </div>
           <div className='coin-info-column coin-info-column-price'>
+            {sellHeikinAshiRestriction !== null ? (
+              <span className='coin-info-label fs-8'>
+                Heikin Ashi ({interval}){' '}
+                <i
+                  className={`fas fa-sm mb-1 ${
+                    sellHeikinAshiRestriction
+                      ? 'fa-arrow-up text-success'
+                      : 'fa-arrow-down text-danger'
+                  }`}></i>
+              </span>
+            ) : (
+              ''
+            )}
+            {buyKagiRestriction !== null ? (
+              <span className='coin-info-label fs-8'>
+                Kagi ({interval}){' '}
+                <i
+                  className={`fas fa-sm mb-1 ${
+                    buyKagiRestriction
+                      ? 'fa-arrow-up text-success'
+                      : 'fa-arrow-down text-danger'
+                  }`}></i>
+              </span>
+            ) : (
+              ''
+            )}
             <span
               className='coin-info-value font-italic fs-9'
               title={tradingView.result.time}>

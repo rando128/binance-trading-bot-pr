@@ -255,6 +255,13 @@
             "__format": "number"
           }
         },
+        "kagiRestriction": {
+          "enabled": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_BUY_kagi_RESTRICTION_ENABLE",
+            "__description": "If enabled, the bot will buy if the last 2 Kagi are bullish. This increases the chance to buy right after a trend reversal. It doesn't apply for the first grid buy.",
+            "__format": "boolean"
+          }
+        },
         "tradingView": {
           "whenStrongBuy": {
             "__name": "BINANCE_JOBS_TRAILING_TRADE_BUY_TRADINGVIEW_WHEN_STRONG_BUY",
@@ -266,6 +273,19 @@
             "__description": "Set a boolean to use TradingView recommendation to trigger the buy. If the buy trigger price is reached, the bot will check TradingView recommendation and if it is not `Buy`, then the bot will not place a buy order.",
             "__format": "boolean"
           }
+        },
+        "automaticBuyAmount": {
+          "enabled": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_AUTOMATIC_BUY_AMOUNT_ENABLED",
+            "__description": "Set a boolean for determining the buy amount that will maximize the chance to break-even given the grid sell trigger objective.",
+            "__format": "boolean"
+          },
+          "drainWallet": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_AUTOMATIC_BUY_DRAIN_WALLET_ENABLED",
+            "__description": "Set a boolean to purchase more than the buy grid maximum amount.",
+            "__format": "boolean"
+          }
+
         }
       },
       "sell": {
@@ -329,6 +349,13 @@
             "__name": "BINANCE_JOBS_TRAILING_TRADE_SELL_CONSERVATIVE_MODE_FACTOR",
             "__description": "Set the conservative factor to be applied on sell trades with at least 2 executed buy grids.",
             "__format": "number"
+          }
+        },
+        "heikinAshiRestriction": {
+          "enabled": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_SELL_HEIKINASHI_RESTRICTION_ENABLE",
+            "__description": "If enabled, the bot will not sell if the last 2 Heikin Ashi candles are bullish. This increases the chance to ride a bull run. It doesn't apply for the first grid buy.",
+            "__format": "boolean"
           }
         }
       },

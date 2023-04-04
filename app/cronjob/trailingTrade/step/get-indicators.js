@@ -600,7 +600,7 @@ const execute = async (logger, rawData) => {
     lowestPrice,
     athPrice,
     athRestrictionPrice: buyATHRestrictionPrice,
-    kagiRestriction: kagiUpTrend,
+    kagiRestriction: !kagiUpTrend,
     triggerPrice: buyTriggerPrice,
     difference: buyDifference,
     nextBestBuyAmount,

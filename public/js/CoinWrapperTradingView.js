@@ -435,8 +435,8 @@ class CoinWrapperTradingView extends React.Component {
                 <i
                   className={`fas fa-sm mb-1 ${
                     kagiDownTrend
-                      ? 'fa-arrow-up text-danger'
-                      : 'fa-arrow-down text-success'
+                      ? 'fa-arrow-down text-danger'
+                      : 'fa-arrow-up text-success'
                   }`}></i>
               </span>
             ) : (

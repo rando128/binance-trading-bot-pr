@@ -140,7 +140,8 @@
           "enabled": false,
           "maxLossPercentage": 0.8,
           "disableBuyMinutes": 360,
-          "orderType": "market"
+          "orderType": "market",
+          "onlyLastGridTrade": false
         },
         "tradingView": {
           "forceSellOverZeroBelowTriggerPrice": {

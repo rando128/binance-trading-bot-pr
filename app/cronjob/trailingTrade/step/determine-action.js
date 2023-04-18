@@ -12,6 +12,7 @@ const { getGridTradeOrder } = require('../../trailingTradeHelper/order');
 
 /**
  * Check whether current price is lower or equal than stop loss trigger price
+ * and if stop-loss after last buy grid trade is enabled.
  *
  * @param {*} data
  * @returns
@@ -19,8 +20,12 @@ const { getGridTradeOrder } = require('../../trailingTradeHelper/order');
 const isLowerThanStopLossTriggerPrice = data => {
   const {
     symbolConfiguration: {
+      buy: { currentGridTrade },
       sell: {
-        stopLoss: { enabled: sellStopLossEnabled }
+        stopLoss: {
+          enabled: sellStopLossEnabled,
+          onlyLastGridTrade: sellStopLossAfterLastGridTrade
+        }
       }
     },
     sell: {
@@ -29,8 +34,15 @@ const isLowerThanStopLossTriggerPrice = data => {
     }
   } = data;
 
+  const stopLossApplicable =
+    (sellStopLossEnabled === true &&
+      sellStopLossAfterLastGridTrade === false) ||
+    (sellStopLossEnabled === true &&
+      sellStopLossAfterLastGridTrade === true &&
+      currentGridTrade === null);
+
   return (
-    sellStopLossEnabled === true && sellCurrentPrice <= sellStopLossTriggerPrice
+    stopLossApplicable === true && sellCurrentPrice <= sellStopLossTriggerPrice
   );
 };
 
@@ -161,7 +173,6 @@ const isExceedingMaxBuyOpenOrders = async (logger, data) => {
  */
 const setBuyActionAndMessage = (logger, rawData, action, processMessage) => {
   const data = rawData;
-
   data.action = action;
   data.buy.processMessage = processMessage;
   data.buy.updatedAt = moment().utc().toDate();

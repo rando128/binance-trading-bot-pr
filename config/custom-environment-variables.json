@@ -298,7 +298,11 @@
             "__name": "BINANCE_JOBS_TRAILING_TRADE_SELL_STOP_LOSS_DISABLE_BUY_MINUTES",
             "__format": "number"
           },
-          "orderType": "BINANCE_JOBS_TRAILING_TRADE_SELL_STOP_LOSS_ORDER_TYPE"
+          "orderType": "BINANCE_JOBS_TRAILING_TRADE_SELL_STOP_LOSS_ORDER_TYPE",
+          "onlyLastGridTrade": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_SELL_STOP_LOSS_ONLY_LAST_GRID_TRADE",
+            "__format": "boolean"
+          }
         },
         "tradingView": {
           "forceSellOverZeroBelowTriggerPrice": {

@@ -1109,7 +1109,7 @@ class SettingIcon extends React.Component {
                               <Accordion.Collapse eventKey='0'>
                                 <Card.Body className='px-2 py-1'>
                                   <div className='row'>
-                                    <div className='col-12'>
+                                    <div className='col-xs-12 col-sm-6'>
                                       <Form.Group
                                         controlId='field-sell-stop-loss-enabled'
                                         className='mb-2'>
@@ -1140,6 +1140,49 @@ class SettingIcon extends React.Component {
                                                     enable this feature to
                                                     prevent the loss more than
                                                     expected.
+                                                  </Popover.Content>
+                                                </Popover>
+                                              }>
+                                              <Button
+                                                variant='link'
+                                                className='p-0 m-0 ml-1 text-info'>
+                                                <i className='fas fa-question-circle fa-sm'></i>
+                                              </Button>
+                                            </OverlayTrigger>
+                                          </Form.Check.Label>
+                                        </Form.Check>
+                                      </Form.Group>
+                                    </div>
+                                    <div className='col-xs-12 col-sm-6'>
+                                      <Form.Group
+                                        controlId='field-sell-stop-loss-onlyLastGridTrade'
+                                        className='mb-2'>
+                                        <Form.Check size='sm'>
+                                          <Form.Check.Input
+                                            type='checkbox'
+                                            data-state-key='sell.stopLoss.onlyLastGridTrade'
+                                            checked={
+                                              configuration.sell.stopLoss
+                                                .onlyLastGridTrade
+                                            }
+                                            disabled={
+                                              !configuration.sell.stopLoss
+                                                .enabled
+                                            }
+                                            onChange={this.handleInputChange}
+                                          />
+                                          <Form.Check.Label>
+                                            After last grid trade{' '}
+                                            <OverlayTrigger
+                                              trigger='click'
+                                              key='sell-stop-loss-onlyLastGridTrade-overlay'
+                                              placement='bottom'
+                                              overlay={
+                                                <Popover id='sell-stop-loss-onlyLastGridTrade-overlay-right'>
+                                                  <Popover.Content>
+                                                    If enabled, stop-loss will
+                                                    happen only if the last buy
+                                                    grid has been executed.
                                                   </Popover.Content>
                                                 </Popover>
                                               }>

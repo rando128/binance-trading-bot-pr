@@ -687,7 +687,7 @@ const execute = async (logger, rawData) => {
       );
     }
 
-    if (isLowerThanStopLossTriggerPrice(data) && currentGridTrade === null) {
+    if (isLowerThanStopLossTriggerPrice(data)) {
       const checkDisable = await isActionDisabled(symbol);
 
       logger.info(
@@ -695,7 +695,6 @@ const execute = async (logger, rawData) => {
         'Checked whether symbol is disabled or not.'
       );
       if (checkDisable.isDisabled) {
-        if (checkDisable.ttl % 60 === 0)
           return setSellActionAndMessage(
             logger,
             data,
@@ -704,8 +703,6 @@ const execute = async (logger, rawData) => {
               `However, the action is temporarily disabled by ${checkDisable.disabledBy}. ` +
               `Resume sell process after ${checkDisable.ttl}s.`
           );
-        else
-          return;
       }
 
       if (!await isKagiRestrictingBuy(logger, data)) {

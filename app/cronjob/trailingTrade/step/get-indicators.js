@@ -154,6 +154,219 @@ const applyConservativeSell = (
 ) => 1 + (sellTriggerPercentage - 1) * conservativeFactor ** buyGridTradeDepth;
 
 /**
+ * Compute Heikin ashi candles
+ * @param {*} candles
+ */
+const getHeikinAshiCandles = ohlc => {
+  const heikinAshi = [];
+  for (let i = 0; i < ohlc.length; i += 1) {
+    const candle = ohlc[i];
+    const ha = {
+      openTime: candle.openTime,
+      open: 0,
+      high: candle.high,
+      low: candle.low,
+      close: 0
+    };
+
+    if (i === 0) {
+      ha.open = (candle.open + candle.close) / 2;
+      ha.close = (candle.open + candle.high + candle.low + candle.close) / 4;
+    } else {
+      ha.open = (heikinAshi[i - 1].open + heikinAshi[i - 1].close) / 2;
+      ha.close = (candle.open + candle.high + candle.low + candle.close) / 4;
+    }
+
+    heikinAshi.push(ha);
+  }
+
+  return heikinAshi;
+}
+
+/**
+ * Determine Kagi trend line
+ * @param {*} candles
+ */
+const getKagiTrend = (candles, period) => {
+
+  const ohlc = candles.slice(-period);
+
+  // Compute the True Range for each candle of the array
+  const trueRange = [];
+  for (let i = 0; i < ohlc.length; i += 1) {
+    const candle = ohlc[i];
+    let ntr = 0;
+
+    if (i ===0) {
+      ntr = Math.max(
+        candle.high - candle.low,
+        candle.high - candle.close,
+        candle.close - candle.low
+      );
+    } else {
+      ntr = Math.max(
+        candle.high - candle.low,
+        candle.high - ohlc[i - 1].close,
+        ohlc[i - 1].close - candle.low
+      );
+    }
+    trueRange.push(ntr);
+  }
+
+  // Compute SMA average of the True Range over the period
+  let sum = 0;
+  for (let i = 0; i < trueRange.length; i += 1) {
+    sum += trueRange[i];
+  }
+  const atr = sum/trueRange.length;
+
+  // Determine trend over the period
+  let trend = ohlc[1].close > ohlc[0].close ? 1 : -1;
+  let highestClose = trend > 0 ? ohlc[1].close : ohlc[0].close;
+  let lowestClose = trend < 0 ? ohlc[1].close : ohlc[0].close;
+
+  for (let i = 1; i < ohlc.length; i += 1) {
+
+    if (trend === 1) {
+      highestClose =
+        ohlc[i].close > highestClose ? ohlc[i].close : highestClose;
+      if (ohlc[i].close < highestClose - atr) trend = -1;
+    }
+
+    if (trend === -1) {
+      lowestClose = ohlc[i].close < lowestClose ? ohlc[i].close : lowestClose;
+
+      if (ohlc[i].close > lowestClose + atr) trend = 1;
+    }
+  }
+
+  return trend * atr;
+};
+
+/**
+ * Determine the grid state for nextBestBuyAmount calculation
+ * - isSingleSellGrid
+ * - hasObviousManualTrade
+ *
+ */
+const nextBestBuyAmountCalculationConditions = data => {
+  const {
+    symbolConfiguration: {
+      buy: {
+        currentGridTradeIndex: currentBuyGridTradeIndex,
+        gridTrade: buyGridTrade
+      },
+      sell: {
+        currentGridTradeIndex: currentSellGridTradeIndex,
+        gridTrade: sellGridTrade
+      }
+    }
+  } = data;
+
+  // Find the first non-executed trade.
+  //    -1 means all buy trades are executed.
+  //    0 or more means the index of trades for first non-executed trade.
+  const firstNonExecutedTradeIndex = buyGridTrade.findIndex(
+    trade => trade.executed === false
+  );
+  // Find the first executed trade.
+  //    -1 means no buy trade is executed.
+  //    0 or more means the index of trades for first executed trade.
+  const firstExecutedTradeIndex = buyGridTrade.findIndex(
+    trade => trade.executed === true
+  );
+  const hasObviousManualTrade =
+    // If there is non-executed trade and does not have executed trade
+    (firstNonExecutedTradeIndex !== -1 && firstExecutedTradeIndex === -1) ||
+    // Or there is non-executed trade and the non-executed trade index is lower than the executed trade index
+    // or the index of current buy grid trade.
+    // It usually happens when the last buy price is set manually.
+    (firstNonExecutedTradeIndex !== -1 &&
+      firstNonExecutedTradeIndex < firstExecutedTradeIndex) ||
+    (firstNonExecutedTradeIndex !== -1 &&
+      firstNonExecutedTradeIndex < currentBuyGridTradeIndex);
+
+  // Check whether it's a single sell grid trade and whether it's executed.
+  const isSingleSellGrid =
+    currentSellGridTradeIndex >= 0 && sellGridTrade.length === 1;
+
+  // Return true if there is no manual trade and it has executed single sell grid trade.
+  // Store the manual trade and single trade status for the frontend
+  return {
+    hasObviousManualTrade,
+    isSingleSellGrid
+  };
+};
+
+/**
+ * Calculate nextBestBuyAmount
+ *
+ * @param {*} currentPrice
+ * @param {*} lastBuyPrice
+ * @param {*} sellTrigger
+ */
+const calculateNextBestBuyAmount = (
+  data,
+  { currentPrice, lastBuyPrice, sellTrigger }
+) => {
+  const {
+    symbolConfiguration: {
+      buy: { gridTrade: buyGridTrade }
+    }
+  } = data;
+
+  const { hasObviousManualTrade, isSingleSellGrid } =
+    nextBestBuyAmountCalculationConditions(data);
+
+  const totalBought = buyGridTrade
+    .filter(trade => trade.executed)
+    .map(order => ({
+      cummulativeQuoteQty: parseFloat(order.executedOrder.cummulativeQuoteQty),
+      executedQty: parseFloat(order.executedOrder.executedQty)
+    }))
+    .reduce(
+      (acc, o) => {
+        acc.amount += o.cummulativeQuoteQty;
+        acc.qty += o.executedQty;
+        return acc;
+      },
+      {
+        amount: 0,
+        qty: 0
+      }
+    );
+
+  const buyTrigger = 1 + (currentPrice - lastBuyPrice) / lastBuyPrice;
+
+  let amount = null;
+
+  if (!hasObviousManualTrade && isSingleSellGrid) {
+    amount =
+      (totalBought.amount -
+        totalBought.qty * buyTrigger * lastBuyPrice * sellTrigger) /
+      (sellTrigger - 1);
+  }
+
+  const calculation = {
+    currentPrice,
+    lastBuyPrice,
+    totalBoughtAmount: totalBought.amount,
+    totalBoughtQty: totalBought.qty,
+    buyTrigger,
+    sellTrigger,
+    hasObviousManualTrade,
+    isSingleSellGrid
+  };
+
+  return { amount, calculation };
+};
+
+const applyConservativeSell = (
+  _data,
+  { conservativeFactor, sellTriggerPercentage, buyGridTradeDepth }
+) => 1 + (sellTriggerPercentage - 1) * conservativeFactor ** buyGridTradeDepth;
+
+/**
  * Get symbol information, buy/sell indicators
  *
  * @param {*} logger
@@ -477,6 +690,32 @@ const execute = async (logger, rawData) => {
     return newOrder;
   });
 
+  // Sell restriction if last 2 candles are bearish
+  const heikinAshiCandles = getHeikinAshiCandles(_.reverse(candles));
+  const heikinAshiUpTrend =
+    heikinAshiCandles[candlesLimit - 1].close >
+      heikinAshiCandles[candlesLimit - 1].open &&
+    heikinAshiCandles[candlesLimit - 2].close >
+      heikinAshiCandles[candlesLimit - 2].open;
+
+  // Buy restriction on Kagi downtrend
+  // computed on HeikinAshi of HeikinAsh to confirm the trend
+  const doubleHeikinAshiCandles = getHeikinAshiCandles(heikinAshiCandles);
+  const previousKagi =
+    candles.length >= 10
+      ? getKagiTrend(
+          doubleHeikinAshiCandles.slice(0, doubleHeikinAshiCandles.length - 1),
+          10
+        )
+      : null;
+  const currentKagi =
+    candles.length >= 10 ? getKagiTrend(doubleHeikinAshiCandles, 10) : null;
+
+  const kagiUpTrend =
+    previousKagi !== null && currentKagi !== null
+      ? previousKagi > 0 && currentKagi > 0
+      : null;
+
   // Populate data
   data.baseAssetBalance.estimatedValue = baseAssetEstimatedValue;
   data.baseAssetBalance.isLessThanMinNotionalValue = isLessThanMinNotionalValue;
@@ -488,6 +727,7 @@ const execute = async (logger, rawData) => {
     lowestPrice,
     athPrice,
     athRestrictionPrice: buyATHRestrictionPrice,
+    kagiRestriction: !kagiUpTrend,
     triggerPrice: buyTriggerPrice,
     difference: buyDifference,
     nextBestBuyAmount,
@@ -509,6 +749,7 @@ const execute = async (logger, rawData) => {
     currentProfitPercentage: sellCurrentProfitPercentage,
     conservativeModeApplicable: sellConservativeModeApplicable,
     triggerPercentage,
+    heikinAshiRestriction: heikinAshiUpTrend,
     openOrders: newOpenOrders?.filter(o => o.side.toLowerCase() === 'sell'),
     processMessage: _.get(data, 'sell.processMessage', ''),
     updatedAt: moment().utc().toDate()

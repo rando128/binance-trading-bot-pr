@@ -57,8 +57,11 @@ class CoinWrapperTradingView extends React.Component {
                 }
               }
             }
-          }
+          },
+          candles: { interval },
         },
+        sell: { heikinAshiRestriction: sellHeikinAshiRestriction },
+        buy: { kagiRestriction: kagiDownTrend },
         tradingView,
         overrideData
       }
@@ -413,6 +416,32 @@ class CoinWrapperTradingView extends React.Component {
             </div>
           </div>
           <div className='coin-info-column coin-info-column-price'>
+            {sellHeikinAshiRestriction !== null ? (
+              <span className='coin-info-label fs-8'>
+                Heikin Ashi ({interval}){' '}
+                <i
+                  className={`fas fa-sm mb-1 ${
+                    sellHeikinAshiRestriction
+                      ? 'fa-arrow-up text-success'
+                      : 'fa-arrow-down text-danger'
+                  }`}></i>
+              </span>
+            ) : (
+              ''
+            )}
+            {kagiDownTrend !== null ? (
+              <span className='coin-info-label fs-8'>
+                Kagi ({interval}){' '}
+                <i
+                  className={`fas fa-sm mb-1 ${
+                    kagiDownTrend
+                      ? 'fa-arrow-down text-danger'
+                      : 'fa-arrow-up text-success'
+                  }`}></i>
+              </span>
+            ) : (
+              ''
+            )}
             <span
               className='coin-info-value font-italic fs-9'
               title={tradingView.result.time}>

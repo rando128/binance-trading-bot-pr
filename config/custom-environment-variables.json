@@ -255,6 +255,13 @@
             "__format": "number"
           }
         },
+        "kagiRestriction": {
+          "enabled": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_BUY_KAGI_RESTRICTION_ENABLE",
+            "__description": "If enabled, the bot will buy if the last 2 Kagi are bullish. This increases the chance to buy right after a trend reversal. It doesn't apply to the first grid buy.",
+            "__format": "boolean"
+          }
+        },
         "tradingView": {
           "whenStrongBuy": {
             "__name": "BINANCE_JOBS_TRAILING_TRADE_BUY_TRADINGVIEW_WHEN_STRONG_BUY",
@@ -356,6 +363,13 @@
             "__name": "BINANCE_JOBS_TRAILING_TRADE_SELL_CONSERVATIVE_MODE_FACTOR",
             "__description": "Set the conservative factor to be applied on sell trades with at least 2 executed buy grids.",
             "__format": "number"
+          }
+        },
+        "heikinAshiRestriction": {
+          "enabled": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_SELL_HEIKINASHI_RESTRICTION_ENABLE",
+            "__description": "If enabled, the bot will not sell if the last 2 Heikin Ashi candles are bullish. This increases the chance to ride a bull run. It doesn't apply for the first grid buy.",
+            "__format": "boolean"
           }
         }
       },

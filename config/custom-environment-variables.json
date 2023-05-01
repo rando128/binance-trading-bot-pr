@@ -267,6 +267,19 @@
             "__format": "boolean"
           }
         },
+        "automaticBuyAmount": {
+          "enabled": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_AUTOMATIC_BUY_AMOUNT_ENABLED",
+            "__description": "Set a boolean for determining the buy amount that will maximize the chance to break-even given the grid sell trigger objective.",
+            "__format": "boolean"
+          },
+          "drainWallet": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_AUTOMATIC_BUY_DRAIN_WALLET_ENABLED",
+            "__description": "Set a boolean to purchase more than the buy grid maximum amount.",
+            "__format": "boolean"
+          }
+
+        },
         "aggressiveMode": {
           "enabled": {
             "__name": "BINANCE_JOBS_TRAILING_TRADE_BUY_AGGRESSIVE_MODE_ENABLED",

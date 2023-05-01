@@ -696,16 +696,6 @@ const execute = async (logger, rawData) => {
         );
       }
 
-      if (!await isKagiRestrictingBuy(logger, data)) {
-        return setSellActionAndMessage(
-          logger,
-          data,
-          'sell-temporary-disabled',
-          'The current price has reached the stop-loss price. ' +
-          `However, the action is temporarily disabled by Kagi bullish signal. `
-        );
-      }
-
       // Then sell market order
       return setSellActionAndMessage(
         logger,

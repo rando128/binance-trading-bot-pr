@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [0.0.98] - 2023-04-13
+
+- Added the prefix to environment parameter for `TRADINGVIEW` related - [#616](https://github.com/chrisleekr/binance-trading-bot/pull/616)
+- Fixed the issue with minNotional - [#623](https://github.com/chrisleekr/binance-trading-bot/pull/623)
+
+## [0.0.97] - 2023-03-21
 
 - Fixed sorting symbols open trades first by [@uhliksk](https://github.com/uhliksk) - [#564](https://github.com/chrisleekr/binance-trading-bot/pull/564)
 - Fixed the issue that cannot export huge logs - [#561](https://github.com/chrisleekr/binance-trading-bot/pull/561), [#567](https://github.com/chrisleekr/binance-trading-bot/pull/567)
@@ -12,6 +17,8 @@ All notable changes to this project will be documented in this file.
 - Added conservative sell strategy, which can reduce the sell trigger price as the grid gets deeper by [@rando128](https://github.com/rando128) - [#585](https://github.com/chrisleekr/binance-trading-bot/pull/585)
 - Fixed the stop-loss to be a higher priority than the new buy order by [@uhliksk](https://github.com/uhliksk) - [#589](https://github.com/chrisleekr/binance-trading-bot/pull/589)
 - Improved search and filtering UX by [@rando128](https://github.com/rando128) - [#591](https://github.com/chrisleekr/binance-trading-bot/pull/591)
+- Enhanced the break-even calculator by [@rando128](https://github.com/rando128) - [#597](https://github.com/chrisleekr/binance-trading-bot/pull/597), [#601](https://github.com/chrisleekr/binance-trading-bot/pull/601)
+- Updated TradingView host/port configurable  by [@rando128](https://github.com/rando128) - [#608](https://github.com/chrisleekr/binance-trading-bot/pull/608)
 
 Thanks [@uhliksk](https://github.com/uhliksk) and [@rando128](https://github.com/rando128) for your great contributions. 💯 :heart:
 

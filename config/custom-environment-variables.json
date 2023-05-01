@@ -33,6 +33,13 @@
     },
     "database": "BINANCE_MONGO_DATABASE"
   },
+  "tradingview": {
+    "host": "BINANCE_TRADINGVIEW_HOST",
+    "port": {
+      "__name": "BINANCE_TRADINGVIEW_PORT",
+      "__format": "number"
+    }
+  },
   "slack": {
     "enabled": {
       "__name": "BINANCE_SLACK_ENABLED",

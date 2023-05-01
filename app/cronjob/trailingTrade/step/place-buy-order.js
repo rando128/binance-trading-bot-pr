@@ -292,6 +292,15 @@ const execute = async (logger, rawData) => {
     logger.info({ freeBalance }, 'Free balance after adjust');
   }
 
+  if (freeBalance < parseFloat(minNotional)) {
+    return setMessage(
+      logger,
+      data,
+      `Do not place a buy order for the grid trade #${humanisedGridTradeIndex} ` +
+        `as not enough ${quoteAsset} to buy ${baseAsset}.`
+    );
+  }
+
   if (freeBalance < minPurchaseAmount) {
     return setMessage(
       logger,
@@ -301,14 +310,6 @@ const execute = async (logger, rawData) => {
     );
   }
 
-  if (freeBalance < parseFloat(minNotional)) {
-    return setMessage(
-      logger,
-      data,
-      `Do not place a buy order for the grid trade #${humanisedGridTradeIndex} ` +
-        `as not enough ${quoteAsset} to buy ${baseAsset}.`
-    );
-  }
   const stopPrice = _.floor(currentPrice * stopPercentage, priceTickPrecision);
   const limitPrice = _.floor(
     currentPrice * limitPercentage,

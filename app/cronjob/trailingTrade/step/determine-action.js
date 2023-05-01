@@ -401,7 +401,8 @@ const isKagiRestrictingBuy = (logger, data) => {
 };
 
 /**
- * Check whether heikin-ashi signal prevents sell trade
+ * Check whether heikin-ashi signal prevents sell trade (if not on last
+ * grid trade)
  *
  * @param {*} logger
  * @param {*} data
@@ -410,7 +411,8 @@ const isKagiRestrictingBuy = (logger, data) => {
 const isHeikinAshiRestrictingSell = (logger, data) => {
   const {
     symbolConfiguration: {
-      sell: {
+        buy: { currentGridTradeIndex: currentBuyGridTradeIndex },
+        sell: {
         heikinAshiRestriction: { enabled: heikinAshiRestrictionEnabled }
       },
       candles: { interval: humanizedInterval }
@@ -424,6 +426,7 @@ const isHeikinAshiRestrictingSell = (logger, data) => {
     moment().utc().diff(moment(updatedAt), unit, true) <= interval;
 
   if (
+    currentBuyGridTradeIndex !== -1 &&
     heikinAshiRestrictionEnabled &&
     heikinAshiRestriction !== null &&
     isSignalFresh

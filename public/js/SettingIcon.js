@@ -1501,8 +1501,8 @@ class SettingIcon extends React.Component {
                                                     It uses the interval defined
                                                     in the{' '}
                                                     <i>candle settings</i>. It
-                                                    doesn't apply to stop-loss
-                                                    sells.
+                                                    doesn't apply to last buy
+                                                    grid or stop-loss sells.
                                                   </Popover.Content>
                                                 </Popover>
                                               }>

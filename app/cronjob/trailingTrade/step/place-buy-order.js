@@ -246,11 +246,19 @@ const execute = async (logger, rawData) => {
     },
     symbolConfiguration: {
       symbols,
-      buy: { enabled: tradingEnabled, currentGridTradeIndex, currentGridTrade }
+      buy: {
+        enabled: tradingEnabled,
+        automaticBuyAmount: {
+          enabled: automaticBuyAmountEnabled,
+          drainWallet: automaticBuyAmountCanDrainWallet
+        },
+        currentGridTradeIndex,
+        currentGridTrade
+      }
     },
     action,
     quoteAssetBalance: { free: quoteAssetFreeBalance },
-    buy: { currentPrice, triggerPrice, openOrders },
+    buy: { currentPrice, triggerPrice, openOrders, nextBestBuyAmount },
     tradingView,
     overrideData
   } = data;
@@ -338,7 +346,29 @@ const execute = async (logger, rawData) => {
   let freeBalance = orgFreeBalance;
 
   logger.info({ freeBalance }, 'Free balance');
-  if (freeBalance > maxPurchaseAmount) {
+
+  if (automaticBuyAmountEnabled && nextBestBuyAmount) {
+    logger.info(
+      { nextBestBuyAmount, saveLog: true },
+      'Next grid best buy amount '
+    );
+
+    let automaticBuyAmount = nextBestBuyAmount;
+    if (automaticBuyAmountCanDrainWallet) {
+      automaticBuyAmount = Math.min(freeBalance, nextBestBuyAmount);
+    } else {
+      // Respect maxPurchaseAmount
+      automaticBuyAmount = Math.min(maxPurchaseAmount, nextBestBuyAmount);
+    }
+
+    // Can't be less than minPurchaseAmount
+    freeBalance = Math.max(minPurchaseAmount, automaticBuyAmount);
+
+    logger.info(
+      { freeBalance, saveLog: true },
+      'Free balance after break-even adjust'
+    );
+  } else if (freeBalance > maxPurchaseAmount) {
     freeBalance = maxPurchaseAmount;
     logger.info({ freeBalance }, 'Free balance after adjust');
   }
@@ -459,6 +489,7 @@ const execute = async (logger, rawData) => {
     orderQuantityBeforeCommission,
     orderQuantity,
     currentPrice,
+    nextBestBuyAmount,
     stopPercentage,
     limitPrice,
     triggerPrice,

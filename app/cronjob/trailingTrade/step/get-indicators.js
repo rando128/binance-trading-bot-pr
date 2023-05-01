@@ -2,7 +2,7 @@
 const _ = require('lodash');
 const moment = require('moment');
 const { cache, mongo } = require('../../../helpers');
-const { getLastBuyPrice, saveCandle } = require('../../trailingTradeHelper/common');
+const { getLastBuyPrice } = require('../../trailingTradeHelper/common');
 
 /**
  * Flatten candle data
@@ -251,6 +251,7 @@ const getKagiTrend = (candles, period) => {
  */
 const execute = async (logger, rawData) => {
   const data = rawData;
+
   const {
     symbol,
     symbolInfo: {
@@ -399,6 +400,7 @@ const execute = async (logger, rawData) => {
     ...data.indicators,
     ...latestIndicators
   };
+
   // Get current price
   const currentPrice = parseFloat(cachedLatestCandle.close);
 

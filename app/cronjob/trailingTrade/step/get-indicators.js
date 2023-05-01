@@ -584,9 +584,9 @@ const execute = async (logger, rawData) => {
   const currentKagi =
     candles.length >= 10 ? getKagiTrend(doubleHeikinAshiCandles, 10) : null;
 
-  const kagiDownTrend =
+  const kagiUpTrend =
     previousKagi !== null && currentKagi !== null
-      ? previousKagi < 0 && currentKagi < 0
+      ? previousKagi > 0 && currentKagi > 0
       : null;
 
   // Populate data
@@ -600,7 +600,7 @@ const execute = async (logger, rawData) => {
     lowestPrice,
     athPrice,
     athRestrictionPrice: buyATHRestrictionPrice,
-    kagiRestriction: kagiDownTrend,
+    kagiRestriction: !kagiUpTrend,
     triggerPrice: buyTriggerPrice,
     difference: buyDifference,
     nextBestBuyAmount,

@@ -363,6 +363,30 @@ class CoinWrapperSetting extends React.Component {
           </div>
 
           <div className='coin-info-sub-wrapper'>
+            <div className='coin-info-sub-label'>Conservative Mode</div>
+            <div
+              className='coin-info-column coin-info-column-order'>
+              <span className='coin-info-label'>
+                Conservative Sell Enabled:
+              </span>
+              <span className='coin-info-value'>
+                {symbolConfiguration.sell.conservativeMode.enabled ? (
+                  <i className='fas fa-toggle-on'></i>
+                ) : (
+                  <i className='fas fa-toggle-off'></i>
+                )}
+              </span>
+            </div>
+            <div
+              className='coin-info-column coin-info-column-order'>
+              <span className='coin-info-label'>Conservative ratio:</span>
+              <div className='coin-info-value'>
+                {symbolConfiguration.sell.conservativeMode.factor}
+              </div>
+            </div>
+          </div>
+
+          <div className='coin-info-sub-wrapper'>
             <div className='coin-info-sub-label'>
               Bot Options - Auto Trigger Buy
             </div>

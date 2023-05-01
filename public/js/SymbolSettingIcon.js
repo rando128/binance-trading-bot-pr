@@ -755,6 +755,162 @@ class SymbolSettingIcon extends React.Component {
                           </Accordion.Collapse>
                         </Card>
                       </Accordion>
+                      <Accordion defaultActiveKey='0'>
+                        <Card className='mt-1'>
+                          <Card.Header className='px-2 py-1'>
+                            <Accordion.Toggle
+                              as={Button}
+                              variant='link'
+                              eventKey='0'
+                              className='p-0 fs-7 text-uppercase'>
+                              Aggressive Buy{' '}
+                            </Accordion.Toggle>
+                          </Card.Header>
+                          <Accordion.Collapse eventKey='0'>
+                            <Card.Body className='px-2 py-1'>
+                              <div className='row'>
+                                <div className='col-12'>
+                                  <Form.Group
+                                    controlId='field-buy-aggressive-mode-enabled'
+                                    className='mb-2'>
+                                    <Form.Check size='sm'>
+                                      <Form.Check.Input
+                                        type='checkbox'
+                                        data-state-key='buy.aggressiveMode.enabled'
+                                        checked={
+                                          symbolConfiguration.buy.aggressiveMode
+                                            .enabled
+                                        }
+                                        onChange={this.handleInputChange}
+                                      />
+                                      <Form.Check.Label>
+                                        Aggressive Buy Enabled{' '}
+                                        <OverlayTrigger
+                                          trigger='click'
+                                          key='buy-aggressive-mode-enabled-overlay'
+                                          placement='bottom'
+                                          overlay={
+                                            <Popover id='buy-aggressive-mode-enabled-overlay-right'>
+                                              <Popover.Content>
+                                                If enabled, the bot will place
+                                                larger buy orders by multiplying
+                                                the purchase amount defined in
+                                                your grid trade configuration by
+                                                the factor set for each market
+                                                condition, assuming you have
+                                                enough balance.
+                                              </Popover.Content>
+                                            </Popover>
+                                          }>
+                                          <Button
+                                            variant='link'
+                                            className='p-0 m-0 ml-1 text-info'>
+                                            <i className='fas fa-question-circle fa-sm'></i>
+                                          </Button>
+                                        </OverlayTrigger>
+                                      </Form.Check.Label>
+                                    </Form.Check>
+                                  </Form.Group>
+                                </div>
+                                <div className='col-xs-12 col-sm-6'>
+                                  <Form.Group
+                                    controlId='field-aggressive-mode-when-strong-buy-factor'
+                                    className='mb-2'>
+                                    <Form.Label className='mb-0'>
+                                      Purchase multiplier when TradingView
+                                      recommendation is <code>Strong buy</code>{' '}
+                                      <OverlayTrigger
+                                        trigger='click'
+                                        placement='bottom'
+                                        overlay={
+                                          <Popover id='aggressive-mode-when-strong-buy-right'>
+                                            <Popover.Content>
+                                              Set the factor for increasing the
+                                              grid purchase amount if
+                                              TradingView recommendation is
+                                              'Strong buy'. Note the resulting
+                                              amount might be higher than your
+                                              grid maximum purchase amount.
+                                              Setting to 1.20 will increase the
+                                              amount by 20%.
+                                            </Popover.Content>
+                                          </Popover>
+                                        }>
+                                        <Button
+                                          variant='link'
+                                          className='p-0 m-0 ml-1 text-info'>
+                                          <i className='fas fa-question-circle fa-sm'></i>
+                                        </Button>
+                                      </OverlayTrigger>
+                                    </Form.Label>
+                                    <Form.Control
+                                      size='sm'
+                                      type='number'
+                                      placeholder='Purchase multiplier when TradingView recommendation is Strong buy'
+                                      required
+                                      min='1'
+                                      step='0.01'
+                                      data-state-key='buy.aggressiveMode.whenStrongBuyFactor'
+                                      value={
+                                        symbolConfiguration.buy.aggressiveMode
+                                          .whenStrongBuyFactor
+                                      }
+                                      onChange={this.handleInputChange}
+                                    />
+                                  </Form.Group>
+                                </div>
+                                <div className='col-xs-12 col-sm-6'>
+                                  <Form.Group
+                                    controlId='field-aggressive-mode-when-buy-factor'
+                                    className='mb-2'>
+                                    <Form.Label className='mb-0'>
+                                      Purchase multiplier when TradingView
+                                      recommendation is <code>Buy</code>{' '}
+                                      <OverlayTrigger
+                                        trigger='click'
+                                        placement='bottom'
+                                        overlay={
+                                          <Popover id='aggressive-mode-when-buy-right'>
+                                            <Popover.Content>
+                                              Set the factor for increasing the
+                                              grid purchase amount if
+                                              TradingView recommendation is
+                                              'Buy'. Note the resulting amount
+                                              might be higher than your grid
+                                              maximum purchase amount. Setting
+                                              to 1.10 will increase the amount
+                                              by 10%.
+                                            </Popover.Content>
+                                          </Popover>
+                                        }>
+                                        <Button
+                                          variant='link'
+                                          className='p-0 m-0 ml-1 text-info'>
+                                          <i className='fas fa-question-circle fa-sm'></i>
+                                        </Button>
+                                      </OverlayTrigger>
+                                    </Form.Label>
+                                    <Form.Control
+                                      size='sm'
+                                      type='number'
+                                      placeholder='Purchase multiplier when TradingView recommendation is buy'
+                                      required
+                                      min='1'
+                                      step='0.01'
+                                      data-state-key='buy.aggressiveMode.whenBuyFactor'
+                                      value={
+                                        symbolConfiguration.buy.aggressiveMode
+                                          .whenBuyFactor
+                                      }
+                                      onChange={this.handleInputChange}
+                                    />
+                                  </Form.Group>
+                                </div>
+                              </div>
+                            </Card.Body>
+                          </Accordion.Collapse>
+                        </Card>
+                      </Accordion>
                     </Card.Body>
                   </Accordion.Collapse>
                 </Card>

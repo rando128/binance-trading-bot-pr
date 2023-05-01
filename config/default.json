@@ -123,6 +123,11 @@
         "tradingView": {
           "whenStrongBuy": true,
           "whenBuy": true
+        },
+        "aggressiveMode": {
+          "enabled": false,
+          "whenStrongBuyFactor": 1,
+          "whenBuyFactor": 1
         }
       },
       "sell": {

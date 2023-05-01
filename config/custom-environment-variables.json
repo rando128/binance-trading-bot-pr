@@ -266,6 +266,20 @@
             "__description": "Set a boolean to use TradingView recommendation to trigger the buy. If the buy trigger price is reached, the bot will check TradingView recommendation and if it is not `Buy`, then the bot will not place a buy order.",
             "__format": "boolean"
           }
+        },
+        "aggressiveMode": {
+          "enabled": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_BUY_AGGRESSIVE_MODE_ENABLED",
+            "__format": "boolean"
+          },
+          "whenStrongBuyFactor": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_BUY_AGGRESSIVE_MODE_WHEN_STRONG_BUY_FACTOR",
+            "__format": "number"
+          },
+          "whenBuyFactor": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_BUY_AGGRESSIVE_MODE_WHEN_BUY_FACTOR",
+            "__format": "number"
+          }
         }
       },
       "sell": {

@@ -131,6 +131,84 @@ const isAllowedTradingViewRecommendation = (logger, data) => {
 };
 
 /**
+ * Get purchase TV multiplier if applicable. Otherwise returns 1
+ *
+ * @param {*} logger
+ * @param {*} data
+ * @returns
+ */
+const getAggressiveModeFactor = (logger, data) => {
+  const {
+    symbolConfiguration: {
+      buy: {
+        aggressiveMode: {
+          enabled: aggressiveModeEnabled,
+          whenStrongBuyFactor,
+          whenBuyFactor
+        }
+      },
+      botOptions: {
+        tradingView: { useOnlyWithin: tradingViewUseOnlyWithin }
+      }
+    },
+    tradingView
+  } = data;
+
+  if (aggressiveModeEnabled === false) return 1;
+
+  // If there is no tradingView result time or recommendation, then ignore TradingView recommendation.
+  const tradingViewTime = _.get(tradingView, 'result.time', '');
+
+  const tradingViewSummaryRecommendation = _.get(
+    tradingView,
+    'result.summary.RECOMMENDATION',
+    ''
+  );
+  if (tradingViewTime === '' || tradingViewSummaryRecommendation === '') {
+    logger.info(
+      { tradingViewTime, tradingViewSummaryRecommendation },
+      'TradingView time or recommendation is empty. Skip aggressive buy factor.'
+    );
+    return 1;
+  }
+
+  // If tradingViewTime is more than configured time, then ignore TradingView recommendation.
+  const tradingViewUpdatedAt = moment
+    .utc(tradingViewTime, 'YYYY-MM-DDTHH:mm:ss.SSSSSS')
+    .add(tradingViewUseOnlyWithin, 'minutes');
+  const currentTime = moment.utc();
+  if (tradingViewUpdatedAt.isBefore(currentTime)) {
+    logger.info(
+      {
+        tradingViewUpdatedAt: tradingViewUpdatedAt.toISOString(),
+        currentTime: currentTime.toISOString()
+      },
+      `TradingView data is older than ${tradingViewUseOnlyWithin} minutes. Skip aggressive buy factor.`
+    );
+    return 1;
+  }
+
+  let aggressiveModeFactor = 1;
+
+  if (tradingViewSummaryRecommendation.toLowerCase() === 'buy')
+    aggressiveModeFactor = whenBuyFactor;
+  else if (tradingViewSummaryRecommendation.toLowerCase() === 'strong_buy')
+    aggressiveModeFactor = whenStrongBuyFactor;
+
+  if (aggressiveModeFactor !== 1)
+    logger.info(
+      {
+        tradingViewUpdatedAt: tradingViewUpdatedAt.toISOString(),
+        currentTime: currentTime.toISOString(),
+        saveLog: true
+      },
+      `Apply ${aggressiveModeFactor}x aggressive buy factor.`
+    );
+
+  return aggressiveModeFactor;
+};
+
+/**
  * Set message and return data
  *
  * @param {*} logger
@@ -223,10 +301,13 @@ const execute = async (logger, rawData) => {
 
   const {
     minPurchaseAmount,
-    maxPurchaseAmount,
+    maxPurchaseAmount: maxPurchaseAmountOriginal,
     stopPercentage,
     limitPercentage
   } = currentGridTrade;
+
+  const maxPurchaseAmount =
+    getAggressiveModeFactor(logger, data) * maxPurchaseAmountOriginal;
 
   if (minPurchaseAmount <= 0) {
     return setMessage(

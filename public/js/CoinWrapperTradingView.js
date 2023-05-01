@@ -1,14 +1,12 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/jsx-no-undef */
 /* eslint-disable no-undef */
-
 class CoinWrapperTradingView extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      collapsed: true,
-      dataKagi: [],
+      collapsed: true
     };
 
     this.toggleCollapse = this.toggleCollapse.bind(this);
@@ -41,7 +39,7 @@ class CoinWrapperTradingView extends React.Component {
   }
 
   render() {
-    const { collapsed, dataKagi } = this.state;
+    const { collapsed } = this.state;
     const {
       connected,
       symbolInfo: {
@@ -316,22 +314,24 @@ class CoinWrapperTradingView extends React.Component {
     return (
       <div className='coin-info-sub-wrapper'>
         <div className='coin-info-column coin-info-column-title'>
-          <div className='coin-info-label'>Tradingview</div>
+          <div className='coin-info-label'>
+            Tradingview
+          </div>
           <div className='coin-info-value'>
-            Open:{' '}
-            <a
+            Open: <a
               href={
                 'https://www.tradingview.com/symbols/' + symbol + '/technicals/'
               }
               rel='noopener noreferrer'
               target='_blank'>
-              Technical analysis
-            </a>{' '}
-            &nbsp; | &nbsp;
+            Technical analysis
+          </a> &nbsp; | &nbsp;
             <a
-              href={'/chart/?symbol=' + symbol}
-              rel='noopener noreferrer'
-              target='_blank'>
+                href={
+                  'https://www.tradingview.com/chart/?symbol=' + symbol
+                }
+                rel='noopener noreferrer'
+                target='_blank'>
               Chart
             </a>
           </div>

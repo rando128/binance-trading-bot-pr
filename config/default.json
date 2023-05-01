@@ -126,10 +126,6 @@
         "tradingView": {
           "whenStrongBuy": true,
           "whenBuy": true
-        },
-        "automaticBuyAmount": {
-          "enabled": false,
-          "drainWallet": false
         }
       },
       "sell": {

@@ -441,7 +441,7 @@
                 this.main = function(context, inputCallback) {
                   this._context = context;
                   this._input = inputCallback;
-                  return tvta[context.symbol.time];
+                  return (tvta) ? tvta[context.symbol.time] : [];
                 }
               }
             }

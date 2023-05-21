@@ -17,8 +17,7 @@
 
     //initialize tvta
     let tvta = JSON.parse(localStorage.getItem("tvta"));//['Recommend.All|1','Recommend.All|5','Recommend.All|15', 'Recommend.All|30', 'Recommend.All|60']
-    if (tvta === null)
-      fetchTVTA(0)
+    refreshTVTA()
 
     function fetchTVTA(since = 0){
       //get the current history of current symbol on page initialization and store it in localstore
@@ -30,7 +29,6 @@
         })
         .then( (data) => {
           console.log("Fetched")
-          console.log(data);
           if (since === 0 ) {
             localStorage.setItem("tvta", JSON.stringify(data));
             console.log("tvta data initialized");
@@ -368,7 +366,7 @@
                 linkedToSeries: false,
                 isCustomIndicator: true,
                 format: {
-                  type: 'volume',
+                  type: 'price',
                   precision: 2,
                 },
 

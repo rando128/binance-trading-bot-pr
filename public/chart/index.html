@@ -371,6 +371,7 @@
                 },
 
                 plots: [
+                  { id: 'plot_signal', type: 'line' },
                   { id: 'plot_1m', type: 'line' },
                   { id: 'plot_5m', type: 'line' },
                   { id: 'plot_15m', type: 'line' },
@@ -379,6 +380,11 @@
                 ],
                 defaults: {
                   styles: {
+                    plot_signal: {
+                      visible: true,
+                      linewidth: 1,
+                      color: '#000000'
+                    },
                     plot_1m: {
                       visible: true,
                       linewidth: 1,
@@ -409,6 +415,10 @@
                   inputs: {}
                 },
                 styles: {
+                  plot_signal: {
+                    title: '',
+                    histogramBase: 0,
+                  },
                   plot_1m: {
                     title: '',
                     histogramBase: 0,
@@ -442,7 +452,19 @@
                 this.main = function(context, inputCallback) {
                   this._context = context;
                   this._input = inputCallback;
-                  return (tvta) ? tvta[context.symbol.time] : [];
+                  if (tvta) {
+                    let ta = tvta[context.symbol.time];
+                    if (ta) {
+                      const trigger = (
+                        ta[0] > ta[1] &&
+                        ta[1] > ta[2] &&
+                        ta[2] > ta[3] &&
+                        ta[3] > ta[4]) ? 0.7 : 0;
+                      ta.unshift(trigger);
+                      return ta;
+                    }
+                  }
+                  return [];
                 }
               }
             }

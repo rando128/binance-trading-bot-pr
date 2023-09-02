@@ -411,8 +411,8 @@ const isKagiRestrictingBuy = (logger, data) => {
 const isHeikinAshiRestrictingSell = (logger, data) => {
   const {
     symbolConfiguration: {
-        buy: { currentGridTradeIndex: currentBuyGridTradeIndex },
-        sell: {
+      buy: { currentGridTradeIndex: currentBuyGridTradeIndex },
+      sell: {
         heikinAshiRestriction: { enabled: heikinAshiRestrictionEnabled }
       },
       candles: { interval: humanizedInterval }
@@ -693,16 +693,6 @@ const execute = async (logger, rawData) => {
           'The current price is reached the stop-loss price. ' +
             `However, the action is temporarily disabled by ${checkDisable.disabledBy}. ` +
             `Resume sell process after ${checkDisable.ttl}s.`
-        );
-      }
-
-      if (!await isKagiRestrictingBuy(logger, data)) {
-        return setSellActionAndMessage(
-          logger,
-          data,
-          'sell-temporary-disabled',
-          'The current price has reached the stop-loss price. ' +
-          `However, the action is temporarily disabled by Kagi bullish signal. `
         );
       }
 

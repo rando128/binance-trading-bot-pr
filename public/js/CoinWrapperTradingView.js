@@ -327,9 +327,7 @@ class CoinWrapperTradingView extends React.Component {
             Technical analysis
           </a> &nbsp; | &nbsp;
             <a
-                href={
-                  'https://www.tradingview.com/chart/?symbol=' + symbol
-                }
+                href={ '/chart/?symbol=' + symbol}
                 rel='noopener noreferrer'
                 target='_blank'>
               Chart

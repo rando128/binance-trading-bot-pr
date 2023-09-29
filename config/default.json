@@ -13,6 +13,7 @@
       "secretKey": ""
     }
   },
+  "tradingBandLimits" : "",
   "redis": {
     "host": "binance-redis",
     "port": 6379,
@@ -107,7 +108,9 @@
             "minPurchaseAmount": -1,
             "minPurchaseAmounts": {},
             "maxPurchaseAmount": -1,
-            "maxPurchaseAmounts": {}
+            "maxPurchaseAmounts": {},
+            "bandLowerLimit": -1,
+            "bandUpperLimit": -1
           }
         ],
         "lastBuyPriceRemoveThreshold": -1,

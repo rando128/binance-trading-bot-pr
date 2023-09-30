@@ -110,7 +110,8 @@
             "maxPurchaseAmount": -1,
             "maxPurchaseAmounts": {},
             "bandLowerLimit": -1,
-            "bandUpperLimit": -1
+            "bandUpperLimit": -1,
+            "globalTradingBandLimits": false
           }
         ],
         "lastBuyPriceRemoveThreshold": -1,

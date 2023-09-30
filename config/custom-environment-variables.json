@@ -18,8 +18,7 @@
   },
   "tradingBandLimits" : {
     "__name": "BINANCE_TRADING_BAND_LIMITS",
-    "__description": "Set a list string ['ETHUSDT:1600-1700','ADAUSDT:0.2500-0.2505'] in .env to configure first grid buy bands by symbol.",
-    "__format": "string"
+    "__description": "Set a list string ['ETHUSDT:1600-1700','ADAUSDT:0.2500-0.2505'] in .env to configure first grid buy bands by symbol."
   },
   "redis": {
     "host": "BINANCE_REDIS_HOST",

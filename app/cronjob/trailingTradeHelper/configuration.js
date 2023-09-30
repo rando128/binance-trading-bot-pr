@@ -530,6 +530,41 @@ const deleteSymbolGridTrade = async (logger, symbol) => {
 };
 
 /**
+ * Get trading band limits for symbol
+ * from env variables if defined
+ * @param {*} logger
+ * @param {*} symbol
+ * @returns
+ */
+const getTradingBandLimits = symbol => {
+  const globalTradingBandLimits = config.get('tradingBandLimits');
+
+  if (globalTradingBandLimits) {
+    // parse list BINANCE_TRADING_BAND_LIMITS - ['ETHUSDT:1600-1700','ADAUSDT:0.25-0.2505']
+    const dataArray = JSON.parse(globalTradingBandLimits[`__name`]);
+    // Initialize variables to store the extracted values
+    let lowerLimit = null;
+    let upperLimit = null;
+    // Iterate through the array of tokens and find the specified symbol
+    dataArray.forEach(item => {
+      const parts = item.split('=');
+      if (parts.length === 2) {
+        const key = parts[0];
+        const values = parts[1].split(':');
+        if (values.length === 2 && key === symbol) {
+          lowerLimit = parseFloat(values[0]);
+          upperLimit = parseFloat(values[1]);
+        }
+      }
+    });
+    if (lowerLimit != null && upperLimit != null) {
+      return [lowerLimit, upperLimit];
+    }
+  }
+  return [-1, -1];
+};
+
+/**
  * Get buy max purchase amount of grid trade for buying
  *
  * @param {*} logger
@@ -552,7 +587,6 @@ const getGridTradeBuy = (
   if (_.isEmpty(srcGridTrade)) {
     orgGridTrade = globalConfiguration.buy.gridTrade;
   }
-
   // Loop symbol's buy.gridTrade
   const gridTrade = orgGridTrade.map((orgGrid, index) => {
     const grid = orgGrid;
@@ -611,6 +645,28 @@ const getGridTradeBuy = (
     return grid;
   });
 
+  // Override or set trading band limits with global configuration for first
+  // buy grid
+  const { symbol } = cachedSymbolInfo;
+  if (symbol) {
+    const [lowerLimit, upperLimit] = getTradingBandLimits(symbol);
+
+    if (lowerLimit !== -1 || upperLimit !== -1) {
+      [
+        {
+          key: 'bandLowerLimit',
+          value: lowerLimit
+        },
+        {
+          key: 'bandUpperLimit',
+          value: upperLimit
+        }
+      ].forEach(conf => {
+        _.set(gridTrade[0], conf.key, conf.value);
+      });
+      _.set(gridTrade[0], 'globalTradingBandLimits', true);
+    }
+  }
   return gridTrade;
 };
 
@@ -921,7 +977,6 @@ const getConfiguration = async (logger, symbol = null) => {
 
     // For symbol configuration, remove lastBuyPriceRemoveThresholds
     _.unset(mergedConfigValue, 'buy.lastBuyPriceRemoveThresholds');
-
     // Post process configuration to get current grid trade
     mergedConfigValue = await postProcessConfiguration(
       logger,

@@ -151,6 +151,41 @@ const isExceedingMaxBuyOpenOrders = async (logger, data) => {
 };
 
 /**
+ * Check whether price is within the trading band boundaries
+ *
+ *  - current grid trade must be first grid trade.
+ *  - tradingBand restriction must be enabled.
+ *  - price must be within the buying band limits
+ *
+ * @param {*} data
+ * @returns
+ */
+const isOutsideTradingBand = (logger, data) => {
+  const {
+    buy: { currentPrice: buyPrice },
+    symbolConfiguration: {
+      buy: { currentGridTradeIndex, gridTrade }
+    }
+  } = data;
+
+  const { bandLowerLimit, bandUpperLimit } = gridTrade[0];
+
+  if (
+    currentGridTradeIndex === 0 &&
+    bandLowerLimit !== -1 &&
+    bandUpperLimit !== -1
+  ) {
+    logger.info(
+      { saveLog: false },
+      `Checking current price ${buyPrice} in trading band [${bandLowerLimit}:${bandUpperLimit}]`
+    );
+    return buyPrice < bandLowerLimit || buyPrice > bandUpperLimit;
+  }
+
+  return false;
+};
+
+/**
  * Set buy action and message
  *
  * @param {*} logger
@@ -511,6 +546,16 @@ const execute = async (logger, rawData) => {
         'wait',
         `The current price has reached the lowest price; however, it is restricted to buy the coin ` +
           `because of reached maximum open trades.`
+      );
+    }
+
+    if (isOutsideTradingBand(logger, data)) {
+      return setBuyActionAndMessage(
+        logger,
+        data,
+        'wait',
+        `The current price has reached the lowest price; however, it is restricted to buy the coin ` +
+          `because it is not within the trading band limits.`
       );
     }
 

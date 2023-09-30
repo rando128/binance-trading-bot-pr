@@ -116,7 +116,9 @@ class SymbolSettingIconGridBuy extends React.Component {
         stopPercentage: true,
         limitPercentage: true,
         minPurchaseAmount: true,
-        maxPurchaseAmount: true
+        maxPurchaseAmount: true,
+        bandLowerLimit: true,
+        bandUpperLimit: true
       };
 
       const humanisedIndex = index + 1;
@@ -172,6 +174,15 @@ class SymbolSettingIconGridBuy extends React.Component {
         v.maxPurchaseAmount = false;
         v.messages.push(
           `The max purchase amount for ${quoteAsset} cannot be less than the minimum purchase amount ${grid.minPurchaseAmount}.`
+        );
+      }
+
+      // If upper band limit is inferior than the lower limit,
+      if (parseFloat(grid.bandLowerLimit) >= parseFloat(grid.bandUpperLimit)) {
+        isValid = false;
+        v.maxPurchaseAmount = false;
+        v.messages.push(
+          `The upper trading band limit ${grid.bandUpperLimit} cannot be less than the lower limit ${grid.bandLowerLimit}.`
         );
       }
 
@@ -512,6 +523,114 @@ class SymbolSettingIconGridBuy extends React.Component {
                     />
                   </Form.Group>
                 </div>
+              </div>
+              <div className='row'>
+                {i == 0 ? (
+                  <div className='col-6'>
+                    <Form.Group
+                      controlId={'field-grid-buy-' + i + '-lower-band-price'}
+                      className='mb-2'>
+                      <Form.Label className='mb-0'>
+                        Lower trading band price{' '}
+                        <OverlayTrigger
+                          trigger='click'
+                          key={
+                            'field-grid-buy-' + i + '-lower-band-price-overlay'
+                          }
+                          placement='bottom'
+                          overlay={
+                            <Popover
+                              id={
+                                'field-grid-buy-' +
+                                i +
+                                '-lower-band-price-overlay-right'
+                              }>
+                              <Popover.Content>
+                                Set the lower price of the trading band. The bot
+                                will only buy if the buying price is within the
+                                lower and upper price limits.
+                              </Popover.Content>
+                            </Popover>
+                          }>
+                          <Button
+                            variant='link'
+                            className='p-0 m-0 ml-1 text-info'>
+                            <i className='fas fa-question-circle fa-sm'></i>
+                          </Button>
+                        </OverlayTrigger>
+                      </Form.Label>
+                      <Form.Control
+                        size='sm'
+                        type='number'
+                        placeholder={'Enter lower limit trading price'}
+                        step='0.0001'
+                        isInvalid={
+                          _.get(validation, `${i}.bandLowerLimit`, true) ===
+                          false
+                        }
+                        disabled={grid.executed || grid.globalTradingBandLimits}
+                        data-state-key={`${i}.bandLowerLimit`}
+                        value={grid.bandLowerLimit}
+                        onChange={this.handleInputChange}
+                      />
+                    </Form.Group>
+                  </div>
+                ) : (
+                  ''
+                )}
+                {i == 0 ? (
+                  <div className='col-6'>
+                    <Form.Group
+                      controlId={'field-grid-buy-' + i + '-upper-band-price'}
+                      className='mb-2'>
+                      <Form.Label className='mb-0'>
+                        Upper trading band price{' '}
+                        <OverlayTrigger
+                          trigger='click'
+                          key={
+                            'field-grid-buy-' + i + '-upper-band-price-overlay'
+                          }
+                          placement='bottom'
+                          overlay={
+                            <Popover
+                              id={
+                                'field-grid-buy-' +
+                                i +
+                                '-upper-band-price-overlay-right'
+                              }>
+                              <Popover.Content>
+                                Set the upper price of the trading band. The bot
+                                will only buy if the buying price is within the
+                                lower and upper price limits.
+                              </Popover.Content>
+                            </Popover>
+                          }>
+                          <Button
+                            variant='link'
+                            className='p-0 m-0 ml-1 text-info'>
+                            <i className='fas fa-question-circle fa-sm'></i>
+                          </Button>
+                        </OverlayTrigger>
+                      </Form.Label>
+                      <Form.Control
+                        size='sm'
+                        type='number'
+                        placeholder={'Enter upper limit trading price'}
+                        step='0.0001'
+                        isInvalid={
+                          _.get(validation, `${i}.bandUpperLimit`, true) ===
+                          false
+                        }
+                        disabled={grid.executed || grid.globalTradingBandLimits}
+                        data-state-key={`${i}.bandUpperLimit`}
+                        value={grid.bandUpperLimit}
+                        onChange={this.handleInputChange}
+                      />
+                    </Form.Group>
+                  </div>
+                ) : (
+                  ''
+                )}
                 {validationText !== '' ? (
                   <div className='col-12'>{validationText}</div>
                 ) : (

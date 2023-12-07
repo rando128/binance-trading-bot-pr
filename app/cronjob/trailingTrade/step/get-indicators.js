@@ -181,7 +181,7 @@ const getHeikinAshiCandles = ohlc => {
   }
 
   return heikinAshi;
-}
+};
 
 /**
  * Determine Kagi trend line
@@ -570,10 +570,12 @@ const execute = async (logger, rawData) => {
   // Sell restriction if last 2 candles are bearish
   const heikinAshiCandles = getHeikinAshiCandles(_.reverse(candles));
   const heikinAshiUpTrend =
-    heikinAshiCandles[candlesLimit - 1].close >
-      heikinAshiCandles[candlesLimit - 1].open &&
-    heikinAshiCandles[candlesLimit - 2].close >
-      heikinAshiCandles[candlesLimit - 2].open;
+    heikinAshiCandles.length < candlesLimit
+      ? false
+      : heikinAshiCandles[candlesLimit - 1].close >
+          heikinAshiCandles[candlesLimit - 1].open &&
+        heikinAshiCandles[candlesLimit - 2].close >
+          heikinAshiCandles[candlesLimit - 2].open;
 
   // Buy restriction on Kagi downtrend
   // computed on HeikinAshi of HeikinAsh to confirm the trend

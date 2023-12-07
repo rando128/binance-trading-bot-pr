@@ -181,14 +181,13 @@ const getHeikinAshiCandles = ohlc => {
   }
 
   return heikinAshi;
-}
+};
 
 /**
  * Determine Kagi trend line
  * @param {*} candles
  */
 const getKagiTrend = (candles, period) => {
-
   const ohlc = candles.slice(-period);
 
   // Compute the True Range for each candle of the array
@@ -197,7 +196,7 @@ const getKagiTrend = (candles, period) => {
     const candle = ohlc[i];
     let ntr = 0;
 
-    if (i ===0) {
+    if (i === 0) {
       ntr = Math.max(
         candle.high - candle.low,
         candle.high - candle.close,
@@ -218,7 +217,7 @@ const getKagiTrend = (candles, period) => {
   for (let i = 0; i < trueRange.length; i += 1) {
     sum += trueRange[i];
   }
-  const atr = sum/trueRange.length;
+  const atr = sum / trueRange.length;
 
   // Determine trend over the period
   let trend = ohlc[1].close > ohlc[0].close ? 1 : -1;
@@ -226,7 +225,6 @@ const getKagiTrend = (candles, period) => {
   let lowestClose = trend < 0 ? ohlc[1].close : ohlc[0].close;
 
   for (let i = 1; i < ohlc.length; i += 1) {
-
     if (trend === 1) {
       highestClose =
         ohlc[i].close > highestClose ? ohlc[i].close : highestClose;
@@ -570,10 +568,12 @@ const execute = async (logger, rawData) => {
   // Sell restriction if last 2 candles are bearish
   const heikinAshiCandles = getHeikinAshiCandles(_.reverse(candles));
   const heikinAshiUpTrend =
-    heikinAshiCandles[candlesLimit - 1].close >
-      heikinAshiCandles[candlesLimit - 1].open &&
-    heikinAshiCandles[candlesLimit - 2].close >
-      heikinAshiCandles[candlesLimit - 2].open;
+    heikinAshiCandles.length < candlesLimit
+      ? false
+      : heikinAshiCandles[candlesLimit - 1].close >
+          heikinAshiCandles[candlesLimit - 1].open &&
+        heikinAshiCandles[candlesLimit - 2].close >
+          heikinAshiCandles[candlesLimit - 2].open;
 
   // Buy restriction on Kagi downtrend
   // computed on HeikinAshi of HeikinAsh to confirm the trend

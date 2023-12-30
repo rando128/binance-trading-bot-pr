@@ -150,8 +150,8 @@ const calculateNextBestBuyAmount = (
 
 const applyConservativeSell = (
   _data,
-  { conservativeFactor, sellTriggerPercentage, buyGridTradeDepth }
-) => 1 + (sellTriggerPercentage - 1) * conservativeFactor ** buyGridTradeDepth;
+  { conservativeFactor, sellTriggerPercentage }
+) => 1 + (sellTriggerPercentage - 1) * conservativeFactor;
 
 /**
  * Compute Heikin ashi candles
@@ -488,9 +488,8 @@ const execute = async (logger, rawData) => {
     const nextBestBuySellTrigger = sellConservativeModeEnabled
       ? applyConservativeSell(data, {
           conservativeFactor,
-          sellTriggerPercentage: nextBestBuySellTriggerPercentage,
-          buyGridTradeDepth: lastExecutedBuyTradeIndex + 1
-        })
+          sellTriggerPercentage: nextBestBuySellTriggerPercentage
+      })
       : nextBestBuySellTriggerPercentage;
 
     nextBestBuy = calculateNextBestBuyAmount(data, {

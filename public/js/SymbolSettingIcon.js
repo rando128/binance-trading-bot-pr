@@ -1562,9 +1562,7 @@ class SymbolSettingIcon extends React.Component {
                                             onChange={this.handleInputChange}
                                           />
                                           <Form.Check.Label>
-                                            Reduce the sell trigger price
-                                            proportionally to the number of
-                                            executed buy grids - applies only to
+                                            Reduce the sell trigger price for
                                             grids with at least 2 executed buy
                                             trades{' '}
                                             <OverlayTrigger
@@ -1619,17 +1617,15 @@ class SymbolSettingIcon extends React.Component {
                                                   <code>0.90</code>, your
                                                   current grid sell percentage
                                                   will be reduced by{' '}
-                                                  <code>10%</code> for each
-                                                  executed buy grid (except the
-                                                  first one). For example, if
-                                                  your sell trigger percentage
-                                                  is <code>1.10</code>, and you
-                                                  have 3 executed buy grids, the
-                                                  sell order trigger will be{' '}
-                                                  <code>1.081</code>. Remember
-                                                  the sell trigger is not
-                                                  modified if you have only 1
-                                                  executed buy grid.
+                                                  <code>10%</code>. For example,
+                                                  if your sell trigger
+                                                  percentage is{' '}
+                                                  <code>1.00</code>, the sell
+                                                  order trigger will be{' '}
+                                                  <code>0.9</code>. Remember the
+                                                  sell trigger is not modified
+                                                  if you have only 1 executed
+                                                  buy grid.
                                                 </Popover.Content>
                                               </Popover>
                                             }>

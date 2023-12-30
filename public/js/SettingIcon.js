@@ -643,8 +643,8 @@ class SettingIcon extends React.Component {
                                             type='checkbox'
                                             data-state-key='buy.kagiRestriction.enabled'
                                             checked={
-                                              configuration.buy
-                                                .kagiRestriction.enabled
+                                              configuration.buy.kagiRestriction
+                                                .enabled
                                             }
                                             onChange={this.handleInputChange}
                                           />
@@ -1707,8 +1707,7 @@ class SettingIcon extends React.Component {
                                                     If enabled, the bot will
                                                     sell at a trigger price
                                                     reduced by the conservative
-                                                    ratio for each executed buy
-                                                    grid. You can use this
+                                                    ratio. You can use this
                                                     feature in bear market
                                                     conditions to secure smaller
                                                     benefits over unreached
@@ -1749,14 +1748,12 @@ class SettingIcon extends React.Component {
                                                   <code>0.90</code>, your
                                                   current grid sell percentage
                                                   will be reduced by{' '}
-                                                  <code>10%</code> for each
-                                                  executed buy grid (except the
-                                                  first one). For example, if
-                                                  your sell trigger percentage
-                                                  is <code>1.10</code>, and you
-                                                  have 3 executed buy grids, the
-                                                  sell order trigger will be{' '}
-                                                  <code>1.081</code>. Remember
+                                                  <code>10%</code>. For example,
+                                                  if your sell trigger
+                                                  percentage is{' '}
+                                                  <code>1.00</code>, the sell
+                                                  order trigger will be{' '}
+                                                  <code>0.90</code>. Remember
                                                   the sell trigger is not
                                                   modified if you have only 1
                                                   executed buy grid.

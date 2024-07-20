@@ -10,6 +10,6 @@ echo "        \/        \/     \/     \/     \/    \/          \/"
 set -e
 
 # Execute migration
-npm run migrate:up
+#npm run migrate:up
 
 exec "$@"

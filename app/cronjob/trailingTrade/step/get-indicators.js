@@ -157,9 +157,9 @@ const applyConservativeSell = (
  * Compute Heikin ashi candles
  * @param {*} candles
  */
-const getHeikinAshiCandles = ohlc => {
+const getHeikinAshiCandles = (ohlc, interval = 1) => {
   const heikinAshi = [];
-  for (let i = 0; i < ohlc.length; i += 1) {
+  for (let i = 0; i < ohlc.length; i += interval) {
     const candle = ohlc[i];
     const ha = {
       openTime: candle.openTime,
@@ -188,7 +188,6 @@ const getHeikinAshiCandles = ohlc => {
  * @param {*} candles
  */
 const getKagiTrend = (candles, period) => {
-
   const ohlc = candles.slice(-period);
 
   // Compute the True Range for each candle of the array
@@ -197,7 +196,7 @@ const getKagiTrend = (candles, period) => {
     const candle = ohlc[i];
     let ntr = 0;
 
-    if (i ===0) {
+    if (i === 0) {
       ntr = Math.max(
         candle.high - candle.low,
         candle.high - candle.close,
@@ -218,7 +217,7 @@ const getKagiTrend = (candles, period) => {
   for (let i = 0; i < trueRange.length; i += 1) {
     sum += trueRange[i];
   }
-  const atr = sum/trueRange.length;
+  const atr = sum / trueRange.length;
 
   // Determine trend over the period
   let trend = ohlc[1].close > ohlc[0].close ? 1 : -1;
@@ -226,7 +225,6 @@ const getKagiTrend = (candles, period) => {
   let lowestClose = trend < 0 ? ohlc[1].close : ohlc[0].close;
 
   for (let i = 1; i < ohlc.length; i += 1) {
-
     if (trend === 1) {
       highestClose =
         ohlc[i].close > highestClose ? ohlc[i].close : highestClose;
@@ -569,7 +567,7 @@ const execute = async (logger, rawData) => {
 
   // Sell restriction if last 2 candles are bearish
   const heikinAshiCandles = getHeikinAshiCandles(_.reverse(candles));
-  const heikinAshiUpTrend =
+  const heikinAshiSellUpTrend =
     heikinAshiCandles.length < candlesLimit
       ? false
       : heikinAshiCandles[candlesLimit - 1].close >
@@ -595,6 +593,54 @@ const execute = async (logger, rawData) => {
       ? previousKagi > 0 && currentKagi > 0
       : null;
 
+  // Second Kagi Buy Restriction over the buyATHRestrictionCandlesInterval
+  // - as a convenience to avoid defining another period setting
+  const convertToMinutes = timeValue =>
+    ({
+      '1m': 1,
+      '3m': 3,
+      '5m': 5,
+      '15m': 15,
+      '30m': 30,
+      '1h': 60,
+      '2h': 120,
+      '4h': 240,
+      '1d': 1440
+    }[timeValue] || 0);
+  const buyKeikinAshiInterval = convertToMinutes(
+    buyATHRestrictionCandlesInterval
+  );
+  const buyHeikinAshiLimit = buyKeikinAshiInterval * candlesLimit;
+  const longerCandles = _.orderBy(
+    await mongo.findAll(
+      logger,
+      'trailing-trade-candles',
+      {
+        key: `${symbol}`
+      },
+      {
+        sort: {
+          time: -1
+        },
+        limit: buyHeikinAshiLimit
+      }
+    ),
+    ['time'],
+    ['desc']
+  );
+
+  const heikinAshiLongerCandles = getHeikinAshiCandles(
+    _.reverse(longerCandles),
+    Math.min(longerCandles.length, buyKeikinAshiInterval)
+  );
+  const heikinAshiBuyUpTrend =
+    heikinAshiLongerCandles.length < buyHeikinAshiLimit
+      ? false
+      : heikinAshiLongerCandles[buyHeikinAshiLimit - 1].close >
+          heikinAshiLongerCandles[buyHeikinAshiLimit - 1].open &&
+        heikinAshiLongerCandles[buyHeikinAshiLimit - 2].close >
+          heikinAshiLongerCandles[buyHeikinAshiLimit - 2].open;
+
   // Populate data
   data.baseAssetBalance.estimatedValue = baseAssetEstimatedValue;
   data.baseAssetBalance.isLessThanMinNotionalValue = isLessThanMinNotionalValue;
@@ -607,6 +653,7 @@ const execute = async (logger, rawData) => {
     athPrice,
     athRestrictionPrice: buyATHRestrictionPrice,
     kagiRestriction: !kagiUpTrend,
+    heikinAshiRestriction: !heikinAshiBuyUpTrend,
     triggerPrice: buyTriggerPrice,
     difference: buyDifference,
     nextBestBuyAmount,
@@ -628,7 +675,7 @@ const execute = async (logger, rawData) => {
     currentProfitPercentage: sellCurrentProfitPercentage,
     conservativeModeApplicable: sellConservativeModeApplicable,
     triggerPercentage,
-    heikinAshiRestriction: heikinAshiUpTrend,
+    heikinAshiRestriction: heikinAshiSellUpTrend,
     openOrders: newOpenOrders?.filter(o => o.side.toLowerCase() === 'sell'),
     processMessage: _.get(data, 'sell.processMessage', ''),
     updatedAt: moment().utc().toDate()

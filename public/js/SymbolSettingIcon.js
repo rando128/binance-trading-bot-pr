@@ -470,6 +470,52 @@ class SymbolSettingIcon extends React.Component {
                               <div className='row'>
                                 <div className='col-12'>
                                   <Form.Group
+                                    controlId='field-buy-heikin-ashi-restriction-enabled'
+                                    className='mb-2'>
+                                    <Form.Check size='sm'>
+                                      <Form.Check.Input
+                                        type='checkbox'
+                                        data-state-key='buy.heikinAshiRestriction.enabled'
+                                        checked={
+                                          symbolConfiguration.buy
+                                            .heikinAshiRestriction.enabled
+                                        }
+                                        onChange={this.handleInputChange}
+                                      />
+                                      <Form.Check.Label>
+                                        Heikin-Ashi Buy Restriction Enabled{' '}
+                                        <OverlayTrigger
+                                          trigger='click'
+                                          key='buy-heikin-ashi-restriction-enabled-overlay'
+                                          placement='bottom'
+                                          overlay={
+                                            <Popover id='buy-heikin-ashi-restriction-enabled-overlay-right'>
+                                              <Popover.Content>
+                                                If enabled, the bot won't buy if
+                                                the last 2 Heikin-Ashi candles,
+                                                computed over the{' '}
+                                                <i>
+                                                  ATH Buy Restriction interval
+                                                </i>
+                                                , is bearish. This avoids buying
+                                                during strong bearish periods.
+                                              </Popover.Content>
+                                            </Popover>
+                                          }>
+                                          <Button
+                                            variant='link'
+                                            className='p-0 m-0 ml-1 text-info'>
+                                            <i className='fas fa-question-circle fa-sm'></i>
+                                          </Button>
+                                        </OverlayTrigger>
+                                      </Form.Check.Label>
+                                    </Form.Check>
+                                  </Form.Group>
+                                </div>
+                              </div>
+                              <div className='row'>
+                                <div className='col-12'>
+                                  <Form.Group
                                     controlId='field-buy-ath-restriction-enabled'
                                     className='mb-2'>
                                     <Form.Check size='sm'>

@@ -262,6 +262,13 @@
             "__format": "boolean"
           }
         },
+        "heikinAshiRestriction": {
+          "enabled": {
+            "__name": "BINANCE_JOBS_TRAILING_TRADE_BUY_HEIKIN_ASHI_RESTRICTION_ENABLE",
+            "__description": "If enabled, the bot will buy if the last 2 Heikin Ashi, computed over ATH candle interval is bullish . This increases the chance to avoid buying during strong bear periods.",
+            "__format": "boolean"
+          }
+        },
         "tradingView": {
           "whenStrongBuy": {
             "__name": "BINANCE_JOBS_TRAILING_TRADE_BUY_TRADINGVIEW_WHEN_STRONG_BUY",

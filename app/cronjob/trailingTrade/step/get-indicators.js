@@ -160,21 +160,34 @@ const applyConservativeSell = (
 const getHeikinAshiCandles = (ohlc, interval = 1) => {
   const heikinAshi = [];
   for (let i = 0; i < ohlc.length; i += interval) {
-    const candle = ohlc[i];
+    let candle;
+    if (interval === 1 || i === 0) candle = ohlc[i];
+    else
+      candle = {
+        interval,
+        time: ohlc[i - interval].time,
+        open: ohlc[i - interval].open,
+        close: ohlc[i].close,
+        high: Math.max(...ohlc.slice(i - interval, i).map(obj => obj.high)),
+        low: Math.min(...ohlc.slice(i - interval, i).map(obj => obj.low))
+      };
+
     const ha = {
-      openTime: candle.openTime,
+      time: candle.time,
       open: 0,
       high: candle.high,
       low: candle.low,
       close: 0
     };
-
     if (i === 0) {
       ha.open = (candle.open + candle.close) / 2;
       ha.close = (candle.open + candle.high + candle.low + candle.close) / 4;
     } else {
-      ha.open = (heikinAshi[i - 1].open + heikinAshi[i - 1].close) / 2;
+      ha.open =
+        (heikinAshi.slice(-1)[0].open + heikinAshi.slice(-1)[0].close) / 2;
       ha.close = (candle.open + candle.high + candle.low + candle.close) / 4;
+      ha.high = Math.max(candle.high, ha.open, ha.close);
+      ha.low = Math.min(candle.low, ha.open, ha.close);
     }
 
     heikinAshi.push(ha);
@@ -598,12 +611,14 @@ const execute = async (logger, rawData) => {
   const convertToMinutes = timeValue =>
     ({
       '1m': 1,
+      '2m': 2,
       '3m': 3,
       '5m': 5,
       '15m': 15,
       '30m': 30,
       '1h': 60,
       '2h': 120,
+      '3h': 180,
       '4h': 240,
       '1d': 1440
     }[timeValue] || 0);
@@ -628,7 +643,9 @@ const execute = async (logger, rawData) => {
     ['time'],
     ['desc']
   );
-
+  console.log(
+    `interval: ${buyHeikinAshiLimit} candle size ${longerCandles.length}`
+  );
   const heikinAshiLongerCandles = getHeikinAshiCandles(
     _.reverse(longerCandles),
     Math.min(longerCandles.length, buyKeikinAshiInterval)

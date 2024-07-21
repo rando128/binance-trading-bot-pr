@@ -68,8 +68,8 @@ class CoinWrapperTradingView extends React.Component {
         },
         sell: { heikinAshiRestriction: sellHeikinAshiRestriction },
         buy: {
-          kagiRestriction: kagiDownTrend,
-          heikinAshiRestriction: heikinAshiDownTrend
+          kagiRestriction: buyKagiRestriction,
+          heikinAshiRestriction: buyHeikinAshiRestriction
         },
         tradingView,
         overrideData
@@ -423,7 +423,8 @@ class CoinWrapperTradingView extends React.Component {
             </div>
           </div>
           <div className='coin-info-column coin-info-column-price'>
-            {sellHeikinAshiRestriction !== null ? (
+            {sellHeikinAshiRestriction !== null &&
+            buyHeikinAshiRestriction !== null ? (
               <span className='coin-info-label fs-8'>
                 Heikin Ashi ({interval}, {buyHeikinAshiRestrictionInterval}){' '}
                 <i
@@ -433,26 +434,50 @@ class CoinWrapperTradingView extends React.Component {
                       : 'fa-arrow-down text-danger'
                   }`}></i>
                 &nbsp;
-                {heikinAshiDownTrend !== null ? (
-                  <i
-                    className={`fas fa-sm mb-1 ${
-                      heikinAshiDownTrend
-                        ? 'fa-arrow-down text-danger'
-                        : 'fa-arrow-up text-success'
-                    }`}></i>
-                ) : (
-                  ''
-                )}
+                <i
+                  className={`fas fa-sm mb-1 ${
+                    buyHeikinAshiRestriction
+                      ? 'fa-arrow-down text-danger'
+                      : 'fa-arrow-up text-success'
+                  }`}></i>
               </span>
             ) : (
               ''
             )}
-            {kagiDownTrend !== null ? (
+            {sellHeikinAshiRestriction !== null &&
+            buyHeikinAshiRestriction === null ? (
+              <span className='coin-info-label fs-8'>
+                Heikin Ashi ({interval}){' '}
+                <i
+                  className={`fas fa-sm mb-1 ${
+                    sellHeikinAshiRestriction
+                      ? 'fa-arrow-up text-success'
+                      : 'fa-arrow-down text-danger'
+                  }`}></i>
+              </span>
+            ) : (
+              ''
+            )}
+            {sellHeikinAshiRestriction === null &&
+            buyHeikinAshiRestriction !== null ? (
+              <span className='coin-info-label fs-8'>
+                Heikin Ashi ({buyHeikinAshiRestrictionInterval}){' '}
+                <i
+                  className={`fas fa-sm mb-1 ${
+                    buyHeikinAshiRestriction
+                      ? 'fa-arrow-down text-danger'
+                      : 'fa-arrow-up text-success'
+                  }`}></i>
+              </span>
+            ) : (
+              ''
+            )}
+            {buyKagiRestriction !== null ? (
               <span className='coin-info-label fs-8'>
                 Kagi ({interval}){' '}
                 <i
                   className={`fas fa-sm mb-1 ${
-                    kagiDownTrend
+                    buyKagiRestriction
                       ? 'fa-arrow-down text-danger'
                       : 'fa-arrow-up text-success'
                   }`}></i>

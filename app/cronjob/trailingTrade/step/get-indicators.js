@@ -161,15 +161,15 @@ const getHeikinAshiCandles = (ohlc, interval = 1) => {
   const heikinAshi = [];
   for (let i = 0; i < ohlc.length; i += interval) {
     let candle;
-    if (interval === 1 || i === 0) candle = ohlc[i];
+    if (interval === 1) candle = ohlc[i];
     else
       candle = {
         interval,
-        time: ohlc[i - interval].time,
-        open: ohlc[i - interval].open,
-        close: ohlc[i].close,
-        high: Math.max(...ohlc.slice(i - interval, i).map(obj => obj.high)),
-        low: Math.min(...ohlc.slice(i - interval, i).map(obj => obj.low))
+        time: ohlc[i].time,
+        open: ohlc[i].open,
+        close: ohlc.slice(i, i + interval).slice(-1)[0].close, // latest available element
+        high: Math.max(...ohlc.slice(i, i + interval).map(obj => obj.high)),
+        low: Math.min(...ohlc.slice(i, i + interval).map(obj => obj.low))
       };
 
     const ha = {
@@ -622,7 +622,7 @@ const execute = async (logger, rawData) => {
 
   // Second Kagi Buy Restriction over the buyATHRestrictionCandlesInterval
   // - as a convenience to avoid defining another period setting
-  let heikinAshiBuyUpTrend;
+  let heikinAshiBuyDownTrend;
   if (heikinAshiBuyRestrictionEnabled) {
     const convertToMinutes = timeValue =>
       ({
@@ -664,13 +664,17 @@ const execute = async (logger, rawData) => {
       _.reverse(longerCandles),
       Math.min(longerCandles.length, buyKeikinAshiInterval)
     );
-    heikinAshiBuyUpTrend =
+    // heikinAshiBuyDownTrend = last 2 candles are bearish and the last is hammer:
+    // close < open, open=high, low < close
+    const lastCandle = heikinAshiLongerCandles.slice(-1)[0];
+    const previousCandle = heikinAshiLongerCandles.slice(-2)[0];
+    heikinAshiBuyDownTrend =
       heikinAshiLongerCandles.length < buyATHRestrictionCandlesLimit
         ? false
-        : heikinAshiLongerCandles.slice(-1)[0].close >
-            heikinAshiLongerCandles.slice(-1)[0].open &&
-          heikinAshiLongerCandles.slice(-2)[0].close >
-            heikinAshiLongerCandles.slice(-2)[0].open;
+        : lastCandle.close < lastCandle.open &&
+          lastCandle.open === lastCandle.high &&
+          lastCandle.low < lastCandle.close &&
+          previousCandle.close < previousCandle.open;
   }
   // Populate data
   data.baseAssetBalance.estimatedValue = baseAssetEstimatedValue;
@@ -685,7 +689,7 @@ const execute = async (logger, rawData) => {
     athRestrictionPrice: buyATHRestrictionPrice,
     kagiRestriction: kagiUpTrend !== undefined ? !kagiUpTrend : null,
     heikinAshiRestriction:
-      heikinAshiBuyUpTrend !== undefined ? !heikinAshiBuyUpTrend : null,
+      heikinAshiBuyDownTrend !== undefined ? heikinAshiBuyDownTrend : null,
     triggerPrice: buyTriggerPrice,
     difference: buyDifference,
     nextBestBuyAmount,

@@ -59,9 +59,17 @@ class CoinWrapperTradingView extends React.Component {
             }
           },
           candles: { interval },
+          buy: {
+            athRestriction: {
+              candles: { interval: buyHeikinAshiRestrictionInterval }
+            }
+          }
         },
         sell: { heikinAshiRestriction: sellHeikinAshiRestriction },
-        buy: { kagiRestriction: kagiDownTrend },
+        buy: {
+          kagiRestriction: buyKagiRestriction,
+          heikinAshiRestriction: buyHeikinAshiRestriction
+        },
         tradingView,
         overrideData
       }
@@ -314,22 +322,22 @@ class CoinWrapperTradingView extends React.Component {
     return (
       <div className='coin-info-sub-wrapper'>
         <div className='coin-info-column coin-info-column-title'>
-          <div className='coin-info-label'>
-            Tradingview
-          </div>
+          <div className='coin-info-label'>Tradingview</div>
           <div className='coin-info-value'>
-            Open: <a
+            Open:{' '}
+            <a
               href={
                 'https://www.tradingview.com/symbols/' + symbol + '/technicals/'
               }
               rel='noopener noreferrer'
               target='_blank'>
-            Technical analysis
-          </a> &nbsp; | &nbsp;
+              Technical analysis
+            </a>{' '}
+            &nbsp; | &nbsp;
             <a
-                href={ '/chart/?symbol=' + symbol}
-                rel='noopener noreferrer'
-                target='_blank'>
+              href={'/chart/?symbol=' + symbol}
+              rel='noopener noreferrer'
+              target='_blank'>
               Chart
             </a>
           </div>
@@ -414,7 +422,29 @@ class CoinWrapperTradingView extends React.Component {
             </div>
           </div>
           <div className='coin-info-column coin-info-column-price'>
-            {sellHeikinAshiRestriction !== null ? (
+            {sellHeikinAshiRestriction !== null &&
+            buyHeikinAshiRestriction !== null ? (
+              <span className='coin-info-label fs-8'>
+                Heikin Ashi ({interval}, {buyHeikinAshiRestrictionInterval}){' '}
+                <i
+                  className={`fas fa-sm mb-1 ${
+                    sellHeikinAshiRestriction
+                      ? 'fa-arrow-up text-success'
+                      : 'fa-arrow-down text-danger'
+                  }`}></i>
+                &nbsp;
+                <i
+                  className={`fas fa-sm mb-1 ${
+                    buyHeikinAshiRestriction
+                      ? 'fa-arrow-down text-danger'
+                      : 'fa-arrow-up text-success'
+                  }`}></i>
+              </span>
+            ) : (
+              ''
+            )}
+            {sellHeikinAshiRestriction !== null &&
+            buyHeikinAshiRestriction === null ? (
               <span className='coin-info-label fs-8'>
                 Heikin Ashi ({interval}){' '}
                 <i
@@ -427,12 +457,26 @@ class CoinWrapperTradingView extends React.Component {
             ) : (
               ''
             )}
-            {kagiDownTrend !== null ? (
+            {sellHeikinAshiRestriction === null &&
+            buyHeikinAshiRestriction !== null ? (
+              <span className='coin-info-label fs-8'>
+                Heikin Ashi ({buyHeikinAshiRestrictionInterval}){' '}
+                <i
+                  className={`fas fa-sm mb-1 ${
+                    buyHeikinAshiRestriction
+                      ? 'fa-arrow-down text-danger'
+                      : 'fa-arrow-up text-success'
+                  }`}></i>
+              </span>
+            ) : (
+              ''
+            )}
+            {buyKagiRestriction !== null ? (
               <span className='coin-info-label fs-8'>
                 Kagi ({interval}){' '}
                 <i
                   className={`fas fa-sm mb-1 ${
-                    kagiDownTrend
+                    buyKagiRestriction
                       ? 'fa-arrow-down text-danger'
                       : 'fa-arrow-up text-success'
                   }`}></i>
@@ -446,7 +490,7 @@ class CoinWrapperTradingView extends React.Component {
               Updated{' '}
               {moment
                 .utc(tradingView.result.time, 'YYYY-MM-DDTHH:mm:ss.SSSSSS')
-                .fromNow()}
+                .fromNow(true)}
             </span>
           </div>
           {updatedWithinAlert}

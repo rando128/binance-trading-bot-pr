@@ -123,6 +123,9 @@
         "kagiRestriction": {
           "enabled": false
         },
+        "heikinAshiRestriction": {
+          "enabled": false
+        },
         "tradingView": {
           "whenStrongBuy": true,
           "whenBuy": true

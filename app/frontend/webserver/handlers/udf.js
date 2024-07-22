@@ -1,5 +1,4 @@
 const _ = require('lodash');
-const moment = require('moment');
 const { binance, mongo } = require('../../../helpers');
 const {
   getCachedExchangeInfo
@@ -9,9 +8,9 @@ const {
   getSymbolConfiguration
 } = require('../../../cronjob/trailingTradeHelper/configuration');
 
-const {
-  getClosedTrades
-} = require('../../../cronjob/trailingTradeIndicator/steps');
+// const {
+//   getClosedTrades
+// } = require('../../../cronjob/trailingTradeIndicator/steps');
 
 const supportedResolutions = [
   '1',
@@ -51,23 +50,23 @@ const RESOLUTIONS_INTERVALS_MAP = {
   '1M': '1M'
 };
 
-const RESOLUTIONS_SECONDS_MAP = {
-  1: 60,
-  3: 180,
-  5: 300,
-  15: 900,
-  30: 1800,
-  60: 3600,
-  120: 7200,
-  240: 14400,
-  360: 21600,
-  480: 28800,
-  720: 43200,
-  '1D': 86400,
-  '3D': 259200,
-  '1W': 604800,
-  '1M': 2592000
-};
+// const RESOLUTIONS_SECONDS_MAP = {
+//   1: 60,
+//   3: 180,
+//   5: 300,
+//   15: 900,
+//   30: 1800,
+//   60: 3600,
+//   120: 7200,
+//   240: 14400,
+//   360: 21600,
+//   480: 28800,
+//   720: 43200,
+//   '1D': 86400,
+//   '3D': 259200,
+//   '1W': 604800,
+//   '1M': 2592000
+// };
 
 function priceScale(symbol) {
   let scale = 1;
@@ -432,7 +431,7 @@ const handleUDF = async (funcLogger, app) => {
     const exchangeSymbol = symbols.filter(s => s.symbol === symbol)[0];
     const scale = exchangeSymbol.pricescale;
 
-    let allTrades = [];
+    const allTrades = [];
     allGrids.forEach(grid => {
       let qty = 0;
       let amount = 0;
@@ -450,7 +449,7 @@ const handleUDF = async (funcLogger, app) => {
               ? parseFloat(sell.fills[0].price)
               : parseFloat(sell.price),
             qty: sell.executedQty,
-            stopLoss: grid.stopLossQuoteQty ? true : false,
+            stopLoss: grid.stopLossQuoteQty,
             scale
           });
       }
@@ -489,7 +488,7 @@ const handleUDF = async (funcLogger, app) => {
               conservativeTrigger: conservativeTrigger * scale,
               lastBuyPrice: amount / qty,
               totalQty: qty,
-              scale: scale
+              scale
             });
           }
         });
@@ -497,9 +496,12 @@ const handleUDF = async (funcLogger, app) => {
 
     allTrades.sort((a, b) => a.time - b.time);
 
+    // eslint-disable-next-line array-callback-return
     allTrades.map((order, i, orders) => {
+      // eslint-disable-next-line no-param-reassign
       order.from = order.time;
-      order.to = i == orders.length - 1 ? null : orders[i + 1].time;
+      // eslint-disable-next-line no-param-reassign
+      order.to = i === orders.length - 1 ? null : orders[i + 1].time;
     });
 
     res.send(allTrades);

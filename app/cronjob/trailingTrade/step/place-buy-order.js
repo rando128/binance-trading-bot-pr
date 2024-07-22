@@ -258,7 +258,13 @@ const execute = async (logger, rawData) => {
     },
     action,
     quoteAssetBalance: { free: quoteAssetFreeBalance },
-    buy: { currentPrice, triggerPrice, openOrders, nextBestBuyAmount, nextBestBuyAmountData },
+    buy: {
+      currentPrice,
+      triggerPrice,
+      openOrders,
+      nextBestBuyAmount,
+      nextBestBuyAmountData
+    },
     tradingView,
     overrideData
   } = data;
@@ -333,7 +339,10 @@ const execute = async (logger, rawData) => {
     );
   }
 
-  logger.info({ currentPrice, openOrders, saveLog: true }, 'Attempting to place buy order');
+  logger.info(
+    { currentPrice, openOrders, saveLog: true },
+    'Attempting to place buy order'
+  );
 
   const lotStepSizePrecision =
     parseFloat(stepSize) === 1 ? 0 : stepSize.indexOf(1) - 1;

@@ -24,7 +24,7 @@
       "reverting": "revert"
     },
     "banned": ["wip"],
-    "skip": ["development", "staging"],
+    "skip": ["development", "staging", "testing/july", "testing/april"],
     "disallowed": ["master", "main"],
     "separator": "/",
     "msgBranchBanned": "Branches with the name \"%s\" are not allowed.",

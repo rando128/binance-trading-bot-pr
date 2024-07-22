@@ -401,6 +401,41 @@ const isKagiRestrictingBuy = (logger, data) => {
 };
 
 /**
+ * Check whether heikin-ashi signal prevents buy trade (except the first one)
+ *
+ * @param {*} logger
+ * @param {*} data
+ * @returns
+ */
+const isHeikinAshiRestrictingBuy = (logger, data) => {
+  const {
+    symbolConfiguration: {
+      buy: {
+        heikinAshiRestriction: { enabled: heikinAshiRestrictionEnabled },
+        currentGridTradeIndex
+      },
+      candles: { interval: humanizedInterval }
+    },
+    buy: { heikinAshiRestriction, updatedAt }
+  } = data;
+
+  const interval = humanizedInterval.match(/\d/)[0];
+  const unit = humanizedInterval.match(/\D/)[0];
+  const isSignalFresh =
+    moment().utc().diff(moment(updatedAt), unit, true) <= interval;
+
+  if (
+    heikinAshiRestrictionEnabled &&
+    heikinAshiRestriction !== null &&
+    currentGridTradeIndex >= 1 &&
+    isSignalFresh
+  ) {
+    return heikinAshiRestriction;
+  }
+  return false;
+};
+
+/**
  * Check whether heikin-ashi signal prevents sell trade (if not on last
  * grid trade)
  *
@@ -411,8 +446,8 @@ const isKagiRestrictingBuy = (logger, data) => {
 const isHeikinAshiRestrictingSell = (logger, data) => {
   const {
     symbolConfiguration: {
-        buy: { currentGridTradeIndex: currentBuyGridTradeIndex },
-        sell: {
+      buy: { currentGridTradeIndex: currentBuyGridTradeIndex },
+      sell: {
         heikinAshiRestriction: { enabled: heikinAshiRestrictionEnabled }
       },
       candles: { interval: humanizedInterval }
@@ -493,8 +528,14 @@ const execute = async (logger, rawData) => {
     symbol,
     symbolInfo: { baseAsset },
     symbolConfiguration: {
-      buy: { currentGridTradeIndex: currentBuyGridTradeIndex },
-      sell: { currentGridTradeIndex: currentSellGridTradeIndex }
+      buy: {
+        currentGridTradeIndex: currentBuyGridTradeIndex,
+        athRestriction: {
+          candles: { interval: buyATHRestrictionCandlesInterval }
+        }
+      },
+      sell: { currentGridTradeIndex: currentSellGridTradeIndex },
+      candles: { interval: candlesInterval }
     }
   } = data;
 
@@ -595,6 +636,15 @@ const execute = async (logger, rawData) => {
       );
     }
 
+    if (await isHeikinAshiRestrictingBuy(logger, data)) {
+      return setBuyActionAndMessage(
+        logger,
+        data,
+        'wait',
+        `The ${buyATHRestrictionCandlesInterval} Heikin-Ashi signal is bearish. Wait before buying.`
+      );
+    }
+
     return setBuyActionAndMessage(
       logger,
       data,
@@ -666,7 +716,7 @@ const execute = async (logger, rawData) => {
           logger,
           data,
           'wait',
-          `The Heikin-Ashi signal is still bullish. Wait before selling.`
+          `The ${candlesInterval} Heikin-Ashi signal is still bullish. Wait before selling.`
         );
       }
 

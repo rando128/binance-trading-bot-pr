@@ -150,27 +150,17 @@ const calculateNextBestBuyAmount = (
 
 const applyConservativeSell = (
   _data,
-  { conservativeFactor, sellTriggerPercentage, buyGridTradeDepth }
-) => 1 + (sellTriggerPercentage - 1) * conservativeFactor ** buyGridTradeDepth;
+  { conservativeFactor, sellTriggerPercentage }
+) => 1 + (sellTriggerPercentage - 1) * conservativeFactor;
 
 /**
- * Compute Heikin ashi candles
+ * Compute Heikin ashi candles on ATH longer timeframe
  * @param {*} candles
  */
-const getHeikinAshiCandles = (ohlc, interval = 1) => {
+const getHeikinAshiCandles = ohlc => {
   const heikinAshi = [];
-  for (let i = 0; i < ohlc.length; i += interval) {
-    let candle;
-    if (interval === 1) candle = ohlc[i];
-    else
-      candle = {
-        interval,
-        time: ohlc[i].time,
-        open: ohlc[i].open,
-        close: ohlc.slice(i, i + interval).slice(-1)[0].close, // latest available element
-        high: Math.max(...ohlc.slice(i, i + interval).map(obj => obj.high)),
-        low: Math.min(...ohlc.slice(i, i + interval).map(obj => obj.low))
-      };
+  for (let i = 0; i < ohlc.length; i += 1) {
+    const candle = ohlc[i];
 
     const ha = {
       time: candle.time,
@@ -330,10 +320,10 @@ const execute = async (logger, rawData) => {
 
   const highestPrice = _.max(candlesData.high);
 
-  // Retrieve ATH candles
+  // Retrieve ATH candles - used for ATH and heikinAshi buy restriction
   let athPrice = null;
-
-  if (buyATHRestrictionEnabled) {
+  let athCandles = [];
+  if (buyATHRestrictionEnabled || heikinAshiBuyRestrictionEnabled) {
     logger.info(
       {
         function: 'athCandles',
@@ -344,7 +334,7 @@ const execute = async (logger, rawData) => {
       'Retrieving ATH candles from MongoDB'
     );
 
-    const athCandles = _.orderBy(
+    athCandles = _.orderBy(
       await mongo.findAll(
         logger,
         'trailing-trade-ath-candles',
@@ -625,57 +615,20 @@ const execute = async (logger, rawData) => {
   // - as a convenience to avoid defining another period setting
   let heikinAshiBuyDownTrend;
   if (heikinAshiBuyRestrictionEnabled) {
-    const convertToMinutes = timeValue =>
-      ({
-        '1m': 1,
-        '2m': 2,
-        '3m': 3,
-        '5m': 5,
-        '15m': 15,
-        '30m': 30,
-        '1h': 60,
-        '2h': 120,
-        '3h': 180,
-        '4h': 240,
-        '1d': 1440
-      }[timeValue] || 0);
-    const buyKeikinAshiInterval = convertToMinutes(
-      buyATHRestrictionCandlesInterval
-    );
-    const buyHeikinAshiLimit =
-      buyKeikinAshiInterval * buyATHRestrictionCandlesLimit;
-    const longerCandles = _.orderBy(
-      await mongo.findAll(
-        logger,
-        'trailing-trade-candles',
-        {
-          key: `${symbol}`
-        },
-        {
-          sort: {
-            time: -1
-          },
-          limit: buyHeikinAshiLimit
-        }
-      ),
-      ['time'],
-      ['desc']
-    );
-    const heikinAshiLongerCandles = getHeikinAshiCandles(
-      _.reverse(longerCandles),
-      Math.min(longerCandles.length, buyKeikinAshiInterval)
-    );
+    const heikinAshiLongerCandles = getHeikinAshiCandles(_.reverse(athCandles));
+    // console.log('athCandles');
+    // console.log(athCandles);
+    // console.log('heikinAshiLongerCandles:');
+    // console.log(heikinAshiLongerCandles);
     // heikinAshiBuyDownTrend = last 2 candles are bearish and the last is hammer:
     // close < open, open >= high, low < close
     const lastCandle = heikinAshiLongerCandles.slice(-1)[0];
     const previousCandle = heikinAshiLongerCandles.slice(-2)[0];
     heikinAshiBuyDownTrend =
-      heikinAshiLongerCandles.length < buyATHRestrictionCandlesLimit
-        ? false
-        : lastCandle.close < lastCandle.open &&
-          lastCandle.open >= lastCandle.high &&
-          lastCandle.low < lastCandle.close &&
-          previousCandle.close < previousCandle.open;
+      lastCandle.close < lastCandle.open &&
+      lastCandle.open >= lastCandle.high &&
+      lastCandle.low < lastCandle.close &&
+      previousCandle.close < previousCandle.open;
   }
   // Populate data
   data.baseAssetBalance.estimatedValue = baseAssetEstimatedValue;

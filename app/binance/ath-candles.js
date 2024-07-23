@@ -31,11 +31,12 @@ const setupATHCandlesWebsocket = async (logger, symbols) => {
         athRestriction: {
           enabled: buyATHRestrictionEnabled,
           candles: { interval: buyATHRestrictionCandlesInterval }
-        }
+        },
+        heikinAshiRestriction: { enabled: buyHeikinAshiEnabled }
       }
     } = symbolConfiguration;
 
-    if (buyATHRestrictionEnabled === false) {
+    if (buyATHRestrictionEnabled === false && buyHeikinAshiEnabled === false) {
       return;
     }
 

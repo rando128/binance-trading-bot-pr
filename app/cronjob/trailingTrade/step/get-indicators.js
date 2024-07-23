@@ -666,14 +666,14 @@ const execute = async (logger, rawData) => {
       Math.min(longerCandles.length, buyKeikinAshiInterval)
     );
     // heikinAshiBuyDownTrend = last 2 candles are bearish and the last is hammer:
-    // close < open, open=high, low < close
+    // close < open, open >= high, low < close
     const lastCandle = heikinAshiLongerCandles.slice(-1)[0];
     const previousCandle = heikinAshiLongerCandles.slice(-2)[0];
     heikinAshiBuyDownTrend =
       heikinAshiLongerCandles.length < buyATHRestrictionCandlesLimit
         ? false
         : lastCandle.close < lastCandle.open &&
-          lastCandle.open === lastCandle.high &&
+          lastCandle.open >= lastCandle.high &&
           lastCandle.low < lastCandle.close &&
           previousCandle.close < previousCandle.open;
   }

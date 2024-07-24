@@ -619,14 +619,23 @@ const execute = async (logger, rawData) => {
     // close < open, open >= high, low < close
     const lastCandle = heikinAshiLongerCandles.slice(-1)[0];
     const previousCandle = heikinAshiLongerCandles.slice(-2)[0];
-
-    heikinAshiBuyDownTrend =
-      lastCandle && previousCandle
-        ? lastCandle.close < lastCandle.open &&
-          lastCandle.open >= lastCandle.high &&
-          lastCandle.low < lastCandle.close &&
-          previousCandle.close < previousCandle.open
-        : false;
+    console.log('------');
+    console.log(heikinAshiLongerCandles);
+    // Less restrictive until we have enough candles
+    if (heikinAshiLongerCandles.length < buyATHRestrictionCandlesLimit)
+      heikinAshiBuyDownTrend =
+        lastCandle && previousCandle
+          ? lastCandle.close < lastCandle.open &&
+            previousCandle.close < previousCandle.open
+          : false;
+    else
+      heikinAshiBuyDownTrend =
+        lastCandle && previousCandle
+          ? lastCandle.close < lastCandle.open &&
+            lastCandle.open >= lastCandle.high &&
+            lastCandle.low < lastCandle.close &&
+            previousCandle.close < previousCandle.open
+          : false;
   }
   // Populate data
   data.baseAssetBalance.estimatedValue = baseAssetEstimatedValue;

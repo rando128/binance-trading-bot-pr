@@ -615,20 +615,18 @@ const execute = async (logger, rawData) => {
   let heikinAshiBuyDownTrend;
   if (heikinAshiBuyRestrictionEnabled) {
     const heikinAshiLongerCandles = getHeikinAshiCandles(_.reverse(athCandles));
-    // console.log('athCandles');
-    // console.log(athCandles);
-    // console.log('heikinAshiLongerCandles:');
-    // console.log(heikinAshiLongerCandles);
     // heikinAshiBuyDownTrend = last 2 candles are bearish and the last is hammer:
     // close < open, open >= high, low < close
     const lastCandle = heikinAshiLongerCandles.slice(-1)[0];
     const previousCandle = heikinAshiLongerCandles.slice(-2)[0];
 
     heikinAshiBuyDownTrend =
-      lastCandle.close < lastCandle.open &&
-      lastCandle.open >= lastCandle.high &&
-      lastCandle.low < lastCandle.close &&
-      previousCandle.close < previousCandle.open;
+      lastCandle && previousCandle
+        ? lastCandle.close < lastCandle.open &&
+          lastCandle.open >= lastCandle.high &&
+          lastCandle.low < lastCandle.close &&
+          previousCandle.close < previousCandle.open
+        : false;
   }
   // Populate data
   data.baseAssetBalance.estimatedValue = baseAssetEstimatedValue;

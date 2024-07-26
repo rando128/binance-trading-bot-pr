@@ -619,7 +619,7 @@ class SettingIcon extends React.Component {
                                                       ATH Buy Restriction
                                                       interval
                                                     </i>
-                                                    , is bearish. This avoids
+                                                    , are bearish. This avoids
                                                     buying during strong bearish
                                                     periods.
                                                   </Popover.Content>
@@ -731,7 +731,6 @@ class SettingIcon extends React.Component {
                                           <option value='30m'>30m</option>
                                           <option value='1h'>1h</option>
                                           <option value='2h'>2h</option>
-                                          <option value='3h'>3h</option>
                                           <option value='4h'>4h</option>
                                           <option value='1d'>1d</option>
                                         </Form.Control>

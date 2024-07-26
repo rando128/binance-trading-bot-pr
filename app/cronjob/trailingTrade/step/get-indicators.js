@@ -611,24 +611,23 @@ const execute = async (logger, rawData) => {
         : null;
   }
 
-  // Second Kagi Buy Restriction over the buyATHRestrictionCandlesInterval
+  // Second HeikinAShi Buy Restriction over the buyATHRestrictionCandlesInterval
   // - as a convenience to avoid defining another period setting
   let heikinAshiBuyDownTrend;
   if (heikinAshiBuyRestrictionEnabled) {
     const heikinAshiLongerCandles = getHeikinAshiCandles(_.reverse(athCandles));
-    // console.log('athCandles');
-    // console.log(athCandles);
-    // console.log('heikinAshiLongerCandles:');
-    // console.log(heikinAshiLongerCandles);
-    // heikinAshiBuyDownTrend = last 2 candles are bearish and the last is hammer:
-    // close < open, open >= high, low < close
+    // heikinAshiBuyDownTrend = last 2 candles are not bearish
     const lastCandle = heikinAshiLongerCandles.slice(-1)[0];
     const previousCandle = heikinAshiLongerCandles.slice(-2)[0];
+    console.log('------');
+    console.log(heikinAshiLongerCandles);
     heikinAshiBuyDownTrend =
-      lastCandle.close < lastCandle.open &&
-      lastCandle.open >= lastCandle.high &&
-      lastCandle.low < lastCandle.close &&
-      previousCandle.close < previousCandle.open;
+      lastCandle && previousCandle
+        ? !(
+            lastCandle.close < lastCandle.open &&
+            previousCandle.close < previousCandle.open
+          )
+        : false;
   }
   // Populate data
   data.baseAssetBalance.estimatedValue = baseAssetEstimatedValue;

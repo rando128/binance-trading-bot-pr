@@ -92,12 +92,13 @@ const syncATHCandles = async (logger, symbols) => {
               interval: buyATHRestrictionCandlesInterval,
               limit: buyATHRestrictionCandlesLimit
             }
-          }
+          },
+          heikinAshiRestriction: { enabled: buyHeikinAshiEnabled }
         }
       } = symbolConfiguration;
 
       const getCandles = async () => {
-        if (buyATHRestrictionEnabled) {
+        if (buyATHRestrictionEnabled || buyHeikinAshiEnabled) {
           // Retrieve ath candles
           logger.info(
             {

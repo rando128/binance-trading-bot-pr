@@ -618,14 +618,10 @@ const execute = async (logger, rawData) => {
     // heikinAshiBuyDownTrend = last 2 candles are not bearish
     const lastCandle = heikinAshiLongerCandles.slice(-1)[0];
     const previousCandle = heikinAshiLongerCandles.slice(-2)[0];
-    console.log('------');
-    console.log(heikinAshiLongerCandles);
     heikinAshiBuyDownTrend =
       lastCandle && previousCandle
-        ? !(
-            lastCandle.close < lastCandle.open &&
-            previousCandle.close < previousCandle.open
-          )
+        ? lastCandle.close < lastCandle.open &&
+          previousCandle.close < previousCandle.open
         : false;
   }
   // Populate data

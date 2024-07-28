@@ -615,14 +615,14 @@ const execute = async (logger, rawData) => {
   let heikinAshiBuyDownTrend;
   if (heikinAshiBuyRestrictionEnabled) {
     const heikinAshiLongerCandles = getHeikinAshiCandles(_.reverse(athCandles));
-    // heikinAshiBuyDownTrend = last 2 candles are bearish or the last one is also bearish
+    // heikinAshiBuyDownTrend = last 2 candles are bearish or the previous one is also bearish
     const lastCandle = heikinAshiLongerCandles.slice(-1)[0];
     const previousCandle = heikinAshiLongerCandles.slice(-2)[0];
     heikinAshiBuyDownTrend =
       lastCandle && previousCandle
         ? (lastCandle.close < lastCandle.open &&
             previousCandle.close < previousCandle.open) ||
-          lastCandle.close < lastCandle.open
+          previousCandle.close < previousCandle.open
         : false;
   }
   // Populate data

@@ -36,9 +36,9 @@ const setupATHCandlesWebsocket = async (logger, symbols) => {
       }
     } = symbolConfiguration;
 
-    if (buyATHRestrictionEnabled === false && buyHeikinAshiEnabled === false) {
-      return;
-    }
+    if (buyATHRestrictionEnabled === false && buyHeikinAshiEnabled === false)
+      // eslint-disable-next-line no-continue
+      continue;
 
     if (!athSymbolsGroupedByIntervals[buyATHRestrictionCandlesInterval]) {
       athSymbolsGroupedByIntervals[buyATHRestrictionCandlesInterval] = [];

@@ -620,9 +620,8 @@ const execute = async (logger, rawData) => {
     const previousCandle = heikinAshiLongerCandles.slice(-2)[0];
     heikinAshiBuyDownTrend =
       lastCandle && previousCandle
-        ? (lastCandle.close < lastCandle.open &&
-            previousCandle.close < previousCandle.open) ||
-          previousCandle.close < previousCandle.open
+        ? previousCandle.close < previousCandle.open ||
+          lastCandle.close < lastCandle.open
         : false;
   }
   // Populate data

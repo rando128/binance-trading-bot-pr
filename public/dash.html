@@ -187,7 +187,7 @@
                             <a href='${chart_url}' target='_blank' class='text-white text-decoration-none me-2'>
                                 <i class='fas fa-chart-line'></i>
                             </a>
-                            <span class='toggle-button' data-bs-toggle='collapse' href='#${crypto.name.toLowerCase()}PriceIncrementsContainer' role='button' aria-expanded='true' aria-controls='${crypto.name.toLowerCase()}PriceIncrementsContainer'>▼</span>
+                            <span class='toggle-button' data-bs-toggle='collapse' href='#${crypto.name.toLowerCase()}PriceIncrementsContainer' role='button' aria-expanded='false' aria-controls='${crypto.name.toLowerCase()}PriceIncrementsContainer'>▼</span>
                         </span>
                     </div>
                     <ul class='list-group list-group-flush'>
@@ -196,7 +196,7 @@
                         <li class='list-group-item'><strong>Total Amount:</strong> <span id='${crypto.name.toLowerCase()}TotalAmount'>Loading...</span></li>
                         <li class='list-group-item'><strong>Grid Depth:</strong> <span id='${crypto.name.toLowerCase()}GridDepth'>Loading...</span></li>
                     </ul>
-                    <div class='collapse show' id='${crypto.name.toLowerCase()}PriceIncrementsContainer'>
+                    <div class='collapse' id='${crypto.name.toLowerCase()}PriceIncrementsContainer'>
                         <div class='group-header'>Buy amounts at current price<br>to breakeven at selling price</div>
                         <ul class='list-group list-group-flush header'>
                             <li id='${crypto.name.toLowerCase()}PriceIncrements' class='list-group'>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <title>Cryptocurrency Cards</title>
+  <link href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css' rel='stylesheet'>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+      body {
+          background-color: #f8f9fa;
+          padding: 20px;
+      }
+
+      .card {
+          width: 18rem;
+          margin-bottom: 20px;
+      }
+
+      .toggle-button {
+          cursor: pointer;
+          font-size: 0.85rem;
+          user-select: none;
+      }
+
+      .group-header {
+          font-weight: 500;
+          font-size: small;
+          text-align: center;
+      }
+  </style>
+</head>
+<body>
+<div class='container'>
+  <div id='cryptoCards' class='row justify-content-center'>
+    <!-- Cryptocurrency cards will be dynamically inserted here -->
+  </div>
+</div>
+
+<script src='https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js'></script>
+<script>
+  function generateCryptoConfig(queryString) {
+    const urlParams = new URLSearchParams(queryString);
+    const cryptoConfig = [];
+
+    const colorMapping = {};
+    const availableColors = [
+      { color: 'bg-primary', textColor: 'text-white' },    // Blue background, white text
+      { color: 'bg-warning', textColor: 'text-dark' },     // Yellow background, dark text
+      { color: 'bg-success', textColor: 'text-white' },    // Green background, white text
+      { color: 'bg-danger', textColor: 'text-white' },     // Red background, white text
+      { color: 'bg-info', textColor: 'text-dark' },        // Light blue background, dark text
+      { color: 'bg-secondary', textColor: 'text-white' },  // Gray background, white text
+      { color: 'bg-dark', textColor: 'text-white' }       // Dark background, white text
+    ];
+    let colorIndex = 0;
+
+    urlParams.forEach((value, key) => {
+      const crypto = key.toUpperCase();  // No need to split the key
+
+      const apiEndpoint = `http://${value}/current_grid/?symbol=${crypto.split('-')[0]}`;
+
+      if (!colorMapping[value]) {
+        colorMapping[value] = availableColors[colorIndex % availableColors.length];
+        colorIndex++;
+      }
+
+      const config = {
+        name: crypto,
+        key: `${crypto.split('-')[0]}FDUSD`,
+        apiEndpoint: apiEndpoint,
+        color: colorMapping[value].color,
+        textColor: colorMapping[value].textColor
+      };
+
+      cryptoConfig.push(config);
+    });
+
+    return cryptoConfig;
+  }
+
+  // Example usage:
+  //const queryString = '?ethfdusd-eu=hxnxeu.mooo.com&btcfdusd-co=hxnxco.mooo.com&ethusdt-b1=b1.hxnxre.art&btcusdt-b2=b2.hxnxre.art';
+  const queryString = window.location.search;
+  const cryptoConfig = generateCryptoConfig(queryString);
+
+  // // Configuration for each cryptocurrency
+  // const cryptoConfig = [
+  //   {
+  //     name: 'ETH-EU',
+  //     key: 'ETHFDUSD',
+  //     apiEndpoint: 'https://hxnxeu.mooo.com/current_grid/?symbol=ETHFDUSD',
+  //     color: 'bg-primary',
+  //     textColor: 'text-white'
+  //   },
+  //   {
+  //     name: 'BTC-EU',
+  //     key: 'BTCFDUSD',
+  //     apiEndpoint: 'https://hxnxeu.mooo.com/current_grid/?symbol=BTCFDUSD',
+  //     color: 'bg-primary',
+  //     textColor: 'text-dark'
+  //   },
+  //   {
+  //     name: 'ETH-EU1',
+  //     key: 'ETHFDUSD',
+  //     apiEndpoint: 'https://hxnxeu1.mooo.com/current_grid/?symbol=ETHFDUSD',
+  //     color: 'bg-warning',
+  //     textColor: 'text-white'
+  //   },
+  //   {
+  //     name: 'BTC-EU1',
+  //     key: 'BTCFDUSD',
+  //     apiEndpoint: 'https://hxnxeu1.mooo.com/current_grid/?symbol=BTCFDUSD',
+  //     color: 'bg-warning',
+  //     textColor: 'text-dark'
+  //   },
+  //   {
+  //     name: 'ETH-EU2',
+  //     key: 'ETHFDUSD',
+  //     apiEndpoint: 'https://hxnxeu2.mooo.com/current_grid/?symbol=ETHFDUSD',
+  //     color: 'bg-primary',
+  //     textColor: 'text-white'
+  //   },
+  //   {
+  //     name: 'BTC-EU2',
+  //     key: 'BTCFDUSD',
+  //     apiEndpoint: 'https://hxnxeu2.mooo.com/current_grid/?symbol=BTCFDUSD',
+  //     color: 'bg-primary',
+  //     textColor: 'text-dark'
+  //   },
+  //   {
+  //     name: 'ETH-CO',
+  //     key: 'ETHFDUSD',
+  //     apiEndpoint: 'https://hxnxco.mooo.com/current_grid/?symbol=ETHFDUSD',
+  //     color: 'bg-primary',
+  //     textColor: 'text-white'
+  //   },
+  //   {
+  //     name: 'BTC-CO',
+  //     key: 'BTCFDUSD',
+  //     apiEndpoint: 'https://hxnxco.mooo.com/current_grid/?symbol=BTCFDUSD',
+  //     color: 'bg-primary',
+  //     textColor: 'text-dark'
+  //   },
+  //   {
+  //     name: 'ETH-B1',
+  //     key: 'ETHFDUSD',
+  //     apiEndpoint: 'https://b1.hxnxre.art/current_grid/?symbol=ETHFDUSD',
+  //     color: 'bg-warning',
+  //     textColor: 'text-white'
+  //   },
+  //   {
+  //     name: 'BTC-B1',
+  //     key: 'BTCFDUSD',
+  //     apiEndpoint: 'https://b1.hxnxre.art/current_grid/?symbol=BTCFDUSD',
+  //     color: 'bg-warning',
+  //     textColor: 'text-dark'
+  //   },
+  //   {
+  //     name: 'ETH-B2',
+  //     key: 'ETHFDUSD',
+  //     apiEndpoint: 'https://b2.hxnxre.art/current_grid/?symbol=ETHFDUSD',
+  //     color: 'bg-primary',
+  //     textColor: 'text-white'
+  //   },
+  //   {
+  //     name: 'BTC-B2',
+  //     key: 'BTCFDUSD',
+  //     apiEndpoint: 'https://b2.hxnxre.art/current_grid/?symbol=BTCFDUSD',
+  //     color: 'bg-primary',
+  //     textColor: 'text-dark'
+  //   }
+  // ];
+
+  function createCryptoCard(crypto) {
+    const card = document.createElement('div');
+    const home_url = new URL(`${crypto.apiEndpoint}`).origin;
+    const chart_url = crypto.apiEndpoint.replace('current_grid','chart')
+    card.className = 'col-md-6 col-lg-4';
+    card.innerHTML = `
+                <div class='card'>
+                    <div class='card-header ${crypto.color} ${crypto.textColor}'>
+                        <a href='${home_url}' target='_blank' class='${crypto.textColor} text-decoration-none me-2'>
+                          <h5 class='card-title mb-0 d-inline-block'>${crypto.name}</h5>
+                        </a>
+                        <span class='float-end'>
+                            <a href='${chart_url}' target='_blank' class='text-white text-decoration-none me-2'>
+                                <i class='fas fa-chart-line'></i>
+                            </a>
+                            <span class='toggle-button' data-bs-toggle='collapse' href='#${crypto.name.toLowerCase()}PriceIncrementsContainer' role='button' aria-expanded='true' aria-controls='${crypto.name.toLowerCase()}PriceIncrementsContainer'>▼</span>
+                        </span>
+                    </div>
+                    <ul class='list-group list-group-flush'>
+                        <li class='list-group-item'><strong>Price:</strong> <span id='${crypto.name.toLowerCase()}CurrentPrice'>Loading...</span></li>
+                        <li class='list-group-item'><strong>Last Buy Price:</strong> <span id='${crypto.name.toLowerCase()}AveragePrice'>Loading...</span></li>
+                        <li class='list-group-item'><strong>Total Amount:</strong> <span id='${crypto.name.toLowerCase()}TotalAmount'>Loading...</span></li>
+                        <li class='list-group-item'><strong>Grid Depth:</strong> <span id='${crypto.name.toLowerCase()}GridDepth'>Loading...</span></li>
+                    </ul>
+                    <div class='collapse show' id='${crypto.name.toLowerCase()}PriceIncrementsContainer'>
+                        <div class='group-header'>Buy amounts at current price<br>to breakeven at selling price</div>
+                        <ul class='list-group list-group-flush header'>
+                            <li id='${crypto.name.toLowerCase()}PriceIncrements' class='list-group'>
+                                <!-- 2.5% increment items with breakeven amounts will be added here -->
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+    return card;
+  }
+
+  function fetchCryptoData(crypto) {
+    fetch(crypto.apiEndpoint)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        const cryptoData = data;
+
+        if (cryptoData && cryptoData.averagePrice) {
+          const lastBuyPrice = cryptoData.averagePrice;
+          const totalQty = cryptoData.totalQuantity;
+          const gridDepth = cryptoData.gridDepth;
+          const currentPrice = cryptoData.currentPrice;
+          const totalCummulativeQuoteQty = cryptoData.totalCummulativeQuoteQty;
+          const priceDelta = (currentPrice - lastBuyPrice) / lastBuyPrice * 100;
+
+          document.getElementById(`${crypto.name.toLowerCase()}CurrentPrice`).innerHTML = `<span>$${currentPrice.toFixed(2)} <span style='color:${priceDelta > 0 ? 'green' : 'red'}'>(${priceDelta.toFixed(2)}%)</span></span>`;
+          document.getElementById(`${crypto.name.toLowerCase()}TotalAmount`).textContent = `$${totalCummulativeQuoteQty.toFixed(4)}`;
+          document.getElementById(`${crypto.name.toLowerCase()}AveragePrice`).textContent = `$${lastBuyPrice.toFixed(2)}`;
+          document.getElementById(`${crypto.name.toLowerCase()}GridDepth`).textContent = gridDepth;
+
+          // Add 2.5% increment items to the list along with breakeven purchase amounts
+          addPriceIncrementsWithBreakeven(crypto.name.toLowerCase(), currentPrice, priceDelta, lastBuyPrice, totalQty);
+
+        } else {
+          document.querySelectorAll(`#${crypto.name.toLowerCase()}Card span`).forEach(span => {
+            span.textContent = 'No data available';
+          });
+        }
+      })
+      .catch(error => {
+        console.error(`Error fetching ${crypto.name} data:`, error);
+        document.querySelectorAll(`#${crypto.name.toLowerCase()}Card span`).forEach(span => {
+          span.textContent = 'Error loading data';
+        });
+      });
+  }
+
+  function addPriceIncrementsWithBreakeven(cryptoName, currentPrice, priceDelta, lastBuyPrice, totalQty) {
+    const incrementList = document.getElementById(`${cryptoName}PriceIncrements`);
+    incrementList.innerHTML = ''; // Clear previous items
+
+    if (priceDelta < 0) {
+      const incrementStep = 1;
+      const increments = Math.ceil(-priceDelta / incrementStep);
+
+      for (let i = 1; i <= increments; i++) {
+        const incrementPercent = (i * incrementStep).toFixed(2);
+        const targetPrice = currentPrice * (1 + incrementPercent / 100);
+
+        // Calculate the amount to purchase to achieve breakeven
+        const additionalQty = targetPrice * (totalQty * (targetPrice - lastBuyPrice)) / (currentPrice - targetPrice);
+
+        const listItem = document.createElement('li');
+        listItem.className = 'list-group-item';
+        listItem.textContent = `$${additionalQty.toFixed(4)} - @${targetPrice.toFixed(0)} - ${incrementPercent}%`;
+        if (additionalQty > 0)
+          incrementList.appendChild(listItem);
+      }
+    }
+  }
+
+  function initializeCryptoCards() {
+    const cardContainer = document.getElementById('cryptoCards');
+    cryptoConfig.forEach(crypto => {
+      const card = createCryptoCard(crypto);
+      cardContainer.appendChild(card);
+      fetchCryptoData(crypto);
+
+      // Toggle the arrow direction based on collapse state
+      const toggleButton = card.querySelector('.toggle-button');
+      const collapseElement = card.querySelector(`#${crypto.name.toLowerCase()}PriceIncrementsContainer`);
+
+      collapseElement.addEventListener('shown.bs.collapse', function() {
+        toggleButton.textContent = '▼';
+      });
+
+      collapseElement.addEventListener('hidden.bs.collapse', function() {
+        toggleButton.textContent = '▲';
+      });
+    });
+  }
+
+  // Call the function when the page loads
+  window.onload = initializeCryptoCards;
+</script>
+</body>
+</html>

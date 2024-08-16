@@ -508,6 +508,71 @@ const handleUDF = async (funcLogger, app) => {
 
     res.send(allTrades);
   });
+
+  // Dashboard endpoints
+  app.get('/current_grid', async (req, res) => {
+    const { symbol } = req.query;
+
+    const activeGrid = await mongo.findAll(logger, 'trailing-trade-cache', {
+      symbol
+    });
+
+    function calculateBuyStats(transactionData) {
+      // Extract gridTrade data for buy transactions
+      const gridData = transactionData[0].symbolConfiguration.buy.gridTrade;
+      const currentPrice = parseFloat(transactionData[0].lastCandle.close);
+
+      // Filter out the executed buy transactions
+      const buyTransactions = gridData.filter(tx => tx.executed);
+
+      if (buyTransactions.length === 0) {
+        return {
+          lastBuyTimestamp: null,
+          totalQuantity: 0,
+          averagePrice: 0,
+          gridDepth: null
+        };
+      }
+
+      let totalQuantity = 0;
+      let totalCummulativeQuoteQty = 0;
+      let lastBuyTransaction = buyTransactions[0];
+
+      // Loop through the executed buy transactions
+      buyTransactions.forEach(tx => {
+        const { executedOrder } = tx;
+        const executedQty = parseFloat(executedOrder.executedQty);
+        const cummulativeQuoteQty = parseFloat(
+          executedOrder.cummulativeQuoteQty
+        );
+
+        totalQuantity += executedQty;
+        totalCummulativeQuoteQty += cummulativeQuoteQty;
+
+        // Update the last buy transaction if the current one is more recent
+        if (
+          executedOrder.transactTime >
+          lastBuyTransaction.executedOrder.transactTime
+        ) {
+          lastBuyTransaction = tx;
+        }
+      });
+
+      const averagePrice = totalCummulativeQuoteQty / totalQuantity;
+
+      return {
+        lastBuyTimestamp: lastBuyTransaction.executedOrder.transactTime,
+        totalQuantity,
+        totalCummulativeQuoteQty,
+        averagePrice,
+        currentPrice,
+        gridDepth: lastBuyTransaction.executedOrder.currentGridTradeIndex + 1
+      };
+    }
+
+    console.log(calculateBuyStats(activeGrid));
+    res.send(calculateBuyStats(activeGrid));
+  });
 };
 
 module.exports = { handleUDF };

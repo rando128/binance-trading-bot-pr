@@ -16,8 +16,8 @@
     var symbol = getParameterByName("symbol");
 
     //initialize tvta
-    let tvta = JSON.parse(localStorage.getItem("tvta"));//['Recommend.All|1','Recommend.All|5','Recommend.All|15', 'Recommend.All|30', 'Recommend.All|60']
-    refreshTVTA()
+    //let tvta = JSON.parse(localStorage.getItem("tvta"));//['Recommend.All|1','Recommend.All|5','Recommend.All|15', 'Recommend.All|30', 'Recommend.All|60']
+    //refreshTVTA()
 
     function fetchTVTA(since = 0){
       //get the current history of current symbol on page initialization and store it in localstore
@@ -354,120 +354,120 @@
                 }
               }
             },
-            {
-              name: 'Tradingview Technical Analysis Summary',
-              metainfo: {
-                _metainfoVersion: 51,
-                id: 'tvta@tv-basicstudies-1',
-                description: 'tvta',
-                shortDescription: 'TV TA summary',
-                is_hidden_study: false,
-                is_price_study: false,
-                linkedToSeries: false,
-                isCustomIndicator: true,
-                format: {
-                  type: 'price',
-                  precision: 2,
-                },
-
-                plots: [
-                  { id: 'plot_signal', type: 'line' },
-                  { id: 'plot_1m', type: 'line' },
-                  { id: 'plot_5m', type: 'line' },
-                  { id: 'plot_15m', type: 'line' },
-                  { id: 'plot_30m', type: 'line' },
-                  { id: 'plot_60m', type: 'line' },
-                ],
-                defaults: {
-                  styles: {
-                    plot_signal: {
-                      visible: true,
-                      linewidth: 1,
-                      color: '#000000'
-                    },
-                    plot_1m: {
-                      visible: true,
-                      linewidth: 1,
-                      color: '#cc3300'
-                    },
-                    plot_5m: {
-                      visible: true,
-                      linewidth: 1,
-                      color: '#ff9966'
-                    },
-                    plot_15m: {
-                      visible: true,
-                      linewidth: 1,
-                      color: '#ffcc00'
-                    },
-                    plot_30m: {
-                      visible: true,
-                      linewidth: 1,
-                      color: '#99cc33'
-                    },
-                    plot_60m: {
-                      visible: true,
-                      linewidth: 1,
-                      color: '#339900'
-                    }
-                  },
-                  precision: 2,
-                  inputs: {}
-                },
-                styles: {
-                  plot_signal: {
-                    title: '',
-                    histogramBase: 0,
-                  },
-                  plot_1m: {
-                    title: '',
-                    histogramBase: 0,
-                  },
-                  plot_5m: {
-                    title: '',
-                    histogramBase: 0,
-                  },
-                  plot_15m: {
-                    title: '',
-                    histogramBase: 0,
-                  },
-                  plot_30m: {
-                    title: '',
-                    histogramBase: 0,
-                  },
-                  plot_60m: {
-                    title: '',
-                    histogramBase: 0,
-                  }
-                },
-                'inputs': [],
-              },
-
-              constructor: function() {
-                this.init = function(context, inputCallback) {
-                  this._context = context;
-                  this._input = inputCallback;
-                };
-
-                this.main = function(context, inputCallback) {
-                  this._context = context;
-                  this._input = inputCallback;
-                  if (tvta) {
-                    let ta = tvta[context.symbol.time];
-                    if (ta) {
-                      const trigger = (
-                        ta[0] > ta[1] &&
-                        ta[1] > ta[2] &&
-                        ta[2] > ta[3] &&
-                        ta[3] > ta[4]) ? 0.7 : 0;
-                      ta.unshift(trigger);
-                      return ta;
-                    }
-                  }
-                  return [];
-                }
-              }
-            }
+            // {
+            //   name: 'Tradingview Technical Analysis Summary',
+            //   metainfo: {
+            //     _metainfoVersion: 51,
+            //     id: 'tvta@tv-basicstudies-1',
+            //     description: 'tvta',
+            //     shortDescription: 'TV TA summary',
+            //     is_hidden_study: false,
+            //     is_price_study: false,
+            //     linkedToSeries: false,
+            //     isCustomIndicator: true,
+            //     format: {
+            //       type: 'price',
+            //       precision: 2,
+            //     },
+            //
+            //     plots: [
+            //       { id: 'plot_signal', type: 'line' },
+            //       { id: 'plot_1m', type: 'line' },
+            //       { id: 'plot_5m', type: 'line' },
+            //       { id: 'plot_15m', type: 'line' },
+            //       { id: 'plot_30m', type: 'line' },
+            //       { id: 'plot_60m', type: 'line' },
+            //     ],
+            //     defaults: {
+            //       styles: {
+            //         plot_signal: {
+            //           visible: true,
+            //           linewidth: 1,
+            //           color: '#000000'
+            //         },
+            //         plot_1m: {
+            //           visible: true,
+            //           linewidth: 1,
+            //           color: '#cc3300'
+            //         },
+            //         plot_5m: {
+            //           visible: true,
+            //           linewidth: 1,
+            //           color: '#ff9966'
+            //         },
+            //         plot_15m: {
+            //           visible: true,
+            //           linewidth: 1,
+            //           color: '#ffcc00'
+            //         },
+            //         plot_30m: {
+            //           visible: true,
+            //           linewidth: 1,
+            //           color: '#99cc33'
+            //         },
+            //         plot_60m: {
+            //           visible: true,
+            //           linewidth: 1,
+            //           color: '#339900'
+            //         }
+            //       },
+            //       precision: 2,
+            //       inputs: {}
+            //     },
+            //     styles: {
+            //       plot_signal: {
+            //         title: '',
+            //         histogramBase: 0,
+            //       },
+            //       plot_1m: {
+            //         title: '',
+            //         histogramBase: 0,
+            //       },
+            //       plot_5m: {
+            //         title: '',
+            //         histogramBase: 0,
+            //       },
+            //       plot_15m: {
+            //         title: '',
+            //         histogramBase: 0,
+            //       },
+            //       plot_30m: {
+            //         title: '',
+            //         histogramBase: 0,
+            //       },
+            //       plot_60m: {
+            //         title: '',
+            //         histogramBase: 0,
+            //       }
+            //     },
+            //     'inputs': [],
+            //   },
+            //
+            //   constructor: function() {
+            //     this.init = function(context, inputCallback) {
+            //       this._context = context;
+            //       this._input = inputCallback;
+            //     };
+            //
+            //     this.main = function(context, inputCallback) {
+            //       this._context = context;
+            //       this._input = inputCallback;
+            //       if (tvta) {
+            //         let ta = tvta[context.symbol.time];
+            //         if (ta) {
+            //           const trigger = (
+            //             ta[0] > ta[1] &&
+            //             ta[1] > ta[2] &&
+            //             ta[2] > ta[3] &&
+            //             ta[3] > ta[4]) ? 0.7 : 0;
+            //           ta.unshift(trigger);
+            //           return ta;
+            //         }
+            //       }
+            //       return [];
+            //     }
+            //   }
+            // }
           ]);
         },
 
@@ -489,6 +489,12 @@
             marksEnabled = true;
             button.textContent = "Marks ON";
           }
+        });
+
+        var back = widget.createButton();
+        back.textContent = "Close";
+        back.addEventListener("click", function() {
+            document.location = document.location.origin
         });
       });
 
@@ -519,7 +525,7 @@
         })
 
         tvWidget.activeChart().createStudy('volatility', false, false)
-        tvWidget.activeChart().createStudy('tvta', false, false)
+        //tvWidget.activeChart().createStudy('tvta', false, false)
         setTimeout(function () {
           tvWidget.activeChart().getPanes()[1].setHeight(10)
         }, 1);

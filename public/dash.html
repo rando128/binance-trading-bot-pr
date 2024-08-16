@@ -58,7 +58,7 @@
     urlParams.forEach((value, key) => {
       const crypto = key.toUpperCase();  // No need to split the key
 
-      const apiEndpoint = `http://${value}/current_grid/?symbol=${crypto.split('-')[0]}`;
+      const apiEndpoint = `https://${value}/current_grid/?symbol=${crypto.split('-')[0]}`;
 
       if (!colorMapping[value]) {
         colorMapping[value] = availableColors[colorIndex % availableColors.length];

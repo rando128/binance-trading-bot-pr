@@ -20,6 +20,7 @@ const {
   placeSellOrder,
   placeSellStopLossOrder,
   removeLastBuyPrice,
+  determineATHInterval,
   saveDataToCache
 } = require('./trailingTrade/steps');
 const { errorHandlerWrapper } = require('../error-handler');
@@ -135,6 +136,10 @@ const execute = async (rawLogger, symbol, correlationId = uuidv4()) => {
       {
         stepName: 'remove-last-buy-price',
         stepFunc: removeLastBuyPrice
+      },
+      {
+        stepName: 'determine-ath-interval',
+        stepFunc: determineATHInterval
       },
       {
         stepName: 'save-data-to-cache',

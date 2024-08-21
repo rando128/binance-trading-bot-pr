@@ -20,6 +20,9 @@ const {
   execute: placeSellStopLossOrder
 } = require('./step/place-sell-stop-loss-order');
 const { execute: removeLastBuyPrice } = require('./step/remove-last-buy-price');
+const {
+  execute: determineATHInterval
+} = require('./step/determine-ath-interval');
 const { execute: saveDataToCache } = require('./step/save-data-to-cache');
 
 module.exports = {
@@ -39,5 +42,6 @@ module.exports = {
   placeSellOrder,
   placeSellStopLossOrder,
   removeLastBuyPrice,
+  determineATHInterval,
   saveDataToCache
 };

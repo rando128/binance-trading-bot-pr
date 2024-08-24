@@ -570,8 +570,40 @@ const handleUDF = async (funcLogger, app) => {
       };
     }
 
-    console.log(calculateBuyStats(activeGrid));
-    res.send(calculateBuyStats(activeGrid));
+    // eslint-disable-next-line no-shadow
+    async function calculateTotalProfit(symbol) {
+      const stats = (
+        await mongo.aggregate(logger, 'trailing-trade-grid-trade-archive', [
+          {
+            $match: { symbol }
+          },
+          {
+            $group: {
+              ...{ _id: '$symbol', symbol: { $first: '$symbol' } },
+              profit: { $sum: '$profit' },
+              trades: { $sum: 1 }
+            }
+          },
+          {
+            $project: {
+              ...{ symbol: 1 },
+              profit: 1,
+              trades: 1
+            }
+          }
+        ])
+      )[0] || {
+        ...{ symbol },
+        profit: 0,
+        trades: 0
+      };
+      return stats;
+    }
+
+    res.send({
+      ...calculateBuyStats(activeGrid),
+      ...(await calculateTotalProfit(symbol))
+    });
   });
 };
 

@@ -102,7 +102,7 @@
                                 <i class='fas fa-chart-line'></i>
                             </a>
                             <span class='toggle-button' data-bs-toggle='collapse' href='#${crypto.name.toLowerCase()}PriceIncrementsContainer' role='button' aria-expanded='false' aria-controls='${crypto.name.toLowerCase()}PriceIncrementsContainer'>▼</span>
-                        </span>
+                        </span><br>
                         <span style='font-size: small' id='${crypto.name.toLowerCase()}Profit'></span> - <span id='${crypto.name.toLowerCase()}Trades' style='font-size: small' ></span>
 
                     </div>
@@ -145,8 +145,8 @@
           const totalCummulativeQuoteQty = cryptoData.totalCummulativeQuoteQty;
           const priceDelta = (currentPrice - lastBuyPrice) / lastBuyPrice * 100;
           const lastBuyTimestamp = cryptoData.lastBuyTimestamp;
-          const trades = cryptoData.trades;
-          const profit = cryptoData.profit;
+          const trades = cryptoData.trades || 0;
+          const profit = cryptoData.profit || 0;
 
           // Format the last buy date
           const lastBuyDate = new Date(lastBuyTimestamp);

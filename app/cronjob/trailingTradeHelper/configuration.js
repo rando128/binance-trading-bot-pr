@@ -193,7 +193,8 @@ const getSymbolGridTrade = async (logger, symbol = null) => {
 const saveSymbolConfiguration = async (
   logger,
   symbol = null,
-  configuration = {}
+  configuration = {},
+  restart = true
 ) => {
   if (symbol === null) {
     // If symbol is not provided, then return empty.
@@ -227,7 +228,7 @@ const saveSymbolConfiguration = async (
       _.get(configuration, ['buy', 'athRestriction', 'candles'], {})
     ) === false
   ) {
-    PubSub.publish('reset-symbol-websockets', symbol);
+    if (restart) PubSub.publish('reset-symbol-websockets', symbol);
   }
 
   return result;

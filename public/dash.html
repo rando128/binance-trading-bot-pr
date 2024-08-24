@@ -103,6 +103,8 @@
                             </a>
                             <span class='toggle-button' data-bs-toggle='collapse' href='#${crypto.name.toLowerCase()}PriceIncrementsContainer' role='button' aria-expanded='false' aria-controls='${crypto.name.toLowerCase()}PriceIncrementsContainer'>▼</span>
                         </span>
+                        <span style='font-size: small' id='${crypto.name.toLowerCase()}Profit'></span> - <span id='${crypto.name.toLowerCase()}Trades' style='font-size: small' ></span>
+
                     </div>
                     <ul class='list-group list-group-flush'>
                         <li class='list-group-item'><strong>Price:</strong> <span id='${crypto.name.toLowerCase()}CurrentPrice'> - </span></li>
@@ -143,6 +145,8 @@
           const totalCummulativeQuoteQty = cryptoData.totalCummulativeQuoteQty;
           const priceDelta = (currentPrice - lastBuyPrice) / lastBuyPrice * 100;
           const lastBuyTimestamp = cryptoData.lastBuyTimestamp;
+          const trades = cryptoData.trades;
+          const profit = cryptoData.profit;
 
           // Format the last buy date
           const lastBuyDate = new Date(lastBuyTimestamp);
@@ -151,6 +155,8 @@
           document.getElementById(`${crypto.name.toLowerCase()}CurrentPrice`).innerHTML = `<span>$${currentPrice.toFixed(2)} <span style='color:${priceDelta > 0 ? 'green' : 'red'}'>(${priceDelta.toFixed(2)}%)</span></span>`;
           document.getElementById(`${crypto.name.toLowerCase()}TotalAmount`).textContent = `$${totalCummulativeQuoteQty.toFixed(4)}`;
           document.getElementById(`${crypto.name.toLowerCase()}AveragePrice`).textContent = `$${lastBuyPrice.toFixed(2)}`;
+          document.getElementById(`${crypto.name.toLowerCase()}Profit`).textContent = `$${profit.toFixed(2)}`;
+          document.getElementById(`${crypto.name.toLowerCase()}Trades`).textContent = `${trades.toFixed(0)} trades`;
           document.getElementById(`${crypto.name.toLowerCase()}GridDepth`).textContent = gridDepth;
           document.getElementById(`${crypto.name.toLowerCase()}LastBuyDate`).textContent = formattedDate.slice(0, 10); // DD/MM/YY
 

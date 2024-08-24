@@ -145,8 +145,8 @@
           const totalCummulativeQuoteQty = cryptoData.totalCummulativeQuoteQty;
           const priceDelta = (currentPrice - lastBuyPrice) / lastBuyPrice * 100;
           const lastBuyTimestamp = cryptoData.lastBuyTimestamp;
-          const trades = cryptoData.trades;
-          const profit = cryptoData.profit;
+          const trades = cryptoData.trades || 0;
+          const profit = cryptoData.profit || 0;
 
           // Format the last buy date
           const lastBuyDate = new Date(lastBuyTimestamp);

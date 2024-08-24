@@ -2,11 +2,13 @@
 <html lang='en'>
 <head>
   <meta charset='UTF-8'>
-  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
-        name="viewport">
+  <meta name='viewport'
+        content='width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no'>
+  <meta name='apple-mobile-web-app-capable' content='yes'>
+  <meta name='apple-mobile-web-app-status-bar-style' content='black-translucent'>
   <title>Cryptocurrency Cards</title>
   <link href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css' rel='stylesheet'>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css' rel='stylesheet'>
   <style>
       body {
           background-color: #f8f9fa;
@@ -88,7 +90,7 @@
   function createCryptoCard(crypto) {
     const card = document.createElement('div');
     const home_url = new URL(`${crypto.apiEndpoint}`).origin;
-    const chart_url = crypto.apiEndpoint.replace('current_grid','chart')
+    const chart_url = crypto.apiEndpoint.replace('current_grid', 'chart');
     card.className = 'col-md-6 col-lg-3' +
       '';
     card.innerHTML = `

@@ -137,9 +137,6 @@ const execute = async (logger, rawData) => {
 
   // We are below the active second buy grid threshold
   if (data.buy.difference < 0 && currentGridTradeIndex === 1) {
-    console.log(
-      `We are below the active second buy grid threshold for ${symbol}`
-    );
     if (!lastUnderwaterTimestamp) {
       await saveLastUnderwaterTimestamp(logger, symbol, {
         lastUnderwaterTimestamp: `${new Date().getTime()}`

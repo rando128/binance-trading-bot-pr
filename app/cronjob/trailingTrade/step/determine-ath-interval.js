@@ -153,7 +153,8 @@ const execute = async (logger, rawData) => {
     else if (delta < 3 * 30) interval = '30m';
     else if (delta < 3 * 60) interval = '1h';
     else if (delta < 6 * 60) interval = '2h';
-    else interval = '4h';
+    else if (delta < 4 * 6 * 60) interval = '4h';
+    else interval = '1d';
 
     if (symbolConfiguration.buy.athRestriction.candles.interval !== interval) {
       const newSymbolConfiguration = symbolConfiguration;

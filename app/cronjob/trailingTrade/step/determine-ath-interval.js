@@ -119,7 +119,7 @@ const execute = async (logger, rawData) => {
     logger,
     symbol
   );
-  const defaultInterval = '5m';
+  const defaultInterval = '15m';
 
   // Don't update if an order is in process
   if (

@@ -709,13 +709,10 @@ class SettingIcon extends React.Component {
                                                     If enabled, the bot won't
                                                     buy if the last 2
                                                     Heikin-Ashi candles,
-                                                    computed over the{' '}
-                                                    <i>
-                                                      ATH Buy Restriction
-                                                      interval
-                                                    </i>
-                                                    , are bearish. This avoids
-                                                    buying during strong bearish
+                                                    computed over a{' '}
+                                                    <i>dynamic interval</i>, are
+                                                    bearish. This avoids buying
+                                                    during strong bearish
                                                     periods.
                                                   </Popover.Content>
                                                 </Popover>

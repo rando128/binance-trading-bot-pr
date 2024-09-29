@@ -640,7 +640,7 @@ const execute = async (logger, rawData) => {
       return setBuyActionAndMessage(
         logger,
         data,
-        'wait',
+        'not-determined',
         `The ${buyATHRestrictionCandlesInterval} Heikin-Ashi signal is bearish. Wait before buying.`
       );
     }

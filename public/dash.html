@@ -7,6 +7,7 @@
   <meta name='apple-mobile-web-app-capable' content='yes'>
   <meta name='apple-mobile-web-app-status-bar-style' content='black-translucent'>
   <title>Cryptocurrency Cards</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
   <link href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css' rel='stylesheet'>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
@@ -61,7 +62,7 @@
     urlParams.forEach((value, key) => {
       const crypto = key.toUpperCase();  // No need to split the key
 
-      const apiEndpoint = `https://${value}/current_grid/?symbol=${crypto.split('-')[0]}`;
+      const apiEndpoint = `http://${value}/current_grid/?symbol=${crypto.split('-')[0]}`;
 
       if (!colorMapping[value]) {
         colorMapping[value] = availableColors[colorIndex % availableColors.length];
@@ -70,7 +71,8 @@
 
       const config = {
         name: crypto,
-        key: `${crypto.split('-')[0]}FDUSD`,
+        //key: `${crypto.split('-')[0]}FDUSD`,
+        key: `${crypto.split('-')[0]}USDT`,
         apiEndpoint: apiEndpoint,
         color: colorMapping[value].color,
         textColor: colorMapping[value].textColor
@@ -105,8 +107,8 @@
                             </a>
                             <span class='toggle-button' data-bs-toggle='collapse' href='#${crypto.name.toLowerCase()}PriceIncrementsContainer' role='button' aria-expanded='false' aria-controls='${crypto.name.toLowerCase()}PriceIncrementsContainer'>▼</span>
                         </span><br>
-                        <span style='font-size: small' id='${crypto.name.toLowerCase()}Profit'></span> - <span id='${crypto.name.toLowerCase()}Trades' style='font-size: small' ></span>
-
+                        <span style='font-size: small' id='${crypto.name.toLowerCase()}Profit'></span> - <span id='${crypto.name.toLowerCase()}Trades' style='font-size: small' ></span></br>
+                        <span style='font-size: small' id='${crypto.name.toLowerCase()}LastProfit'></span> (<span id='${crypto.name.toLowerCase()}LastTrade' style='font-size: small' ></span>)
                     </div>
                     <ul class='list-group list-group-flush'>
                         <li class='list-group-item'><strong>Price:</strong> <span id='${crypto.name.toLowerCase()}CurrentPrice'> - </span></li>
@@ -146,21 +148,21 @@
           const currentPrice = cryptoData.currentPrice;
           const totalCummulativeQuoteQty = cryptoData.totalCummulativeQuoteQty;
           const priceDelta = (currentPrice - lastBuyPrice) / lastBuyPrice * 100;
-          const lastBuyTimestamp = cryptoData.lastBuyTimestamp;
+          const lastBuyDate = moment(cryptoData.lastBuyTimestamp).fromNow() || '';
           const trades = cryptoData.trades || 0;
           const profit = cryptoData.profit || 0;
-
-          // Format the last buy date
-          const lastBuyDate = new Date(lastBuyTimestamp);
-          const formattedDate = lastBuyDate.toLocaleDateString('en-GB'); // DD/MM/YYYY
+          const lastTrade = moment(cryptoData.lasttrade).fromNow() || '';
+          const lastProfit = cryptoData.lastProfit || 0;
 
           document.getElementById(`${crypto.name.toLowerCase()}CurrentPrice`).innerHTML = `<span>$${currentPrice.toFixed(2)} <span style='color:${priceDelta > 0 ? 'green' : 'red'}'>(${priceDelta.toFixed(2)}%)</span></span>`;
           document.getElementById(`${crypto.name.toLowerCase()}TotalAmount`).textContent = `$${totalCummulativeQuoteQty.toFixed(4)}`;
           document.getElementById(`${crypto.name.toLowerCase()}AveragePrice`).textContent = `$${lastBuyPrice.toFixed(2)}`;
           document.getElementById(`${crypto.name.toLowerCase()}Profit`).textContent = `$${profit.toFixed(2)}`;
+          document.getElementById(`${crypto.name.toLowerCase()}LastProfit`).textContent = `$${lastProfit.toFixed(2)}`;
           document.getElementById(`${crypto.name.toLowerCase()}Trades`).textContent = `${trades.toFixed(0)} trades`;
+          document.getElementById(`${crypto.name.toLowerCase()}LastTrade`).textContent = `${lastTrade}`;
           document.getElementById(`${crypto.name.toLowerCase()}GridDepth`).textContent = gridDepth;
-          document.getElementById(`${crypto.name.toLowerCase()}LastBuyDate`).textContent = formattedDate.slice(0, 10); // DD/MM/YY
+          document.getElementById(`${crypto.name.toLowerCase()}LastBuyDate`).textContent = lastBuyDate;
 
           // Add 2.5% increment items to the list along with breakeven purchase amounts
           addPriceIncrementsWithBreakeven(crypto.name.toLowerCase(), currentPrice, priceDelta, lastBuyPrice, totalQty);

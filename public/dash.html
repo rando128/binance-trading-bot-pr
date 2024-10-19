@@ -150,7 +150,7 @@
           const lastBuyDate = moment(cryptoData.lastBuyTimestamp).fromNow() || '';
           const trades = cryptoData.trades || 0;
           const profit = cryptoData.profit || 0;
-          const lastTrade = moment(cryptoData.lasttrade).fromNow() || '';
+          const lastTrade = moment(cryptoData.lastTrade).fromNow() || '';
           const lastProfit = cryptoData.lastProfit || 0;
 
           document.getElementById(`${crypto.name.toLowerCase()}CurrentPrice`).innerHTML = `<span>$${currentPrice.toFixed(2)} <span style='color:${priceDelta > 0 ? 'green' : 'red'}'>(${priceDelta.toFixed(2)}%)</span></span>`;

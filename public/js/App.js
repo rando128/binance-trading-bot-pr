@@ -21,6 +21,7 @@ class App extends React.Component {
       closedTrades: [],
       publicURL: '',
       dustTransfer: {},
+      balanceTransfer: {},
       availableSortOptions: [
         { sortBy: 'default', sortByDesc: false, label: 'Default' },
         {
@@ -248,6 +249,12 @@ class App extends React.Component {
           exchangeSymbols: response.exchangeSymbols
         });
       }
+
+      if (response.type === 'balances-get-result') {
+        self.setState({
+          balanceTransfer: response.balanceTransfer
+        });
+      }
     };
 
     instance.onclose = () => {
@@ -376,6 +383,7 @@ class App extends React.Component {
       monitoringSymbolsCount,
       cachedMonitoringSymbolsCount,
       dustTransfer,
+      balanceTransfer,
       availableSortOptions,
       selectedSortOption,
       searchKeyword,
@@ -492,6 +500,7 @@ class App extends React.Component {
                 isAuthenticated={isAuthenticated}
                 accountInfo={accountInfo}
                 dustTransfer={dustTransfer}
+                balanceTransfer={balanceTransfer}
                 sendWebSocket={this.sendWebSocket}
                 totalProfitAndLoss={totalProfitAndLoss}
                 setSearchKeyword={this.setSearchKeyword}

@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/jsx-no-undef */
+
 /* eslint-disable no-undef */
 class AccountWrapper extends React.Component {
   constructor(props) {
@@ -28,6 +29,7 @@ class AccountWrapper extends React.Component {
     const {
       accountInfo,
       dustTransfer,
+      balanceTransfer,
       sendWebSocket,
       isAuthenticated,
       totalProfitAndLoss
@@ -68,6 +70,11 @@ class AccountWrapper extends React.Component {
                   {assets}
                 </div>
                 <div className='d-flex flex-row flex-wrap justify-content-end'>
+                  <BalanceTransferIcon
+                    isAuthenticated={isAuthenticated}
+                    balanceTransfer={balanceTransfer}
+                    sendWebSocket={sendWebSocket}
+                  />
                   <DustTransferIcon
                     isAuthenticated={isAuthenticated}
                     dustTransfer={dustTransfer}

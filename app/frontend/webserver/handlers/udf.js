@@ -571,8 +571,8 @@ const handleUDF = async (funcLogger, app) => {
     }
 
     // eslint-disable-next-line no-shadow
-    async function calculateTotalProfit(symbol) {
-      const stats = (
+    async function calculateProfits(symbol) {
+      const totalProfit = (
         await mongo.aggregate(logger, 'trailing-trade-grid-trade-archive', [
           {
             $match: { symbol }
@@ -597,12 +597,42 @@ const handleUDF = async (funcLogger, app) => {
         profit: 0,
         trades: 0
       };
-      return stats;
+      const lastProfit = (
+        await mongo.aggregate(logger, 'trailing-trade-grid-trade-archive', [
+          {
+            $match: { symbol }
+          },
+          {
+            $group: {
+              _id: '$symbol',
+              profit: { $last: '$profit' },
+              archivedAt: { $last: '$archivedAt' }
+            }
+          },
+          {
+            $project: {
+              ...{ symbol: 1 },
+              profit: 1,
+              archivedAt: 1
+            }
+          }
+        ])
+      )[0] || {
+        ...{ symbol },
+        profit: 0,
+        trades: 0
+      };
+      return {
+        lastProfit: lastProfit.profit,
+        lastTrade: lastProfit.archivedAt,
+        profit: totalProfit.profit,
+        trades: totalProfit.trades
+      };
     }
 
     res.send({
       ...calculateBuyStats(activeGrid),
-      ...(await calculateTotalProfit(symbol))
+      ...(await calculateProfits(symbol))
     });
   });
 };

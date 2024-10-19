@@ -1214,6 +1214,122 @@ const refreshOpenOrdersAndAccountInfo = async (logger, symbol) => {
     sellOpenOrders
   };
 };
+/**
+ * Retrieve sub-account list from API
+ * If not a master account, return null
+ * @param {*} logger
+ */
+const isMasterAccountOf = async logger => {
+  logger.info(
+    { tag: 'get-sub-account-list' },
+    'Retrieving sub-account list from API'
+  );
+
+  try {
+    const { subAccounts } = await binance.client.privateRequest(
+      'GET',
+      '/sapi/v1/sub-account/list'
+    );
+    // Return an array of sub-account email addresses
+    return subAccounts.map(subAccount => subAccount.email);
+  } catch (e) {
+    logger.error(
+      { tag: 'get-sub-account-list', subAccounts: e },
+      'Failed to get sub-account list'
+    );
+    return null;
+  }
+};
+
+/**
+ * Retrieve sub-account balances from API
+ *
+ * @param {*} logger
+ */
+const getSubAccountBalance = async (logger, email) => {
+  logger.info(
+    { tag: 'get-sub-account-balance' },
+    'Retrieving sub-account info from API'
+  );
+
+  // console.log(await getAccountInfo(logger));
+  const { balances, success } = await binance.client.privateRequest(
+    'GET',
+    '/sapi/v3/sub-account/assets',
+    { email }
+  );
+  if (success === false || email === undefined) {
+    logger.error(
+      { tag: 'get-sub-account-balance', balances },
+      'Failed to get sub-account balance'
+    );
+    return null;
+  }
+  return balances.filter(b => b.free > 0);
+};
+
+/**
+ * Retrieve sub-accounts balances from API
+ *
+ * @param {*} logger
+ */
+const getSubAccountsBalance = async logger => {
+  const subAccounts = await isMasterAccountOf(logger);
+
+  if (subAccounts === null) {
+    return [];
+  }
+  const balancePromises = subAccounts.map(async email => {
+    let balance = await getSubAccountBalance(logger, email);
+    balance = JSON.parse(JSON.stringify(balance));
+    return { balance, email };
+  });
+
+  const balances = await Promise.all(balancePromises);
+
+  const info = await getAccountInfo(logger);
+  balances.push({
+    email: 'master',
+    balance: info.balances
+  });
+
+  return balances.filter(balance => balance !== null && balance !== undefined);
+};
+
+/**
+ * Transfer Assets between account and subaccounts
+ *
+ * @param {*} logger
+ * @param {*} fromEmail
+ * @param {*} toEmail
+ * @param {*} baseAsset
+ * @param {*} amount
+ */
+const transferAssets = async (logger, transferParams) => {
+  logger.info(
+    { tag: 'transfer-assets', transferParams },
+    'Transferring assets'
+  );
+
+  const { tranId } = await binance.client.privateRequest(
+    'POST',
+    '/sapi/v1/sub-account/universalTransfer',
+    {
+      ...transferParams,
+      fromAccountType: 'SPOT',
+      toAccountType: 'SPOT'
+    }
+  );
+
+  if (tranId === undefined) {
+    logger.error(
+      { tag: 'transfer-assets', transferParams },
+      'Failed to transfer assets'
+    );
+    return false;
+  }
+  return true;
+};
 
 module.exports = {
   cacheExchangeSymbols,
@@ -1257,5 +1373,7 @@ module.exports = {
   getCacheTrailingTradeQuoteEstimates,
   isExceedingMaxOpenTrades,
   cancelOrder,
-  refreshOpenOrdersAndAccountInfo
+  refreshOpenOrdersAndAccountInfo,
+  getSubAccountsBalance,
+  transferAssets
 };

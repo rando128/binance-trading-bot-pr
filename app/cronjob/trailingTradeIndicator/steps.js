@@ -13,6 +13,9 @@ const { execute: getOpenOrders } = require('./step/get-open-orders');
 const {
   execute: executeDustTransfer
 } = require('./step/execute-dust-transfer');
+const {
+  execute: executeBalanceTransfer
+} = require('./step/execute-balance-transfer');
 const { execute: getClosedTrades } = require('./step/get-closed-trades');
 const { execute: getOrderStats } = require('./step/get-order-stats');
 const { execute: getTradingView } = require('./step/get-trading-view');
@@ -31,5 +34,6 @@ module.exports = {
   getClosedTrades,
   getOrderStats,
   getTradingView,
-  saveDataToCache
+  saveDataToCache,
+  executeBalanceTransfer
 };

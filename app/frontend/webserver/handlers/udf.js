@@ -603,11 +603,10 @@ const handleUDF = async (funcLogger, app) => {
             $match: { symbol }
           },
           {
-            $group: {
-              _id: '$symbol',
-              profit: { $last: '$profit' },
-              archivedAt: { $last: '$archivedAt' }
-            }
+            $sort: { archivedAt: -1 }
+          },
+          {
+            $limit: 1
           },
           {
             $project: {

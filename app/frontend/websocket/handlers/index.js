@@ -15,6 +15,8 @@ const { handleCancelOrder } = require('./cancel-order');
 const { handleDustTransferGet } = require('./dust-transfer-get');
 const { handleDustTransferExecute } = require('./dust-transfer-execute');
 const { handleExchangeSymbolsGet } = require('./exchange-symbols-get');
+const { handleBalancesGet } = require('./balances-get');
+const { handleBalanceTransferExecute } = require('./balance-transfer-execute');
 
 module.exports = {
   handleLatest,
@@ -31,5 +33,7 @@ module.exports = {
   handleCancelOrder,
   handleDustTransferGet,
   handleDustTransferExecute,
-  handleExchangeSymbolsGet
+  handleExchangeSymbolsGet,
+  handleBalancesGet,
+  handleBalanceTransferExecute
 };

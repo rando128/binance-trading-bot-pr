@@ -13,7 +13,8 @@ const {
   getClosedTrades,
   getOrderStats,
   getTradingView,
-  saveDataToCache
+  saveDataToCache,
+  executeBalanceTransfer
 } = require('./trailingTradeIndicator/steps');
 const { errorHandlerWrapper } = require('../error-handler');
 
@@ -59,6 +60,10 @@ const execute = async logger => {
         {
           stepName: 'execute-dust-transfer',
           stepFunc: executeDustTransfer
+        },
+        {
+          stepName: 'execute-balance-transfer',
+          stepFunc: executeBalanceTransfer
         },
         {
           stepName: 'get-symbol-info',

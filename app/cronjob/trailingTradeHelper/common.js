@@ -1275,13 +1275,24 @@ const getSubAccountBalance = async (logger, email) => {
  */
 const getSubAccountsBalance = async logger => {
   const subAccounts = await isMasterAccountOf(logger);
+
+  if (subAccounts === null) {
+    return [];
+  }
   const balancePromises = subAccounts.map(async email => {
     let balance = await getSubAccountBalance(logger, email);
     balance = JSON.parse(JSON.stringify(balance));
-    return { [email]: balance };
+    return { balance, email };
   });
 
   const balances = await Promise.all(balancePromises);
+
+  const info = await getAccountInfo(logger);
+  balances.push({
+    email: 'master',
+    balance: info.balances
+  });
+
   return balances.filter(balance => balance !== null && balance !== undefined);
 };
 
@@ -1294,50 +1305,28 @@ const getSubAccountsBalance = async logger => {
  * @param {*} baseAsset
  * @param {*} amount
  */
-const transferAssets = async (
-  logger,
-  fromEmail,
-  toEmail,
-  baseAsset,
-  amount
-) => {
+const transferAssets = async (logger, transferParams) => {
   logger.info(
-    { tag: 'transfer-assets', fromEmail, toEmail, baseAsset, amount },
+    { tag: 'transfer-assets', transferParams },
     'Transferring assets'
   );
-
-  if (
-    fromEmail === undefined ||
-    toEmail === undefined ||
-    baseAsset === undefined ||
-    amount === undefined
-  ) {
-    logger.error(
-      { tag: 'transfer-assets', fromEmail, toEmail, baseAsset, amount },
-      'Failed to transfer assets'
-    );
-    return null;
-  }
 
   const { tranId } = await binance.client.privateRequest(
     'POST',
     '/sapi/v1/sub-account/universalTransfer',
     {
-      fromEmail,
-      toEmail,
-      asset: baseAsset,
-      amount,
+      ...transferParams,
       fromAccountType: 'SPOT',
       toAccountType: 'SPOT'
     }
   );
-  console.log(tranId);
+
   if (tranId === undefined) {
     logger.error(
-      { tag: 'transfer-assets', fromEmail, toEmail, baseAsset, amount },
+      { tag: 'transfer-assets', transferParams },
       'Failed to transfer assets'
     );
-    return null;
+    return false;
   }
   return true;
 };

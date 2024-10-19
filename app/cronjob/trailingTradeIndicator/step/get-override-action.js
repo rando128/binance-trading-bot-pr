@@ -29,7 +29,8 @@ const execute = async (logger, rawData) => {
 
   // Override action
   if (
-    _.get(overrideData, 'action') === 'dust-transfer' &&
+    (_.get(overrideData, 'action') === 'dust-transfer' ||
+      _.get(overrideData, 'action') === 'balance-transfer') &&
     moment(_.get(overrideData, 'actionAt', undefined)) <= moment()
   ) {
     data.action = overrideData.action;

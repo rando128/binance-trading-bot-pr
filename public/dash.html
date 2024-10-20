@@ -231,6 +231,61 @@
 
   // Call the function when the page loads
   window.onload = initializeCryptoCards;
+
+  // ---------------------------------------------
+  // Addition Starts Here: Reload on Scroll Up
+  // ---------------------------------------------
+
+  // Track the last scroll position
+  let lastScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  let isReloading = false; // Flag to prevent multiple reloads
+
+  // Function to reload crypto data
+  function reloadCryptoData() {
+    if (isReloading) return; // Prevent multiple simultaneous reloads
+    isReloading = true;
+    console.log('Reloading cryptocurrency data...');
+
+    cryptoConfig.forEach(crypto => {
+      fetchCryptoData(crypto);
+    });
+
+    // Simulate reload completion after a short delay (e.g., 1 second)
+    setTimeout(() => {
+      isReloading = false;
+      console.log('Reload complete.');
+    }, 1000); // Adjust the delay as needed
+  }
+
+  // Scroll event handler
+  function handleScroll() {
+    const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    if (currentScrollTop < lastScrollTop) {
+      // User is scrolling up
+      // Check if near the top (e.g., within 100px)
+      if (currentScrollTop < 100) {
+        reloadCryptoData();
+      }
+    }
+
+    lastScrollTop = currentScrollTop <= 0 ? 0 : currentScrollTop; // For Mobile or negative scrolling
+  }
+
+  // Throttle the scroll event using requestAnimationFrame
+  let scrollTimeout;
+  window.addEventListener('scroll', function() {
+    if (!scrollTimeout) {
+      scrollTimeout = requestAnimationFrame(function() {
+        handleScroll();
+        scrollTimeout = null;
+      });
+    }
+  });
+
+  // ---------------------------------------------
+  // Addition Ends Here
+  // ---------
 </script>
 </body>
 </html>

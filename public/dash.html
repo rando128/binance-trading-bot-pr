@@ -62,7 +62,7 @@
     urlParams.forEach((value, key) => {
       const crypto = key.toUpperCase();  // No need to split the key
 
-      const apiEndpoint = `https://${value}/current_grid/?symbol=${crypto.split('-')[0]}`;
+      const apiEndpoint = `http://${value}/current_grid/?symbol=${crypto.split('-')[0]}`;
 
       if (!colorMapping[value]) {
         colorMapping[value] = availableColors[colorIndex % availableColors.length];
@@ -140,28 +140,31 @@
       .then(data => {
         const cryptoData = data;
 
-        if (cryptoData && cryptoData.averagePrice) {
-          const lastBuyPrice = cryptoData.averagePrice;
-          const totalQty = cryptoData.totalQuantity;
-          const gridDepth = cryptoData.gridDepth;
-          const currentPrice = cryptoData.currentPrice;
-          const totalCummulativeQuoteQty = cryptoData.totalCummulativeQuoteQty;
-          const priceDelta = (currentPrice - lastBuyPrice) / lastBuyPrice * 100;
+        if (cryptoData) {
+          const lastBuyPrice = cryptoData.averagePrice || 0;
+          const totalQty = cryptoData.totalQuantity || 0;
+          const gridDepth = cryptoData.gridDepth || 0;
+          const currentPrice = cryptoData.currentPrice || 0;
+          const totalCummulativeQuoteQty = cryptoData.totalCummulativeQuoteQty || 0;
+          const priceDelta = (currentPrice - lastBuyPrice) / lastBuyPrice * 100 || 0;
           const lastBuyDate = moment(cryptoData.lastBuyTimestamp).fromNow() || '';
           const trades = cryptoData.trades || 0;
           const profit = cryptoData.profit || 0;
           const lastTrade = moment(cryptoData.lastTrade).fromNow() || '';
           const lastProfit = cryptoData.lastProfit || 0;
 
-          document.getElementById(`${crypto.name.toLowerCase()}CurrentPrice`).innerHTML = `<span>$${currentPrice.toFixed(2)} <span style='color:${priceDelta > 0 ? 'green' : 'red'}'>(${priceDelta.toFixed(2)}%)</span></span>`;
-          document.getElementById(`${crypto.name.toLowerCase()}TotalAmount`).textContent = `$${totalCummulativeQuoteQty.toFixed(4)}`;
-          document.getElementById(`${crypto.name.toLowerCase()}AveragePrice`).textContent = `$${lastBuyPrice.toFixed(2)}`;
           document.getElementById(`${crypto.name.toLowerCase()}Profit`).textContent = `$${profit.toFixed(2)}`;
           document.getElementById(`${crypto.name.toLowerCase()}LastProfit`).textContent = `$${lastProfit.toFixed(2)}`;
           document.getElementById(`${crypto.name.toLowerCase()}Trades`).textContent = `${trades.toFixed(0)} trades`;
           document.getElementById(`${crypto.name.toLowerCase()}LastTrade`).textContent = `${lastTrade}`;
-          document.getElementById(`${crypto.name.toLowerCase()}GridDepth`).textContent = gridDepth;
-          document.getElementById(`${crypto.name.toLowerCase()}LastBuyDate`).textContent = lastBuyDate;
+
+          if (lastBuyPrice > 0) {
+            document.getElementById(`${crypto.name.toLowerCase()}TotalAmount`).textContent = `$${totalCummulativeQuoteQty.toFixed(4)}`;
+            document.getElementById(`${crypto.name.toLowerCase()}AveragePrice`).textContent = `$${lastBuyPrice.toFixed(2)}`;
+            document.getElementById(`${crypto.name.toLowerCase()}CurrentPrice`).innerHTML = `<span>$${currentPrice.toFixed(2)} <span style='color:${priceDelta > 0 ? 'green' : 'red'}'>(${priceDelta.toFixed(2)}%)</span></span>`;
+            document.getElementById(`${crypto.name.toLowerCase()}GridDepth`).textContent = gridDepth;
+            document.getElementById(`${crypto.name.toLowerCase()}LastBuyDate`).textContent = lastBuyDate;
+          }
 
           // Add 2.5% increment items to the list along with breakeven purchase amounts
           addPriceIncrementsWithBreakeven(crypto.name.toLowerCase(), currentPrice, priceDelta, lastBuyPrice, totalQty);

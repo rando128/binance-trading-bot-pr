@@ -20,7 +20,11 @@ const execute = async (logger, rawData) => {
     symbol,
     action,
     openOrders,
-    buy: { limitPrice: buyLimitPrice, currentPrice: buyCurrentPrice },
+    buy: {
+      limitPrice: buyLimitPrice,
+      currentPrice: buyCurrentPrice,
+      triggerPrice: buyTriggerPrice
+    },
     sell: { limitPrice: sellLimitPrice, currentPrice: sellCurrentPrice }
   } = data;
 
@@ -75,8 +79,17 @@ const execute = async (logger, rawData) => {
         }
       } else if (
         parseFloat(order.stopPrice) > buyLimitPrice ||
-        buyCurrentPrice > parseFloat(order.price)
+        buyCurrentPrice > parseFloat(order.price) ||
+        buyCurrentPrice > buyTriggerPrice
       ) {
+        if (buyCurrentPrice > buyTriggerPrice) {
+          // Is the current price higher than buy trigger price?
+          logger.info(
+            { buyTriggerPrice, buyCurrentPrice, saveLog: true },
+            'Current price is higher than buy trigger price, cancel current buy order'
+          );
+        }
+
         if (parseFloat(order.stopPrice) > buyLimitPrice) {
           // Is the buy order stop price higher than current buy limit price?
           logger.info(

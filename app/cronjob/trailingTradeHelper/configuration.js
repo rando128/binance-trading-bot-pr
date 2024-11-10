@@ -189,6 +189,7 @@ const getSymbolGridTrade = async (logger, symbol = null) => {
  * @param {*} logger
  * @param {*} symbol
  * @param {*} configuration
+ * @param {*} restart boolean (used by determine-ath-interval.js)
  */
 const saveSymbolConfiguration = async (
   logger,

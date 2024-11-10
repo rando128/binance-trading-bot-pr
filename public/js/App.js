@@ -22,6 +22,7 @@ class App extends React.Component {
       publicURL: '',
       dustTransfer: {},
       balanceTransfer: {},
+      lastBuyPriceFromAPI: null,
       availableSortOptions: [
         { sortBy: 'default', sortByDesc: false, label: 'Default' },
         {
@@ -255,6 +256,12 @@ class App extends React.Component {
           balanceTransfer: response.balanceTransfer
         });
       }
+
+      if (response.type === 'last-buy-get-result') {
+        self.setState({
+          lastBuyPriceFromAPI: response.lastBuyPriceFromAPI
+        });
+      }
     };
 
     instance.onclose = () => {
@@ -384,6 +391,7 @@ class App extends React.Component {
       cachedMonitoringSymbolsCount,
       dustTransfer,
       balanceTransfer,
+      lastBuyPriceFromAPI,
       availableSortOptions,
       selectedSortOption,
       searchKeyword,
@@ -426,6 +434,7 @@ class App extends React.Component {
           symbolInfo={symbol}
           configuration={configuration}
           sendWebSocket={this.sendWebSocket}
+          lastBuyPriceFromAPI={lastBuyPriceFromAPI}
         />
       );
     });

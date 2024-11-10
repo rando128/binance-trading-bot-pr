@@ -17,6 +17,7 @@ const { handleDustTransferExecute } = require('./dust-transfer-execute');
 const { handleExchangeSymbolsGet } = require('./exchange-symbols-get');
 const { handleBalancesGet } = require('./balances-get');
 const { handleBalanceTransferExecute } = require('./balance-transfer-execute');
+const { handleLastBuyGetFromAPI } = require('./last-buy-get');
 
 module.exports = {
   handleLatest,
@@ -35,5 +36,6 @@ module.exports = {
   handleDustTransferExecute,
   handleExchangeSymbolsGet,
   handleBalancesGet,
-  handleBalanceTransferExecute
+  handleBalanceTransferExecute,
+  handleLastBuyGetFromAPI
 };

@@ -1331,6 +1331,54 @@ const transferAssets = async (logger, transferParams) => {
   return true;
 };
 
+/**
+ * Get last buy price from Binance
+ *
+ * @param {*} logger
+ * @param {*} symbol
+ */
+const getLastBuyPriceFromAPI = async (logger, symbol) => {
+  logger.info(
+    { tag: 'get-last-buy-price-from-api' },
+    'Retrieving last buy price from API'
+  );
+  const historicalTrades = await binance.client.tradesHistory({
+    symbol,
+    limit: 10
+  });
+
+  // Collect buy trades
+  const buyTrades = [];
+  // eslint-disable-next-line no-plusplus
+  for (let i = 0; i < historicalTrades.length; i++) {
+    const trade = historicalTrades[i];
+    // isBuyerMaker: true → Sell trade
+    // isBuyerMaker: false → Buy trade
+
+    if (trade.isBuyerMaker === true) {
+      break; // Stop collecting buys once a sell is found
+    } else {
+      buyTrades.push(trade);
+    }
+  }
+
+  // Compute last buy price
+
+  let totalWeightedPrice = 0;
+  let totalQuantity = 0;
+
+  buyTrades.forEach(trade => {
+    const price = parseFloat(trade.price);
+    const qty = parseFloat(trade.qty);
+    totalWeightedPrice += price * qty;
+    totalQuantity += qty;
+  });
+
+  const lastbuy = totalQuantity > 0 ? totalWeightedPrice / totalQuantity : 0;
+
+  return lastbuy;
+};
+
 module.exports = {
   cacheExchangeSymbols,
   getCachedExchangeSymbols,
@@ -1375,5 +1423,6 @@ module.exports = {
   cancelOrder,
   refreshOpenOrdersAndAccountInfo,
   getSubAccountsBalance,
-  transferAssets
+  transferAssets,
+  getLastBuyPriceFromAPI
 };

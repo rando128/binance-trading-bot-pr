@@ -7,13 +7,15 @@ class SymbolEditLastBuyPriceIcon extends React.Component {
 
     this.state = {
       showModal: false,
-      symbolInfo: {}
+      symbolInfo: {},
+      lastBuyPriceFromAPI: null
     };
 
     this.handleModalShow = this.handleModalShow.bind(this);
     this.handleModalClose = this.handleModalClose.bind(this);
     this.handleFormSubmit = this.handleFormSubmit.bind(this);
-
+    this.handleGetLastBuyPriceFromAPI =
+      this.handleGetLastBuyPriceFromAPI.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
   }
 
@@ -28,8 +30,43 @@ class SymbolEditLastBuyPriceIcon extends React.Component {
         symbolInfo: nextProps.symbolInfo
       });
     }
+
+    // Update lastBuyPriceFromAPI when it changes in props
+    if (
+      !_.isEqual(this.state.lastBuyPriceFromAPI, nextProps.lastBuyPriceFromAPI)
+    ) {
+      const roundedLastBuyPrice = nextProps.lastBuyPriceFromAPI
+        ? this.roundLastBuyPrice(
+            nextProps.lastBuyPriceFromAPI,
+            nextProps.symbolInfo
+          )
+        : '';
+      this.setState({
+        lastBuyPriceFromAPI: nextProps.lastBuyPriceFromAPI,
+        // Update symbolInfo.sell.lastBuyPrice with rounded lastBuyPriceFromAPI
+        symbolInfo: _.set(
+          _.cloneDeep(nextProps.symbolInfo),
+          'sell.lastBuyPrice',
+          roundedLastBuyPrice
+        )
+      });
+    }
   }
 
+  roundLastBuyPrice(value, symbol) {
+    // Replace comma with dot if the input uses comma as a decimal separator
+    value = value.toString().replace(',', '.');
+    const floatValue = parseFloat(value);
+
+    // Get the tickSize from symbolInfo
+    const tickSize = parseFloat(symbol.symbolInfo.filterPrice.tickSize || '1'); // Provide a default tickSize if not available
+
+    // Check if value is valid and round to the nearest tickSize
+    const roundedLastBuyPrice = !isNaN(floatValue)
+      ? Math.round(floatValue / tickSize) * tickSize
+      : '';
+    return parseFloat(roundedLastBuyPrice);
+  }
   handleFormSubmit(e) {
     e.preventDefault();
 
@@ -40,7 +77,7 @@ class SymbolEditLastBuyPriceIcon extends React.Component {
 
     this.props.sendWebSocket('symbol-update-last-buy-price', {
       symbol,
-      sell: { lastBuyPrice }
+      sell: { lastBuyPrice: parseFloat(lastBuyPrice) }
     });
     this.handleModalClose();
   }
@@ -59,14 +96,10 @@ class SymbolEditLastBuyPriceIcon extends React.Component {
 
   handleInputChange(event) {
     const target = event.target;
-    const value =
-      target.type === 'checkbox'
-        ? target.checked
-        : target.type === 'number'
-        ? +target.value
-        : target.value;
-    const stateKey = target.getAttribute('data-state-key');
+    let value = target.value;
+    value = value !== '' ? value.toString() : '';
 
+    const stateKey = target.getAttribute('data-state-key');
     const { symbolInfo } = this.state;
 
     this.setState({
@@ -74,9 +107,20 @@ class SymbolEditLastBuyPriceIcon extends React.Component {
     });
   }
 
+  handleGetLastBuyPriceFromAPI() {
+    const { symbolInfo } = this.state;
+
+    const { symbol } = symbolInfo;
+
+    this.props.sendWebSocket('last-buy-get', {
+      symbol
+    });
+  }
+
   render() {
     const { isAuthenticated } = this.props;
-    if (isAuthenticated === false) {
+
+    if (!isAuthenticated) {
       return '';
     }
 
@@ -112,7 +156,7 @@ class SymbolEditLastBuyPriceIcon extends React.Component {
                   min='0'
                   step='0.00000001'
                   data-state-key='sell.lastBuyPrice'
-                  defaultValue={symbolInfo.sell.lastBuyPrice}
+                  value={symbolInfo.sell.lastBuyPrice || ''}
                   onChange={this.handleInputChange}
                 />
                 <Form.Text className='text-muted'>
@@ -142,6 +186,12 @@ class SymbolEditLastBuyPriceIcon extends React.Component {
                 size='sm'
                 onClick={this.handleModalClose}>
                 Close
+              </Button>
+              <Button
+                variant='secondary'
+                size='sm'
+                onClick={this.handleGetLastBuyPriceFromAPI}>
+                Get From Binance
               </Button>
               <Button type='submit' variant='primary' size='sm'>
                 Save Changes

@@ -3,7 +3,8 @@
 /* eslint-disable no-undef */
 class CoinWrapperSellLastBuyPrice extends React.Component {
   render() {
-    const { symbolInfo, sendWebSocket, isAuthenticated } = this.props;
+    const { symbolInfo, sendWebSocket, isAuthenticated, lastBuyPriceFromAPI } =
+      this.props;
 
     const {
       symbolInfo: {
@@ -21,6 +22,7 @@ class CoinWrapperSellLastBuyPrice extends React.Component {
           <SymbolEditLastBuyPriceIcon
             symbolInfo={symbolInfo}
             sendWebSocket={sendWebSocket}
+            lastBuyPriceFromAPI={lastBuyPriceFromAPI}
             isAuthenticated={isAuthenticated}
           />
         </span>

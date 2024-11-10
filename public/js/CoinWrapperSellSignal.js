@@ -18,7 +18,9 @@ class CoinWrapperSellSignal extends React.Component {
   }
 
   render() {
-    const { symbolInfo, sendWebSocket, isAuthenticated } = this.props;
+    const { symbolInfo, sendWebSocket, isAuthenticated, lastBuyPriceFromAPI } =
+      this.props;
+
     const {
       symbolInfo: {
         symbol,
@@ -441,6 +443,7 @@ class CoinWrapperSellSignal extends React.Component {
         <CoinWrapperSellLastBuyPrice
           symbolInfo={symbolInfo}
           sendWebSocket={sendWebSocket}
+          lastBuyPriceFromAPI={lastBuyPriceFromAPI}
           isAuthenticated={isAuthenticated}></CoinWrapperSellLastBuyPrice>
       </div>
     );

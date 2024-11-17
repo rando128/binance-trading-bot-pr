@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const config = require('config');
 const { binance, mongo } = require('../../../helpers');
 const {
   getCachedExchangeInfo
@@ -630,6 +631,7 @@ const handleUDF = async (funcLogger, app) => {
     }
 
     res.send({
+      accountEmail: config.get('appName'), // expect to send the email of the account from BINANCE_APP_NAME env variable
       ...calculateBuyStats(activeGrid),
       ...(await calculateProfits(symbol))
     });

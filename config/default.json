@@ -11,7 +11,8 @@
     "test": {
       "apiKey": "",
       "secretKey": ""
-    }
+    },
+    "accountEmail": ""
   },
   "redis": {
     "host": "binance-redis",

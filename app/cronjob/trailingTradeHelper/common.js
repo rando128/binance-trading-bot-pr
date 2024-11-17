@@ -1342,25 +1342,21 @@ const getLastBuyPriceFromAPI = async (logger, symbol) => {
     { tag: 'get-last-buy-price-from-api' },
     'Retrieving last buy price from API'
   );
-  const historicalTrades = await binance.client.tradesHistory({
+  const historicalTrades = await binance.client.myTrades({
     symbol,
     limit: 10
   });
 
+  const sortedTrades = historicalTrades.sort((a, b) => b.time - a.time);
+
   // Collect buy trades
   const buyTrades = [];
   // eslint-disable-next-line no-plusplus
-  for (let i = 0; i < historicalTrades.length; i++) {
-    const trade = historicalTrades[i];
-    // isBuyerMaker: true → Sell trade
-    // isBuyerMaker: false → Buy trade
-
-    if (trade.isBuyerMaker === true) {
-      break; // Stop collecting buys once a sell is found
-    } else {
+  sortedTrades.forEach(trade => {
+    if (trade.isBuyer === true && buyTrades.length === 0) {
       buyTrades.push(trade);
     }
-  }
+  });
 
   // Compute last buy price
 

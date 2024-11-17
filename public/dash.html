@@ -108,7 +108,7 @@
                             <span class='toggle-button p-2' data-bs-toggle='collapse' href='#${crypto.name.toLowerCase()}PriceIncrementsContainer' role='button' aria-expanded='false' aria-controls='${crypto.name.toLowerCase()}PriceIncrementsContainer'>▼</span>
                         </span><br>
                         <span style='font-size: small' id='${crypto.name.toLowerCase()}Profit'></span> - <span id='${crypto.name.toLowerCase()}Trades' style='font-size: small' ></span></br>
-                        <span style='font-size: small' id='${crypto.name.toLowerCase()}LastProfit'></span> (<span id='${crypto.name.toLowerCase()}LastTrade' style='font-size: small' ></span>)
+                        <span style='font-size: small' id='${crypto.name.toLowerCase()}LastProfit'></span> (<span id='${crypto.name.toLowerCase()}LastTrade' style='font-size: small' ></span>) <a style='font-size: xx-small' id='${crypto.name.toLowerCase()}BinanceUrl' href='' target='_blank' class='text-white text-decoration-none me-2'></a>
                     </div>
                     <ul class='list-group list-group-flush'>
                         <li class='list-group-item'><strong>Price:</strong> <span id='${crypto.name.toLowerCase()}CurrentPrice'> - </span></li>
@@ -153,18 +153,22 @@
           const profit = cryptoData.profit || 0;
           const lastTrade = moment(cryptoData.lastTrade).fromNow() || '';
           const lastProfit = cryptoData.lastProfit || 0;
+          const accountEmail = cryptoData.accountEmail || '';
+          const accountBinanceURL = `https://www.binance.com/en/my/sub-account/orders-management?tab=tradehistory&email=${accountEmail.replace(/@/g, '%40')}`;
 
           document.getElementById(`${crypto.name.toLowerCase()}Profit`).textContent = `$${profit.toFixed(2)}`;
           document.getElementById(`${crypto.name.toLowerCase()}LastProfit`).textContent = `$${lastProfit.toFixed(2)}`;
           document.getElementById(`${crypto.name.toLowerCase()}Trades`).textContent = `${trades.toFixed(0)} trades`;
           document.getElementById(`${crypto.name.toLowerCase()}LastTrade`).textContent = `${lastTrade}`;
+          document.getElementById(`${crypto.name.toLowerCase()}BinanceUrl`).href = accountBinanceURL;
+          document.getElementById(`${crypto.name.toLowerCase()}BinanceUrl`).textContent = accountEmail.split('@')[0];
 
           if (lastBuyPrice > 0) {
             document.getElementById(`${crypto.name.toLowerCase()}TotalAmount`).textContent = `$${totalCummulativeQuoteQty.toFixed(4)}`;
             document.getElementById(`${crypto.name.toLowerCase()}AveragePrice`).textContent = `$${lastBuyPrice.toFixed(2)}`;
             document.getElementById(`${crypto.name.toLowerCase()}CurrentPrice`).innerHTML = `<span>$${currentPrice.toFixed(2)} <span style='color:${priceDelta > 0 ? 'green' : 'red'}'>(${priceDelta.toFixed(2)}%)</span></span>`;
-          document.getElementById(`${crypto.name.toLowerCase()}GridDepth`).textContent = gridDepth;
-          document.getElementById(`${crypto.name.toLowerCase()}LastBuyDate`).textContent = lastBuyDate;
+            document.getElementById(`${crypto.name.toLowerCase()}GridDepth`).textContent = gridDepth;
+            document.getElementById(`${crypto.name.toLowerCase()}LastBuyDate`).textContent = lastBuyDate;
           }
 
           // Add 2.5% increment items to the list along with breakeven purchase amounts

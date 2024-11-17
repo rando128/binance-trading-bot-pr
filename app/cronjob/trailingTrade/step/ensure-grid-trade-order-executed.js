@@ -96,7 +96,7 @@ const slackMessageOrderDeleted = async (
   symbol,
   side,
   order,
-  notifyOrderExecute
+  notifyDebug
 ) => {
   const type = order.type.toUpperCase();
 
@@ -119,7 +119,7 @@ const slackMessageOrderDeleted = async (
       `for ${symbol} is ${order.status}. Stop monitoring.`
   });
 
-  if (notifyOrderExecute) {
+  if (notifyDebug) {
     slack.sendMessage(
       `*${symbol}* ${side.toUpperCase()} Grid Trade #${humanisedGridTradeIndex} Order Removed: *${type}*\n` +
         `- Order Result: \`\`\`${JSON.stringify(order, undefined, 2)}\`\`\``,
@@ -192,7 +192,7 @@ const execute = async (logger, rawData) => {
 
   const {
     symbol,
-    featureToggle: { notifyOrderExecute },
+    featureToggle: { notifyOrderExecute, notifyDebug },
     symbolConfiguration: {
       symbols,
       system: { temporaryDisableActionAfterConfirmingOrder }
@@ -291,7 +291,7 @@ const execute = async (logger, rawData) => {
         symbol,
         'buy',
         lastBuyOrder,
-        notifyOrderExecute
+        notifyDebug
       );
     } else {
       logger.info(

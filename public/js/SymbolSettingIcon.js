@@ -478,7 +478,10 @@ class SymbolSettingIcon extends React.Component {
                                         data-state-key='buy.heikinAshiRestriction.enabled'
                                         checked={
                                           symbolConfiguration.buy
-                                            .heikinAshiRestriction.enabled
+                                            .heikinAshiRestriction
+                                            ? symbolConfiguration.buy
+                                                .heikinAshiRestriction.enabled
+                                            : false
                                         }
                                         onChange={this.handleInputChange}
                                       />

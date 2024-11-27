@@ -1287,7 +1287,8 @@ const getSubAccountsBalance = async logger => {
 
   const balances = await Promise.all(balancePromises);
 
-  const info = await getAccountInfo(logger);
+  const info = await getAccountInfoFromAPI(logger);
+  // FIXME: This is not a good idea to call this function but we are testing the notional error
   balances.push({
     email: 'master',
     balance: info.balances

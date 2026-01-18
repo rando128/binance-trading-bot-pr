@@ -23,13 +23,13 @@ def index():
     screener = request.args.get('screener')
     interval = request.args.get('interval')
 
-    analyse = get_multiple_analysis(
-        screener, interval, symbols
-    )
+    # analyse = get_multiple_analysis(
+    #     screener, interval, symbols
+    # )
 
     result = {}
     for symbol in symbols:
-        symbolAnalyse = analyse[symbol]
+        symbolAnalyse = None #analyse[symbol]
         if not (symbolAnalyse is None):
             result[symbol] = {
                 'summary': symbolAnalyse.summary, 'time': symbolAnalyse.time.isoformat(), 'oscillators': symbolAnalyse.oscillators, 'moving_averages': symbolAnalyse.moving_averages, 'indicators': symbolAnalyse.indicators}

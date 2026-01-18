@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/jsx-no-undef */
+
 /* eslint-disable no-undef */
 class CoinWrapperTradingView extends React.Component {
   constructor(props) {
@@ -70,11 +71,94 @@ class CoinWrapperTradingView extends React.Component {
           kagiRestriction: buyKagiRestriction,
           heikinAshiRestriction: buyHeikinAshiRestriction
         },
-        tradingView,
+        //tradingView,
         overrideData
       }
     } = this.props;
 
+    // Mock tradingView data
+    const tradingView = {
+      request: {
+        interval: '1h'
+      },
+      result: {
+        time: '2026-01-18T11:28:00.000000',
+        summary: {
+          RECOMMENDATION: 'BUY',
+          BUY: 15,
+          NEUTRAL: 10,
+          SELL: 1
+        },
+        indicators: {
+          RSI: 65.42,
+          'Stoch.K': 80.1,
+          CCI20: 110.5,
+          ADX: 25.3,
+          AO: 0.0045,
+          Mom: 120.4,
+          'MACD.macd': 15.2,
+          'Stoch.RSI.K': 75.0,
+          'W.R': -15.4,
+          BBPower: 2.1,
+          UO: 55.6,
+          EMA10: 42000.5,
+          SMA10: 42100.2,
+          EMA20: 41800.7,
+          SMA20: 41900.1,
+          EMA30: 41500.8,
+          SMA30: 41600.4,
+          EMA50: 41000.3,
+          SMA50: 41100.9,
+          EMA100: 40000.5,
+          SMA100: 40200.2,
+          EMA200: 38000.4,
+          SMA200: 38500.1,
+          'Ichimoku.BLine': 41500.0,
+          VWMA: 41750.5,
+          HullMA9: 41950.2
+        },
+        oscillators: {
+          BUY: 3,
+          NEUTRAL: 7,
+          SELL: 1,
+          COMPUTE: {
+            RSI: 'NEUTRAL',
+            'STOCH.K': 'STRONG_BUY',
+            CCI: 'BUY',
+            ADX: 'NEUTRAL',
+            AO: 'NEUTRAL',
+            Mom: 'BUY',
+            MACD: 'NEUTRAL',
+            'Stoch.RSI': 'NEUTRAL',
+            'W%R': 'NEUTRAL',
+            BBP: 'NEUTRAL',
+            UO: 'NEUTRAL'
+          }
+        },
+        moving_averages: {
+          BUY: 12,
+          NEUTRAL: 3,
+          SELL: 0,
+          COMPUTE: {
+            EMA10: 'BUY',
+            SMA10: 'BUY',
+            EMA20: 'BUY',
+            SMA20: 'BUY',
+            EMA30: 'BUY',
+            SMA30: 'BUY',
+            EMA50: 'BUY',
+            SMA50: 'BUY',
+            EMA100: 'BUY',
+            SMA100: 'BUY',
+            EMA200: 'BUY',
+            SMA200: 'BUY',
+            Ichimoku: 'NEUTRAL',
+            VWMA: 'BUY',
+            HullMA: 'BUY'
+          }
+        }
+      }
+    };
     if (_.isEmpty(tradingView)) {
       return '';
     }
@@ -342,200 +426,200 @@ class CoinWrapperTradingView extends React.Component {
             </a>
           </div>
         </div>
-        <div className='d-flex flex-column w-100'>
-          <div className='coin-info-column coin-info-column-price'>
-            <div className='coin-info-label'>
-              Summary ({tradingView.request.interval})
-              {this.isTriggeredByAutoTrigger(overrideData) &&
-              autoTriggerBuyTradingViewOverrideInterval !== '' ? (
-                <OverlayTrigger
-                  trigger='click'
-                  key={'tradingview-overriden-interval-' + symbol + '-overlay'}
-                  placement='bottom'
-                  overlay={
-                    <Popover
-                      id={
-                        'tradingview-overriden-interval-' +
-                        symbol +
-                        '-overlay-right'
-                      }>
-                      <Popover.Content>
-                        TradingView interval is overridden by the auto-buy
-                        trigger. While the auto-buy trigger is active,
-                        TradingView will retrieve the data by the override
-                        interval.
-                      </Popover.Content>
-                    </Popover>
-                  }>
-                  <Button
-                    variant='link'
-                    className='p-0 m-0 ml-1 text-warning d-inline-block'
-                    style={{ lineHeight: '17px' }}>
-                    <i className='fas fa-info-circle fa-sm'></i>
-                  </Button>
-                </OverlayTrigger>
-              ) : (
-                ''
-              )}
-            </div>
-            <HightlightChange
-              className={
-                'coin-info-value font-weight-bold ' +
-                this.getRecommendationClass(
-                  tradingView.result.summary.RECOMMENDATION
-                )
-              }>
-              {_.startCase(tradingView.result.summary.RECOMMENDATION)}
-            </HightlightChange>
-            <button
-              type='button'
-              className='btn btn-sm btn-link p-0 ml-1 text-white'
-              onClick={this.toggleCollapse}>
-              <i
-                className={`fas ${
-                  collapsed ? 'fa-arrow-right' : 'fa-arrow-down'
-                }`}></i>
-            </button>
-          </div>
-          <div className='coin-info-column-rows coin-info-column-price'>
-            <div className='coin-info-column-row'>
-              <div className='coin-info-column w-row-3 text-center text-danger'>
-                Sell
-              </div>
-              <div className='coin-info-column w-row-3 text-center text-muted'>
-                Neutral
-              </div>
-              <div className='coin-info-column w-row-3 text-center text-success'>
-                Buy
-              </div>
-            </div>
-            <div className='coin-info-column-row'>
-              <div className='coin-info-column w-row-3 text-center text-danger'>
-                {tradingView.result.summary.SELL}
-              </div>
-              <div className='coin-info-column w-row-3 text-center text-muted'>
-                {tradingView.result.summary.NEUTRAL}
-              </div>
-              <div className='coin-info-column w-row-3 text-center text-success'>
-                {tradingView.result.summary.BUY}
-              </div>
-            </div>
-          </div>
-          <div className='coin-info-column coin-info-column-price'>
-            {sellHeikinAshiRestriction !== null &&
-            buyHeikinAshiRestriction !== null ? (
-              <span className='coin-info-label fs-8'>
-                Heikin Ashi ({interval}, {buyHeikinAshiRestrictionInterval}){' '}
-                <i
-                  className={`fas fa-sm mb-1 ${
-                    sellHeikinAshiRestriction
-                      ? 'fa-arrow-up text-success'
-                      : 'fa-arrow-down text-danger'
-                  }`}></i>
-                &nbsp;
-                <i
-                  className={`fas fa-sm mb-1 ${
-                    buyHeikinAshiRestriction
-                      ? 'fa-arrow-down text-danger'
-                      : 'fa-arrow-up text-success'
-                  }`}></i>
-              </span>
-            ) : (
-              ''
-            )}
-            {sellHeikinAshiRestriction !== null &&
-            buyHeikinAshiRestriction === null ? (
-              <span className='coin-info-label fs-8'>
-                Heikin Ashi ({interval}){' '}
-                <i
-                  className={`fas fa-sm mb-1 ${
-                    sellHeikinAshiRestriction
-                      ? 'fa-arrow-up text-success'
-                      : 'fa-arrow-down text-danger'
-                  }`}></i>
-              </span>
-            ) : (
-              ''
-            )}
-            {sellHeikinAshiRestriction === null &&
-            buyHeikinAshiRestriction !== null ? (
-              <span className='coin-info-label fs-8'>
-                Heikin Ashi ({buyHeikinAshiRestrictionInterval}){' '}
-                <i
-                  className={`fas fa-sm mb-1 ${
-                    buyHeikinAshiRestriction
-                      ? 'fa-arrow-down text-danger'
-                      : 'fa-arrow-up text-success'
-                  }`}></i>
-              </span>
-            ) : (
-              ''
-            )}
-            {buyKagiRestriction !== null ? (
-              <span className='coin-info-label fs-8'>
-                Kagi ({interval}){' '}
-                <i
-                  className={`fas fa-sm mb-1 ${
-                    buyKagiRestriction
-                      ? 'fa-arrow-down text-danger'
-                      : 'fa-arrow-up text-success'
-                  }`}></i>
-              </span>
-            ) : (
-              ''
-            )}
-            <span
-              className='coin-info-value font-italic fs-9'
-              title={tradingView.result.time}>
-              Updated{' '}
-              {moment
-                .utc(tradingView.result.time, 'YYYY-MM-DDTHH:mm:ss.SSSSSS')
-                .fromNow(true)}
-            </span>
-          </div>
-          {updatedWithinAlert}
-          <div
-            className={`coin-info-content-setting ${
-              collapsed ? 'd-none' : ''
-            }`}>
-            <div className='coin-info-sub-wrapper'>
-              <div className='coin-info-sub-label'>
-                Oscillators (
-                <span className='text-danger mx-1'>
-                  Sell: {tradingView.result.oscillators.SELL}
-                </span>
-                /
-                <span className='text-muted mx-1'>
-                  Neutral: {tradingView.result.oscillators.NEUTRAL}
-                </span>
-                /
-                <span className='text-success mx-1'>
-                  Buy: {tradingView.result.oscillators.BUY}
-                </span>
-                )
-              </div>
-              {oscillators}
-            </div>
-            <div className='coin-info-sub-wrapper'>
-              <div className='coin-info-sub-label'>
-                Moving Averages (
-                <span className='text-danger mx-1'>
-                  Sell: {tradingView.result.moving_averages.SELL}
-                </span>
-                /
-                <span className='text-muted mx-1'>
-                  Neutral: {tradingView.result.moving_averages.NEUTRAL}
-                </span>
-                /
-                <span className='text-success mx-1'>
-                  Buy: {tradingView.result.moving_averages.BUY}
-                </span>
-                )
-              </div>
-              {movingAverages}
-            </div>
-          </div>
-        </div>
+        {/*<div className='d-flex flex-column w-100'>*/}
+        {/*  <div className='coin-info-column coin-info-column-price'>*/}
+        {/*    <div className='coin-info-label'>*/}
+        {/*      Summary ({tradingView.request.interval})*/}
+        {/*      {this.isTriggeredByAutoTrigger(overrideData) &&*/}
+        {/*      autoTriggerBuyTradingViewOverrideInterval !== '' ? (*/}
+        {/*        <OverlayTrigger*/}
+        {/*          trigger='click'*/}
+        {/*          key={'tradingview-overriden-interval-' + symbol + '-overlay'}*/}
+        {/*          placement='bottom'*/}
+        {/*          overlay={*/}
+        {/*            <Popover*/}
+        {/*              id={*/}
+        {/*                'tradingview-overriden-interval-' +*/}
+        {/*                symbol +*/}
+        {/*                '-overlay-right'*/}
+        {/*              }>*/}
+        {/*              <Popover.Content>*/}
+        {/*                TradingView interval is overridden by the auto-buy*/}
+        {/*                trigger. While the auto-buy trigger is active,*/}
+        {/*                TradingView will retrieve the data by the override*/}
+        {/*                interval.*/}
+        {/*              </Popover.Content>*/}
+        {/*            </Popover>*/}
+        {/*          }>*/}
+        {/*          <Button*/}
+        {/*            variant='link'*/}
+        {/*            className='p-0 m-0 ml-1 text-warning d-inline-block'*/}
+        {/*            style={{ lineHeight: '17px' }}>*/}
+        {/*            <i className='fas fa-info-circle fa-sm'></i>*/}
+        {/*          </Button>*/}
+        {/*        </OverlayTrigger>*/}
+        {/*      ) : (*/}
+        {/*        ''*/}
+        {/*      )}*/}
+        {/*    </div>*/}
+        {/*    <HightlightChange*/}
+        {/*      className={*/}
+        {/*        'coin-info-value font-weight-bold ' +*/}
+        {/*        this.getRecommendationClass(*/}
+        {/*          tradingView.result.summary.RECOMMENDATION*/}
+        {/*        )*/}
+        {/*      }>*/}
+        {/*      {_.startCase(tradingView.result.summary.RECOMMENDATION)}*/}
+        {/*    </HightlightChange>*/}
+        {/*    <button*/}
+        {/*      type='button'*/}
+        {/*      className='btn btn-sm btn-link p-0 ml-1 text-white'*/}
+        {/*      onClick={this.toggleCollapse}>*/}
+        {/*      <i*/}
+        {/*        className={`fas ${*/}
+        {/*          collapsed ? 'fa-arrow-right' : 'fa-arrow-down'*/}
+        {/*        }`}></i>*/}
+        {/*    </button>*/}
+        {/*  </div>*/}
+        {/*  <div className='coin-info-column-rows coin-info-column-price'>*/}
+        {/*    <div className='coin-info-column-row'>*/}
+        {/*      <div className='coin-info-column w-row-3 text-center text-danger'>*/}
+        {/*        Sell*/}
+        {/*      </div>*/}
+        {/*      <div className='coin-info-column w-row-3 text-center text-muted'>*/}
+        {/*        Neutral*/}
+        {/*      </div>*/}
+        {/*      <div className='coin-info-column w-row-3 text-center text-success'>*/}
+        {/*        Buy*/}
+        {/*      </div>*/}
+        {/*    </div>*/}
+        {/*    <div className='coin-info-column-row'>*/}
+        {/*      <div className='coin-info-column w-row-3 text-center text-danger'>*/}
+        {/*        {tradingView.result.summary.SELL}*/}
+        {/*      </div>*/}
+        {/*      <div className='coin-info-column w-row-3 text-center text-muted'>*/}
+        {/*        {tradingView.result.summary.NEUTRAL}*/}
+        {/*      </div>*/}
+        {/*      <div className='coin-info-column w-row-3 text-center text-success'>*/}
+        {/*        {tradingView.result.summary.BUY}*/}
+        {/*      </div>*/}
+        {/*    </div>*/}
+        {/*  </div>*/}
+        {/*  <div className='coin-info-column coin-info-column-price'>*/}
+        {/*    {sellHeikinAshiRestriction !== null &&*/}
+        {/*    buyHeikinAshiRestriction !== null ? (*/}
+        {/*      <span className='coin-info-label fs-8'>*/}
+        {/*        Heikin Ashi ({interval}, {buyHeikinAshiRestrictionInterval}){' '}*/}
+        {/*        <i*/}
+        {/*          className={`fas fa-sm mb-1 ${*/}
+        {/*            sellHeikinAshiRestriction*/}
+        {/*              ? 'fa-arrow-up text-success'*/}
+        {/*              : 'fa-arrow-down text-danger'*/}
+        {/*          }`}></i>*/}
+        {/*        &nbsp;*/}
+        {/*        <i*/}
+        {/*          className={`fas fa-sm mb-1 ${*/}
+        {/*            buyHeikinAshiRestriction*/}
+        {/*              ? 'fa-arrow-down text-danger'*/}
+        {/*              : 'fa-arrow-up text-success'*/}
+        {/*          }`}></i>*/}
+        {/*      </span>*/}
+        {/*    ) : (*/}
+        {/*      ''*/}
+        {/*    )}*/}
+        {/*    {sellHeikinAshiRestriction !== null &&*/}
+        {/*    buyHeikinAshiRestriction === null ? (*/}
+        {/*      <span className='coin-info-label fs-8'>*/}
+        {/*        Heikin Ashi ({interval}){' '}*/}
+        {/*        <i*/}
+        {/*          className={`fas fa-sm mb-1 ${*/}
+        {/*            sellHeikinAshiRestriction*/}
+        {/*              ? 'fa-arrow-up text-success'*/}
+        {/*              : 'fa-arrow-down text-danger'*/}
+        {/*          }`}></i>*/}
+        {/*      </span>*/}
+        {/*    ) : (*/}
+        {/*      ''*/}
+        {/*    )}*/}
+        {/*    {sellHeikinAshiRestriction === null &&*/}
+        {/*    buyHeikinAshiRestriction !== null ? (*/}
+        {/*      <span className='coin-info-label fs-8'>*/}
+        {/*        Heikin Ashi ({buyHeikinAshiRestrictionInterval}){' '}*/}
+        {/*        <i*/}
+        {/*          className={`fas fa-sm mb-1 ${*/}
+        {/*            buyHeikinAshiRestriction*/}
+        {/*              ? 'fa-arrow-down text-danger'*/}
+        {/*              : 'fa-arrow-up text-success'*/}
+        {/*          }`}></i>*/}
+        {/*      </span>*/}
+        {/*    ) : (*/}
+        {/*      ''*/}
+        {/*    )}*/}
+        {/*    {buyKagiRestriction !== null ? (*/}
+        {/*      <span className='coin-info-label fs-8'>*/}
+        {/*        Kagi ({interval}){' '}*/}
+        {/*        <i*/}
+        {/*          className={`fas fa-sm mb-1 ${*/}
+        {/*            buyKagiRestriction*/}
+        {/*              ? 'fa-arrow-down text-danger'*/}
+        {/*              : 'fa-arrow-up text-success'*/}
+        {/*          }`}></i>*/}
+        {/*      </span>*/}
+        {/*    ) : (*/}
+        {/*      ''*/}
+        {/*    )}*/}
+        {/*    <span*/}
+        {/*      className='coin-info-value font-italic fs-9'*/}
+        {/*      title={tradingView.result.time}>*/}
+        {/*      Updated{' '}*/}
+        {/*      {moment*/}
+        {/*        .utc(tradingView.result.time, 'YYYY-MM-DDTHH:mm:ss.SSSSSS')*/}
+        {/*        .fromNow(true)}*/}
+        {/*    </span>*/}
+        {/*  </div>*/}
+        {/*  {updatedWithinAlert}*/}
+        {/*  <div*/}
+        {/*    className={`coin-info-content-setting ${*/}
+        {/*      collapsed ? 'd-none' : ''*/}
+        {/*    }`}>*/}
+        {/*    <div className='coin-info-sub-wrapper'>*/}
+        {/*      <div className='coin-info-sub-label'>*/}
+        {/*        Oscillators (*/}
+        {/*        <span className='text-danger mx-1'>*/}
+        {/*          Sell: {tradingView.result.oscillators.SELL}*/}
+        {/*        </span>*/}
+        {/*        /*/}
+        {/*        <span className='text-muted mx-1'>*/}
+        {/*          Neutral: {tradingView.result.oscillators.NEUTRAL}*/}
+        {/*        </span>*/}
+        {/*        /*/}
+        {/*        <span className='text-success mx-1'>*/}
+        {/*          Buy: {tradingView.result.oscillators.BUY}*/}
+        {/*        </span>*/}
+        {/*        )*/}
+        {/*      </div>*/}
+        {/*      {oscillators}*/}
+        {/*    </div>*/}
+        {/*    <div className='coin-info-sub-wrapper'>*/}
+        {/*      <div className='coin-info-sub-label'>*/}
+        {/*        Moving Averages (*/}
+        {/*        <span className='text-danger mx-1'>*/}
+        {/*          Sell: {tradingView.result.moving_averages.SELL}*/}
+        {/*        </span>*/}
+        {/*        /*/}
+        {/*        <span className='text-muted mx-1'>*/}
+        {/*          Neutral: {tradingView.result.moving_averages.NEUTRAL}*/}
+        {/*        </span>*/}
+        {/*        /*/}
+        {/*        <span className='text-success mx-1'>*/}
+        {/*          Buy: {tradingView.result.moving_averages.BUY}*/}
+        {/*        </span>*/}
+        {/*        )*/}
+        {/*      </div>*/}
+        {/*      {movingAverages}*/}
+        {/*    </div>*/}
+        {/*  </div>*/}
+        {/*</div>*/}
       </div>
     );
   }

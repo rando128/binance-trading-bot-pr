@@ -139,13 +139,18 @@ const handleLatest = async (logger, ws, payload) => {
   });
 
   const rawApiInfo = binance.client.getInfo() || {};
-  // Normalize API info - binance-api-node uses 'usedWeigh1m' (typo) for spot
+  // Normalize API info - binance-api-node@0.13.8 uses 'api.binance.com' key instead of 'spot'
+  // Also check for 'usedWeigh1m' (typo without 't') for backwards compatibility
   const apiInfo = {
     ...rawApiInfo,
     spot: {
       ...(rawApiInfo.spot || {}),
       usedWeight1m:
-        rawApiInfo.spot?.usedWeigh1m || rawApiInfo.spot?.usedWeight1m || '0'
+        rawApiInfo['api.binance.com']?.usedWeight1m ||
+        rawApiInfo['api.binance.com']?.usedWeigh1m ||
+        rawApiInfo.spot?.usedWeigh1m ||
+        rawApiInfo.spot?.usedWeight1m ||
+        '0'
     }
   };
 

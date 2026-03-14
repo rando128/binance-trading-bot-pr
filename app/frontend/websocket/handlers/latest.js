@@ -138,11 +138,22 @@ const handleLatest = async (logger, ws, payload) => {
     };
   });
 
+  const rawApiInfo = binance.client.getInfo() || {};
+  // Normalize API info - binance-api-node uses 'usedWeigh1m' (typo) for spot
+  const apiInfo = {
+    ...rawApiInfo,
+    spot: {
+      ...(rawApiInfo.spot || {}),
+      usedWeight1m:
+        rawApiInfo.spot?.usedWeigh1m || rawApiInfo.spot?.usedWeight1m || '0'
+    }
+  };
+
   common = {
     version,
     gitHash: process.env.GIT_HASH || 'unspecified',
     accountInfo,
-    apiInfo: binance.client.getInfo(),
+    apiInfo,
     closedTradesSetting: JSON.parse(
       cacheTrailingTradeCommon['closed-trades'] || '{}'
     ),

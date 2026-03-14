@@ -65,7 +65,7 @@ class Status extends React.Component {
                   <li>
                     Used Weight (1m):{' '}
                     <HightlightChange className='coin-info-value'>
-                      {apiInfo.spot.usedWeight1m}
+                      {(apiInfo.spot && apiInfo.spot.usedWeight1m) || '0'}
                     </HightlightChange>
                     /1200
                   </li>

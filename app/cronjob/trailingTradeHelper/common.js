@@ -388,7 +388,15 @@ const getAPILimit = logger => {
   const apiInfo = binance.client.getInfo();
   logger.info({ apiInfo }, 'API info');
 
-  return parseInt(apiInfo.spot?.usedWeight1m || 0, 10);
+  // Note: binance-api-node uses 'usedWeigh1m' (typo without 't') for spot/futures
+  // but 'usedWeight1m' (with 't') for delivery
+  return parseInt(
+    apiInfo?.spot?.usedWeigh1m ||
+      apiInfo?.spot?.usedWeight1m ||
+      apiInfo?.spot?.['used-weight-1m'] ||
+      0,
+    10
+  );
 };
 
 /**
